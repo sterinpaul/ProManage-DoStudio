@@ -12,7 +12,7 @@ const authHelpers = {
         return await newUser.save()
     },
     getUserByEmail:async(email)=>{
-        return await UserModel.findOne({email,isActive:true},{__v:0})
+        return await UserModel.findOne({email},{__v:0})
     },
     getAdminByEmail:async(email)=>{
         return await AdminModel.findOne({email},{__v:0})

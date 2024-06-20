@@ -83,7 +83,11 @@ const authControllers = () => {
 
             const userExists = await authHelpers.getUserByEmail(lowerCaseEmail)
             if (userExists) {
-                registration(userExists, configKeys.JWT_USER_ROLE)
+                if(userExists.isActive){
+                    registration(userExists, configKeys.JWT_USER_ROLE)
+                }else{
+                    return res.status(200).json({ status: false, message: "Contact Admin to access" })
+                }
             } else {
                 const AdminExists = await authHelpers.getAdminByEmail(lowerCaseEmail)
                 if (AdminExists) {
