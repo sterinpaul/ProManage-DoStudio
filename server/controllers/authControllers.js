@@ -21,6 +21,10 @@ const authControllers = () => {
             const { email, password } = value;
             const lowerCaseEmail = email.toLowerCase()
 
+            const userExists = await authHelpers.getUserByEmail(lowerCaseEmail)
+            if(userExists){
+                return res.status(200).json({ status: false, message: "User exists. Contact admin" });
+            }
             const hashedPassword = await authService.encryptPassword(password)
             const response = await authHelpers.signUp(lowerCaseEmail, hashedPassword);
             if (response) {
