@@ -35,10 +35,52 @@ const taskHelpers = {
                   {
                     $lookup: {
                       from: "users",
-                      localField: "people",
-                      foreignField: "_id",
-                      as: "userDetails",
+                      let: {
+                        peopleId: {
+                          $cond: {
+                            if: {
+                              $and: [
+                                {
+                                  $ne: ["$people", null]
+                                },
+                                {
+                                  $ne: ["$people", ""]
+                                },
+                                {
+                                  $eq: [
+                                    {
+                                      $strLenCP: "$people"
+                                    },
+                                    24
+                                  ]
+                                }
+                              ]
+                            },
+                            then: {
+                              $toObjectId: "$people"
+                            },
+                            else: null
+                          }
+                        }
+                      },
                       pipeline: [
+                        {
+                          $match: {
+                            $expr: {
+                              $and: [
+                                {
+                                  $ne: ["$$peopleId", null]
+                                },
+                                {
+                                  $eq: [
+                                    "$_id",
+                                    "$$peopleId"
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        },
                         {
                           $project: {
                             _id: 0,
@@ -46,7 +88,8 @@ const taskHelpers = {
                             profilePhotoURL: 1
                           }
                         }
-                      ]
+                      ],
+                      as: "userDetails"
                     }
                   },
                   {
@@ -121,7 +164,7 @@ const taskHelpers = {
               $sort: {
                 createdAt: 1
               }
-            },
+            }
           ]
         )
     },
