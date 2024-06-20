@@ -63,26 +63,10 @@ const adminControllers = () => {
     }
 
 
-
-    const uploadTicket = async (req, res) => {
-        try {
-            const ticketUrl = req.file.path
-            const { orderId } = req.params
-
-
-            return res.status(200).json({ status: false, message: "Ticket could not be uploaded" })
-        } catch (error) {
-            console.error("Error uploading invoice", error);
-            return res.status(500).json({ status: false, message: "Internal server error" })
-        }
-    }
-
-
     return {
         getAllUsers,
         updateUserStatus,
-        updatePermissions,
-        uploadTicket
+        updatePermissions
     }
 }
 

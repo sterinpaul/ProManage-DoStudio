@@ -38,7 +38,7 @@ const userControllers = () => {
 
 
 
-    const uploadTicket = async (req, res) => {
+    const uploadProfileImg = async (req, res) => {
         try {
             const ticketUrl = req.file.path
             const { orderId } = req.params
@@ -54,7 +54,7 @@ const userControllers = () => {
     return {
         getUserData,
         getUsersAssign,
-        uploadTicket
+        uploadProfileImg
     }
 }
 

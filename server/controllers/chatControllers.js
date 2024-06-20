@@ -40,7 +40,7 @@ const chatControllers = () => {
         }
     }
 
-    const uploadTicket = async (req, res) => {
+    const uploadFile = async (req, res) => {
         try {
             const ticketUrl = req.file.path
             const { orderId } = req.params
@@ -56,7 +56,7 @@ const chatControllers = () => {
     return {
         getChatMessages,
         sendMessage,
-        uploadTicket
+        uploadFile
     }
 }
 
