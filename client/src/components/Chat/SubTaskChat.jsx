@@ -71,7 +71,7 @@ export const SubTaskChat = ({ socket,subTaskId, subTaskChatModalHandler }) => {
         const response = await sendSingleMessage({roomId:subTaskId,sender:userData._id,message:singleMessage})
         if(response?.status){
             sendMessage({...response.data,user:userData.email})
-            setMessages(previous=>[...previous,response.data])
+            setMessages(previous=>[...previous,{...response.data,user:userData.email}])
             setSingleMessage("")
         }
     }
