@@ -38,6 +38,7 @@ export const SignUp = ({handleSignIn}) => {
       const response = await signUp(data)
       if (response?.status) {
         handleSignIn()
+        toast.success(response?.message)
       } else {
         toast.error(response?.message)
       }

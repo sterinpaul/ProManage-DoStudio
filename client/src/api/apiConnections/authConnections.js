@@ -10,7 +10,6 @@ export const signIn = async(credentials) => {
         }
     }catch(error){
         console.error(`Error signing in ${error.message}`);
-        toast.error(error.message)
     }
 }
 
@@ -24,7 +23,6 @@ export const signUp = async(credentials) => {
         }
     }catch(error){
         console.error(`Error signing up ${error.message}`);
-        toast.error(error.message)
     }
 }
 
@@ -37,7 +35,6 @@ export const userSignOut = async(id)=>{
         }
     }catch(error){
         console.error(`Error signing out: ${error.message}`);
-        toast.error(error.message)
     }
 }
 
@@ -49,7 +46,6 @@ export const getUserData = async()=>{
         }
     }catch(error){
         console.error(`Error fetching user data ${error.message}`);
-        toast.error(error.message)
     }
 }
 
@@ -61,7 +57,6 @@ export const createSubadmin = async(subadminData)=>{
         }
     }catch(error){
         console.error(`Error creating sub admin: ${error.message}`);
-        toast.error(error.message)
     }
 }
 
@@ -70,7 +65,7 @@ export const handleChangePassword = async (oldPassword, newPassword) => {
         const response = await baseURL.put(`/auth/change-password`, { oldPassword, newPassword });
         return response.data;
     } catch (error) {
-        toast.error(error.message)
+        console.error(`Error changing password: ${error.message}`);
     }
 }
 
@@ -91,6 +86,5 @@ export const uploadProfileImage = async (imageFile) => {
         
     } catch (error) {
         console.error('Error updating profile image:', error);
-        toast.error(error.message)
     }
 }

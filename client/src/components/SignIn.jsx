@@ -39,6 +39,7 @@ export const SignIn = () => {
     onSubmit: async (values) => {
       const response = await signIn(values)
       if (response?.status) {
+        toast.success(response.message)
         setToken(response.token)
         setUser(response.data)
         localStorage.setItem("token", response.token)
