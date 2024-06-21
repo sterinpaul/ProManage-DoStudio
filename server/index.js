@@ -21,7 +21,7 @@ const server = http.createServer(app)
 // Socket CORS config
 const io = new Server(server,{
     cors:{
-        origin: [configKeys.CLIENT_URL],
+        origin: ["https://workplacecodedone.online"],
         methods: ['GET','POST']
     }
 })
