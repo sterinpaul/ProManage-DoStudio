@@ -9,9 +9,11 @@ import {
   Typography
 } from "@material-tailwind/react";
 import { signUp } from './../api/apiConnections/authConnections';
+import { useNavigate } from 'react-router-dom';
 
 
 export const SignUp = ({handleSignIn}) => {
+  const navigate = useNavigate()
 
   const formik = useFormik({
     initialValues: {
@@ -37,8 +39,8 @@ export const SignUp = ({handleSignIn}) => {
       const data = lodash.omit(values, 'rePassword')
       const response = await signUp(data)
       if (response?.status) {
-        handleSignIn()
         toast.success(response?.message)
+        navigate("/")
       } else {
         toast.error(response?.message)
       }
