@@ -1,4 +1,3 @@
-import { toast } from 'react-toastify';
 import baseURL from '../baseURL'
 
 
@@ -18,7 +17,6 @@ export const signUp = async(credentials) => {
     try{
         const response = await baseURL.post(`/auth/signUp`,credentials);
         if (response) {
-            toast.success(response.data.message)
             return response.data
         }
     }catch(error){

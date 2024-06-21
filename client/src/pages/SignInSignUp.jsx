@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Card, Typography } from "@material-tailwind/react";
-import { SignIn } from "./../components/SignIn";
-import { SignUp } from "./../components/SignUp";
+import { SignIn } from "../components/SignIn";
+import { SignUp } from "../components/SignUp";
 
 const SignInSignUp = () => {
     const [signInStatus, setSignInStatus] = useState(true)

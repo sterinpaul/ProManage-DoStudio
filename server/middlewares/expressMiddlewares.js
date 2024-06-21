@@ -2,7 +2,7 @@ import express from 'express'
 import morgan from 'morgan';
 import cors from 'cors';
 import helmet from 'helmet'
-import cookieParser from 'express'
+import cookieParser from 'cookie-parser'
 import mongoSanitize from 'express-mongo-sanitize';
 // import sanitizeHandler from './sanitizeHandler.js';
 

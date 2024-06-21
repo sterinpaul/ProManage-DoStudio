@@ -20,8 +20,11 @@ const authControllers = () => {
 
             const { email, password } = value;
             const lowerCaseEmail = email.toLowerCase()
-
+            if(lowerCaseEmail === configKeys.ADMIN_EMAIL){
+                return res.status(200).json({ status: false, message: "Admin already registered" });
+            }
             const userExists = await authHelpers.getUserByEmail(lowerCaseEmail)
+            
             if(userExists){
                 return res.status(200).json({ status: false, message: "User exists. Contact admin" });
             }
@@ -90,7 +93,7 @@ const authControllers = () => {
                 if(userExists.isActive){
                     registration(userExists, configKeys.JWT_USER_ROLE)
                 }else{
-                    return res.status(200).json({ status: false, message: "Contact Admin to access" })
+                    return res.status(200).json({ status: false, message: "Contact Admin for access" })
                 }
             } else {
                 const AdminExists = await authHelpers.getAdminByEmail(lowerCaseEmail)

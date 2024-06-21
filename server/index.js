@@ -9,7 +9,6 @@ import {Server} from 'socket.io'
 import { fileURLToPath } from 'url';
 import path,{dirname} from 'path'
 import socketConfig from './routes/socketRoute.js';
-import configKeys from './config/configKeys.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,7 +20,9 @@ const server = http.createServer(app)
 // Socket CORS config
 const io = new Server(server,{
     cors:{
-        origin: ["https://workplacecodedone.online"],
+        origin: [
+            "https://workplacecodedone.online"
+        ],
         methods: ['GET','POST']
     }
 })

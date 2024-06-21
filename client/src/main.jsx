@@ -8,10 +8,10 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-    <ThemeProvider>
-      <RecoilRoot>
-        <ToastContainer position="top-right" hideProgressBar={true} autoClose={2000} />
+    <RecoilRoot>
+      <ThemeProvider>
+        <ToastContainer position="top-right" hideProgressBar={true} pauseOnFocusLoss={false} autoClose={2000} />
         <App />
-      </RecoilRoot>
-    </ThemeProvider>
+      </ThemeProvider>
+    </RecoilRoot>
 )

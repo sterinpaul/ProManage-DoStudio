@@ -1,4 +1,4 @@
-import metaicon from '../assets/logos/ico.png';
+import metaicon from './logos/ico.png';
 
 export{
     metaicon

@@ -11,8 +11,8 @@ import {
   Button
 } from "@material-tailwind/react";
 import { useSetRecoilState } from 'recoil';
-import {tokenAtom,userDataAtom} from './../recoil/atoms/userAtoms'
-import { signIn } from './../api/apiConnections/authConnections';
+import {tokenAtom,userDataAtom} from '../recoil/atoms/userAtoms'
+import { signIn } from '../api/apiConnections/authConnections';
 
 
 export const SignIn = () => {
@@ -40,8 +40,8 @@ export const SignIn = () => {
       const response = await signIn(values)
       if (response?.status) {
         setToken(response.token)
-        setUser(response.data)
         localStorage.setItem("token", response.token)
+        setUser(response.data)
         navigate('/')
       } else {
         toast.error(response.message)
