@@ -36,7 +36,7 @@ const priorityGroup = [
     }
 ]
 
-export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, selectSubTaskChat, isAdmin,dueDatePermitted,priorityPermitted,peoplePermitted }) => {
+export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, selectSubTaskChat, isAdmin,dueDatePermitted,priorityPermitted,peoplePermitted,socket }) => {
     const setSelectedProject = useSetRecoilState(currentProjectAtom)
     const [selectedSubTasks,setSelectedSubTasks] = useState([])
     const [openRemoveDialog,setOpenRemoveDialog] = useState(false)
@@ -137,6 +137,7 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, se
                                     dueDatePermitted={dueDatePermitted}
                                     priorityPermitted={priorityPermitted}
                                     peoplePermitted={peoplePermitted}
+                                    socket={socket}
                                 />
                             )
                         })}

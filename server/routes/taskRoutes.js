@@ -6,7 +6,7 @@ const taskRoutes = ()=>{
     const controllers = taskControllers()
     
     router.post('/addTask',controllers.addTask)
-    router.get('/getSingleProject/:id',controllers.getSingleProject)
+    router.get('/getSingleProject/:projectid',controllers.getSingleProject)
     
     return router
 }

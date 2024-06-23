@@ -16,9 +16,9 @@ export const getAllProjects = async() => {
     }
 }
 
-export const getSingleProject = async(id) => {
+export const getSingleProject = async(projectid) => {
     try{
-        const response = await baseURL.get(`/tasks/getSingleProject/${id}`);
+        const response = await baseURL.get(`/tasks/getSingleProject/${projectid}`);
         if (response) {
             return response.data;
         } else {

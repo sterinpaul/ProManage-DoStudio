@@ -1,7 +1,7 @@
 import { HiOutlineChatBubbleOvalLeft } from "react-icons/hi2";
 import dayjs from 'dayjs'
 import { DatePicker,Space } from 'antd';
-import { Avatar, Popover, PopoverHandler, PopoverContent } from "@material-tailwind/react";
+import { Avatar, Popover, PopoverHandler, PopoverContent, Badge } from "@material-tailwind/react";
 import moment from 'moment';
 import { useState } from "react";
 import { SelectComponent } from "./elements/SelectComponent";
@@ -28,7 +28,8 @@ export const SubTask = ({ index,
     isAdmin,
     dueDatePermitted,
     priorityPermitted,
-    peoplePermitted
+    peoplePermitted,
+    socket
 }) => {
 
     const setSelectedProject = useSetRecoilState(currentProjectAtom)
@@ -158,9 +159,12 @@ export const SubTask = ({ index,
                 </>}
             </td>
 
-            <td onClick={()=>selectSubTaskChat(subTask._id)} className={`${classes} cursor-pointer`}>
-                <div className="flex justify-center items-center">
-                    <HiOutlineChatBubbleOvalLeft className="w-5 h-5" />
+            <td onClick={()=>selectSubTaskChat(taskId,subTask._id)} className={`${classes} cursor-pointer w-16`}>
+                <div className="relative flex justify-center items-center">
+                    <HiOutlineChatBubbleOvalLeft className="w-6 h-6" />
+                    {subTask?.chatUnreadCount ? <div className="absolute top-2 right-1 rounded-full w-4 h-4 flex items-center justify-center text-white bg-green-500">
+                        <p className="text-center p-[2px] whitespace-nowrap overflow-hidden overflow-ellipsis text-[9px]">{subTask.chatUnreadCount}</p>
+                    </div> : null}
                 </div>
             </td>
             

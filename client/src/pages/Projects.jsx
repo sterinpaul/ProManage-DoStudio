@@ -20,6 +20,7 @@ const Projects = () => {
   const [selectedProject,setSelectedProject] = useRecoilState(currentProjectAtom)
   const [isFormOpen,setIsFormOpen] = useState(false)
   const [openChat,setOpenChat] = useState(false)
+  const [taskId,setTaskId] = useState("")
   const [subTaskId,setSubTaskId] = useState("")
   const socketRef = useRef(null)
   const isAdmin = userData?.role === configKeys.ADMIN_ROLE ? true : false ;
@@ -82,8 +83,9 @@ const Projects = () => {
 
   const subTaskChatModalHandler = ()=>setOpenChat(previous=>!previous)
 
-  const selectSubTaskChat = (id)=>{
-    setSubTaskId(id)
+  const selectSubTaskChat = (taskid,subtaskid)=>{
+    setTaskId(taskid)
+    setSubTaskId(subtaskid)
     subTaskChatModalHandler()
   }
 
@@ -128,12 +130,13 @@ const Projects = () => {
               dueDatePermitted={dueDatePermitted}
               priorityPermitted={priorityPermitted}
               peoplePermitted={peoplePermitted}
+              socket={socketRef}
             />
           ))}
         </div>
       </div>
       <Dialog dismiss={{escapeKey:false,outsidePress:false}} open={openChat} handler={subTaskChatModalHandler} size="md" className="outline-none">
-        <SubTaskChat socket={socketRef} subTaskId={subTaskId} subTaskChatModalHandler={subTaskChatModalHandler} />
+        <SubTaskChat socket={socketRef} taskId={taskId} subTaskId={subTaskId} subTaskChatModalHandler={subTaskChatModalHandler} />
       </Dialog>
     </div>
   );

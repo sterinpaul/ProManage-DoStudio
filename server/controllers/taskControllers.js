@@ -35,8 +35,9 @@ const taskControllers = () => {
 
     const getSingleProject = async(req,res)=>{   
         try {
-            const {id} = req.params
-            const projectResponse = await taskHelpers.getSingleProject(id)
+            const {projectid} = req.params
+            const {id} = req.payload
+            const projectResponse = await taskHelpers.getSingleProject(projectid,id)
             if(projectResponse.length){
                 return res.status(200).json({status:true,data:projectResponse})
             }

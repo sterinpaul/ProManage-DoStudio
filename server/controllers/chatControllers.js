@@ -1,5 +1,6 @@
 import Joi from 'joi'
 import chatHelpers from '../helpers/chatHelpers.js'
+import unreadChatHelpers from '../helpers/unreadChatHelpers.js'
 
 
 const chatControllers = () => {
@@ -13,7 +14,7 @@ const chatControllers = () => {
             }
             return res.status(200).json({status:false,message:"No messages found"})
         } catch (error) {
-            throw new Error(error.message);
+            return res.status(500).json({ status: false, message: error.message });
         }
     }
 
@@ -30,13 +31,38 @@ const chatControllers = () => {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
             
-            const response = await chatHelpers.sendMessage(value)
-            if(response){
-                return res.status(200).json({status:true,data:response})
+            const [sendResponse,unreadResponse] = await Promise.allSettled([
+                chatHelpers.sendMessage(value),
+                unreadChatHelpers.updateChatUnreadCount(value.roomId,value.sender)
+            ])
+            
+            if(sendResponse.status === "fulfilled" && unreadResponse.status === "fulfilled"){
+                return res.status(200).json({status:true,data:sendResponse.value})
             }
             return res.status(200).json({status:false,message:"Message could not send"})
         } catch (error) {
-            throw new Error(error.message);
+            return res.status(500).json({ status: false, message: error.message });
+        }
+    }
+
+    const updateUnreadChat = async(req,res)=>{
+        try {
+            const unreadChatSchema = Joi.object({
+                roomId: Joi.string().required(),
+                userId: Joi.string().required()
+            })
+            const { error, value } = unreadChatSchema.validate(req.body)
+    
+            if (error) {
+                return res.status(200).json({ status: false, message: error.details[0].message })
+            }
+            
+            const updateResponse = await unreadChatHelpers.updateUnreadChat(value)
+            if(!updateResponse.acknowledged){
+                return res.status(200).json({ status: false, message: "Could not update read status" })
+            }
+        } catch (error) {
+            return res.status(500).json({ status: false, message: error.message });
         }
     }
 
@@ -48,7 +74,7 @@ const chatControllers = () => {
             return res.status(200).json({ status: false, message: "Ticket could not be uploaded" })
         } catch (error) {
             console.error("Error uploading invoice", error);
-            throw new Error(error.message);
+            return res.status(500).json({ status: false, message: error.message });
         }
     }
 
@@ -56,6 +82,7 @@ const chatControllers = () => {
     return {
         getChatMessages,
         sendMessage,
+        updateUnreadChat,
         uploadFile
     }
 }

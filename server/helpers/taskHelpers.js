@@ -10,8 +10,9 @@ const taskHelpers = {
     findTaskByName:async(name,projectId)=>{
         return await TaskModel.findOne({isActive:true,name,projectId})
     },
-    getSingleProject:async(id)=>{
-        const projectId = new mongoose.Types.ObjectId(id)
+    getSingleProject:async(projectid,userid)=>{
+        const projectId = new mongoose.Types.ObjectId(projectid)
+        const userId = new mongoose.Types.ObjectId(userid)
         return await TaskModel.aggregate(
           [
             {
@@ -23,13 +24,16 @@ const taskHelpers = {
             {
               $lookup: {
                 from: "subtasks",
-                localField: "_id",
-                foreignField: "taskId",
-                as: "subTasks",
+                let: { taskId: "$_id" },
                 pipeline: [
                   {
                     $match: {
-                      isActive: true
+                      $expr: {
+                        $and: [
+                          { $eq: ["$taskId", "$$taskId"] },
+                          { $eq: ["$isActive", true] }
+                        ]
+                      }
                     }
                   },
                   {
@@ -40,25 +44,12 @@ const taskHelpers = {
                           $cond: {
                             if: {
                               $and: [
-                                {
-                                  $ne: ["$people", null]
-                                },
-                                {
-                                  $ne: ["$people", ""]
-                                },
-                                {
-                                  $eq: [
-                                    {
-                                      $strLenCP: "$people"
-                                    },
-                                    24
-                                  ]
-                                }
+                                { $ne: ["$people", null] },
+                                { $ne: ["$people", ""] },
+                                { $eq: [{ $strLenCP: "$people" }, 24] }
                               ]
                             },
-                            then: {
-                              $toObjectId: "$people"
-                            },
+                            then: { $toObjectId: "$people" },
                             else: null
                           }
                         }
@@ -68,15 +59,8 @@ const taskHelpers = {
                           $match: {
                             $expr: {
                               $and: [
-                                {
-                                  $ne: ["$$peopleId", null]
-                                },
-                                {
-                                  $eq: [
-                                    "$_id",
-                                    "$$peopleId"
-                                  ]
-                                }
+                                { $ne: ["$$peopleId", null] },
+                                { $eq: ["$_id", "$$peopleId"] }
                               ]
                             }
                           }
@@ -93,6 +77,27 @@ const taskHelpers = {
                     }
                   },
                   {
+                    $lookup: {
+                      from: "unreadchats",
+                      localField: "_id",
+                      foreignField: "roomId",
+                      as: "chatUnreadCount",
+                      pipeline: [
+                        {
+                          $match: {
+                            userId
+                          }
+                        },
+                        {
+                          $project: {
+                            _id: 0,
+                            unreadCount: 1
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
                     $unwind: {
                       path: "$userDetails",
                       preserveNullAndEmptyArrays: true
@@ -101,8 +106,13 @@ const taskHelpers = {
                   {
                     $addFields: {
                       peopleName: "$userDetails.email",
-                      peopleImg:
-                        "$userDetails.profilePhotoURL"
+                      peopleImg: "$userDetails.profilePhotoURL",
+                      chatUnreadCount: {
+                        $ifNull: [
+                          { $arrayElemAt: ["$chatUnreadCount.unreadCount", 0] },
+                          0
+                        ]
+                      }
                     }
                   },
                   {
@@ -110,7 +120,8 @@ const taskHelpers = {
                       userDetails: 0
                     }
                   }
-                ]
+                ],
+                as: "subTasks"
               }
             },
             {
@@ -122,28 +133,12 @@ const taskHelpers = {
             {
               $group: {
                 _id: "$_id",
-                projectId: {
-                  $first: "$projectId"
-                },
-                name: {
-                  $first: "$name"
-                },
-                description: {
-                  $first: "$description"
-                },
-                createdAt: {
-                  $first: "$createdAt"
-                },
+                projectId: { $first: "$projectId" },
+                name: { $first: "$name" },
+                description: { $first: "$description" },
+                createdAt: { $first: "$createdAt" },
                 subTasks: {
-                  $push: {
-                    $cond: [
-                      {
-                        $ne: ["$subTasks._id", null]
-                      },
-                      "$subTasks",
-                      null
-                    ]
-                  }
+                  $push: "$subTasks"
                 }
               }
             },
@@ -153,9 +148,7 @@ const taskHelpers = {
                   $filter: {
                     input: "$subTasks",
                     as: "subTask",
-                    cond: {
-                      $ne: ["$$subTask", null]
-                    }
+                    cond: { $ne: ["$$subTask._id", null] }
                   }
                 }
               }
@@ -165,7 +158,7 @@ const taskHelpers = {
                 createdAt: 1
               }
             }
-          ]
+          ]          
         )
     },
 }

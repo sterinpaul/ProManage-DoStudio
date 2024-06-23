@@ -8,6 +8,7 @@ const chatRoutes = ()=>{
 
     router.get('/getChatMessages/:roomId',controllers.getChatMessages)
     router.post('/sendMessage',controllers.sendMessage)
+    router.patch('/updateUnreadChat',controllers.updateUnreadChat)
     
     return router
 }

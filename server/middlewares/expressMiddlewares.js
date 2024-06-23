@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
 import mongoSanitize from 'express-mongo-sanitize';
+import configKeys from '../config/configKeys.js';
 // import sanitizeHandler from './sanitizeHandler.js';
 
 
@@ -11,7 +12,7 @@ const expressConfig = (app) => {
   // Enabling CORS
   const enableCors = {
     origin: [
-      "https://workplacecodedone.online"
+      configKeys.CLIENT_URL
     ],
     exposeHeaders: ['Cross-Origin-Opener-Policy', 'Cross-Origin-Resource-Policy'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],

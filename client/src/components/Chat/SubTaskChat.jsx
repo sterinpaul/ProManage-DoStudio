@@ -1,15 +1,18 @@
 import { DialogBody } from "@material-tailwind/react"
 import { useEffect, useRef, useState } from "react"
 import { MdImage,MdClose, MdAttachFile } from "react-icons/md"
-import { getSubTaskChatMessages, sendSingleMessage } from "../../api/apiConnections/chatConnections"
+import { getSubTaskChatMessages, readChatUpdation, sendSingleMessage } from "../../api/apiConnections/chatConnections"
 import InputEmoji from "react-input-emoji"
 import moment from "moment"
-import { useRecoilValue } from "recoil"
+import { useRecoilValue, useSetRecoilState } from "recoil"
 import { userDataAtom } from "../../recoil/atoms/userAtoms"
+import { toast } from "react-toastify"
+import { currentProjectAtom } from "../../recoil/atoms/projectAtoms"
 
 
-export const SubTaskChat = ({ socket,subTaskId, subTaskChatModalHandler }) => {
+export const SubTaskChat = ({ socket, taskId, subTaskId, subTaskChatModalHandler }) => {
     const userData = useRecoilValue(userDataAtom)
+    const setSelectedProject = useSetRecoilState(currentProjectAtom)
     const [messages, setMessages] = useState([])
     const [singleMessage, setSingleMessage] = useState("")
     const [users, setUsers] = useState([])
@@ -18,11 +21,33 @@ export const SubTaskChat = ({ socket,subTaskId, subTaskChatModalHandler }) => {
 
     const chatRef = useRef(null)
     const textAreaRef = useRef(null)
+
+    
+    const readChats = async()=>{
+        setSelectedProject(previous=>previous.map(task=>task._id === taskId ? {...task,subTasks:task.subTasks.map(subTask=>subTask._id === subTaskId ? {...subTask,chatUnreadCount:0} : subTask)} : task))
+        const readUpdation = await readChatUpdation(userData._id,subTaskId)
+        if(!readUpdation?.status){
+            toast.error("Error in update read status")
+        }
+    }
+    
+    const getChatMessages = async () => {
+        const response = await getSubTaskChatMessages(subTaskId)
+        if (response?.status) {
+            setMessages(response.data)
+        }
+        readChats()
+    }
+
+    useEffect(() => {
+        getChatMessages()
+    }, [])
     
     useEffect(()=>{
         if(socket.current){
             socket.current.on("chatMessage",(msg)=>{
                 setMessages(previous=>[...previous,msg.messageData])
+                readChats()
             })
         }
 
@@ -49,16 +74,6 @@ export const SubTaskChat = ({ socket,subTaskId, subTaskChatModalHandler }) => {
         }
     };
 
-    const getChatMessages = async () => {
-        const response = await getSubTaskChatMessages(subTaskId)
-        if (response?.status) {
-            setMessages(response.data)
-        }
-    }
-
-    useEffect(() => {
-        getChatMessages()
-    }, [])
 
 
     useEffect(() => {
@@ -111,9 +126,9 @@ export const SubTaskChat = ({ socket,subTaskId, subTaskChatModalHandler }) => {
             {/* Image Upload */}
             {/* <Dialog open={openUploadModal} handler={uploadModalHandler} size="xs" className="outline-none">
                 <input onChange={imageLoad} type="file" />
-                <ReactCrop crop={crop} onChange={c=>setCrop(c)} onImageLoaded={setImage} >
-                    <img src={image} />
-                </ReactCrop>
+                
+                <img src={image} />
+                
             </Dialog> */}
         </div>
     )
