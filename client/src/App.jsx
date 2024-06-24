@@ -1,6 +1,5 @@
 import "./App.css";
 import { ScrollToTop } from "react-router-scroll-to-top";
-import { ToastContainer } from "react-toastify";
 // import { motion } from "framer-motion";
 import { lazy, Suspense } from "react";
 import {
@@ -9,8 +8,9 @@ import {
   Outlet
 } from "react-router-dom";
 import { Sidebar, Topbar } from "./components";
-import { useRecoilValue } from "recoil";
 import { tokenAtom } from "./recoil/atoms/userAtoms";
+import { useRecoilValue } from 'recoil';
+
 
 const Home = lazy(() => import("./pages/home"));
 const SignInSignUp = lazy(() => import('./pages/SignInSignUp'))
@@ -22,9 +22,8 @@ const Layout = () => {
   return (
     <>
       <ScrollToTop />
-      <ToastContainer />
       <div>
-        <Topbar/>
+        <Topbar />
         <div className="flex">
           <Sidebar />
           <Outlet />
@@ -36,7 +35,6 @@ const Layout = () => {
 
 
 function App() {
-
   const token = useRecoilValue(tokenAtom)
 
   const router = createBrowserRouter([

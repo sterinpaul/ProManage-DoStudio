@@ -11,11 +11,15 @@ const socketConfig = (io)=>{
           });
         
           socket.on('chatMessage', (msg) => {
-            const user = activeUsers.find(user => user.id === socket.id);
-            if (user) {
-              socket.broadcast.to(user.room).emit('chatMessage', { user: user.username, messageData: msg });
-            }
+            // const user = activeUsers.find(user => user.id === socket.id);
+            // if (user) {
+              socket.broadcast.emit('chatMessage',msg);
+            // }
           });
+
+          socket.on("task-assigned",(data)=>{
+            socket.broadcast.emit("task-assigned",data)
+          })
 
         socket.on('disconnect',()=>{
             activeUsers = activeUsers.filter((user)=>user.id !== socket.id)

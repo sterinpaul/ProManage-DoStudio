@@ -1,38 +1,41 @@
 import { DialogBody } from "@material-tailwind/react"
 import { useEffect, useRef, useState } from "react"
-import { MdImage,MdClose, MdAttachFile } from "react-icons/md"
+import { MdImage, MdClose, MdAttachFile } from "react-icons/md"
 import { getSubTaskChatMessages, readChatUpdation, sendSingleMessage } from "../../api/apiConnections/chatConnections"
 import InputEmoji from "react-input-emoji"
 import moment from "moment"
-import { useRecoilValue, useSetRecoilState } from "recoil"
+import { useRecoilValue,useRecoilState,useSetRecoilState } from "recoil"
 import { userDataAtom } from "../../recoil/atoms/userAtoms"
 import { toast } from "react-toastify"
-import { currentProjectAtom } from "../../recoil/atoms/projectAtoms"
+import { currentProjectAtom, taskSubTaskAtom } from "../../recoil/atoms/projectAtoms"
+import { allChatMessageAtom, socketMessageAtom } from "../../recoil/atoms/chatAtoms"
 
 
-export const SubTaskChat = ({ socket, taskId, subTaskId, subTaskChatModalHandler }) => {
+export const SubTaskChat = ({ subTaskChatModalHandler }) => {
     const userData = useRecoilValue(userDataAtom)
     const setSelectedProject = useSetRecoilState(currentProjectAtom)
-    const [messages, setMessages] = useState([])
+    const [taskSubTaskId,setTaskSubTaskId] = useRecoilState(taskSubTaskAtom)
+    const [messages, setMessages] = useRecoilState(allChatMessageAtom)
     const [singleMessage, setSingleMessage] = useState("")
+    const setSocketMessage = useSetRecoilState(socketMessageAtom)
     const [users, setUsers] = useState([])
-    const [openUploadModal,setOpenUploadModal] = useState(false)
-    
+    const [openUploadModal, setOpenUploadModal] = useState(false)
+
 
     const chatRef = useRef(null)
     const textAreaRef = useRef(null)
 
-    
-    const readChats = async()=>{
-        setSelectedProject(previous=>previous.map(task=>task._id === taskId ? {...task,subTasks:task.subTasks.map(subTask=>subTask._id === subTaskId ? {...subTask,chatUnreadCount:0} : subTask)} : task))
-        const readUpdation = await readChatUpdation(userData._id,subTaskId)
-        if(!readUpdation?.status){
+
+    const readChats = async () => {
+        setSelectedProject(previous => previous.map(task => task._id === taskSubTaskId.taskId ? { ...task, subTasks: task.subTasks.map(subTask => subTask._id === taskSubTaskId.subTaskId ? { ...subTask, chatUnreadCount: 0 } : subTask) } : task))
+        const readUpdation = await readChatUpdation(userData._id, taskSubTaskId.subTaskId)
+        if (!readUpdation?.status) {
             toast.error("Error in update read status")
         }
     }
-    
+
     const getChatMessages = async () => {
-        const response = await getSubTaskChatMessages(subTaskId)
+        const response = await getSubTaskChatMessages(taskSubTaskId?.subTaskId)
         if (response?.status) {
             setMessages(response.data)
         }
@@ -41,58 +44,30 @@ export const SubTaskChat = ({ socket, taskId, subTaskId, subTaskChatModalHandler
 
     useEffect(() => {
         getChatMessages()
+        return()=>{
+            setMessages([])
+            setTaskSubTaskId({taskId:"",subTaskId:""})
+        }
     }, [])
-    
-    useEffect(()=>{
-        if(socket.current){
-            socket.current.on("chatMessage",(msg)=>{
-                setMessages(previous=>[...previous,msg.messageData])
-                readChats()
-            })
-        }
-
-        joinRoom()
-
-        if(socket.current){
-            socket.current.on('userList', (allUsers) => {
-                setUsers(allUsers);
-            });
-        }
-    },[])
-
-    const joinRoom = () => {
-        if(socket.current){
-            if (userData.email !== '' && subTaskId !== '') {
-                socket.current.emit('joinRoom', userData.email, subTaskId);
-            }
-        }
-    };
-
-    const sendMessage = (messageData) => {
-        if(socket.current){
-            socket.current.emit('chatMessage', messageData);
-        }
-    };
-
 
 
     useEffect(() => {
-        if(chatRef.current){
+        if (chatRef.current) {
             chatRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [messages])
 
-    const send = async() => {
-        const response = await sendSingleMessage({roomId:subTaskId,sender:userData._id,message:singleMessage})
-        if(response?.status){
-            sendMessage({...response.data,user:userData.email})
-            setMessages(previous=>[...previous,{...response.data,user:userData.email}])
+    const send = async () => {
+        const response = await sendSingleMessage({ roomId: taskSubTaskId.subTaskId, sender: userData._id, message: singleMessage })
+        if (response?.status) {
+            setSocketMessage({ ...response.data, user: userData.email,taskId:taskSubTaskId.taskId })
+            setMessages(previous => [...previous, { ...response.data, user: userData.email }])
             setSingleMessage("")
         }
     }
 
 
-    const uploadModalHandler = ()=>setOpenUploadModal(previous=>!previous)
+    const uploadModalHandler = () => setOpenUploadModal(previous => !previous)
 
     return (
         <div className="relative w-full">
@@ -100,15 +75,15 @@ export const SubTaskChat = ({ socket, taskId, subTaskId, subTaskChatModalHandler
                 <MdClose className="w-4 h-4 transition text-black group-hover:text-white" />
             </div>
             <DialogBody>
-                <div className="flex w-full h-96 overflow-y-scroll mt-6 flex-col items-center gap-2 rounded border border-gray-900/10 bg-gray-900/5 p-2">
-                    {messages?.length ? messages.map((singleMessage,index)=>{
+                <div className="flex w-full max-h-96 overflow-y-scroll mt-6 flex-col items-center gap-2 rounded border border-gray-900/10 bg-gray-900/5 p-2">
+                    {messages?.length ? messages.map((singleMessage, index) => {
                         const userId = singleMessage.user ? singleMessage.user.split("@")[0] : "admin"
-                        return(
-                            userData._id === singleMessage.sender ? <div ref={index === messages.length-1 ? chatRef : null} className="self-end p-1.5 rounded-s-3xl rounded-t-3xl bg-brown-100" key={singleMessage._id}>
+                        return (
+                            userData._id === singleMessage.sender ? <div ref={index === messages.length - 1 ? chatRef : null} className="self-end p-1.5 w-4/5 md:w-fit rounded-s-3xl rounded-t-3xl bg-brown-100" key={singleMessage._id}>
                                 <p className="px-2 font-semibold capitalize max-w-36 whitespace-nowrap overflow-hidden overflow-ellipsis">{userId}</p>
                                 <p className="text-black px-2 break-words max-w-xs md:max-w-96">{singleMessage.message}</p>
                                 <p className="text-xs text-right px-2">{moment(singleMessage.createdAt).startOf('seconds').fromNow()}</p>
-                            </div> : <div ref={index === messages.length-1 ? chatRef : null} className="self-start p-1.5 rounded-e-3xl rounded-t-3xl bg-light-blue-100" key={singleMessage._id}>
+                            </div> : <div ref={index === messages.length - 1 ? chatRef : null} className="self-start p-1.5 rounded-e-3xl rounded-t-3xl bg-light-blue-100" key={singleMessage._id}>
                                 <p className="px-2 font-semibold capitalize max-w-36 whitespace-nowrap overflow-hidden overflow-ellipsis">{userId}</p>
                                 <p className="text-black px-2 break-words max-w-xs md:max-w-96">{singleMessage.message}</p>
                                 <p className="text-xs text-left px-2">{moment(singleMessage.createdAt).startOf('seconds').fromNow()}</p>

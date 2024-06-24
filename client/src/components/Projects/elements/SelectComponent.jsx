@@ -36,7 +36,7 @@ export const SelectComponent = ({ currentValue, valueGroup, updateSubTaskOption,
 
 
     return (
-        <td onClick={toggleDropdown} className={`${classes} relative bg-${currentColor} capitalize cursor-pointer text-white text-nowrap text-center`} ref={dropdownRef}>
+        <td onClick={toggleDropdown} className={`${classes} relative bg-${currentColor} capitalize cursor-pointer text-white text-nowrap text-center w-36`} ref={dropdownRef}>
             {currentOption}
             {isOpen && <div className="absolute z-10 top-8 left-0 rounded bg-blue-gray-50 w-full text-center cursor-pointer text-sm ">
                 {valueGroup.map((options, index) => (

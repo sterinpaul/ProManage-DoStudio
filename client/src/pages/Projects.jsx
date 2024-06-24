@@ -1,15 +1,14 @@
 import { BiPlus,BiSearchAlt2,BiFilterAlt,BiSort } from "react-icons/bi"
 import { TaskTable } from "../components/Projects/TaskTable";
 import { Button, Dialog } from "@material-tailwind/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { addSingleSubTask, dueDateUpdate, getSingleProject } from "../api/apiConnections/projectConnections";
 import { currentProjectAtom } from "../recoil/atoms/projectAtoms";
 import { FormComponent } from "../components/Home/FormComponent";
 import { toast } from "react-toastify";
 import { SubTaskChat } from "../components/Chat/SubTaskChat";
-import io from 'socket.io-client';
 import { configKeys } from "../api/config";
 import { userDataAtom } from "../recoil/atoms/userAtoms";
 
@@ -20,9 +19,6 @@ const Projects = () => {
   const [selectedProject,setSelectedProject] = useRecoilState(currentProjectAtom)
   const [isFormOpen,setIsFormOpen] = useState(false)
   const [openChat,setOpenChat] = useState(false)
-  const [taskId,setTaskId] = useState("")
-  const [subTaskId,setSubTaskId] = useState("")
-  const socketRef = useRef(null)
   const isAdmin = userData?.role === configKeys.ADMIN_ROLE ? true : false ;
   const projectPermitted = userData?.permissions?.find(project=>project?.projectId === state.id)
   const dueDatePermitted = projectPermitted?.allowedPermissions?.includes("dueDate") ?? false
@@ -33,7 +29,7 @@ const Projects = () => {
 
 
   const getSelectedProject = async()=>{
-    const response = await getSingleProject(state.id)
+    const response = await getSingleProject(state?.id)
     if(response?.status){
       setSelectedProject(response.data)
     }
@@ -44,15 +40,6 @@ const Projects = () => {
     return()=>setSelectedProject([])
   },[state])
 
-  useEffect(()=>{
-    socketRef.current = io(configKeys.SOCKET_URL)
-    
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-    };
-  },[])
 
   const formHandler = ()=>{
     setIsFormOpen(!isFormOpen)
@@ -74,26 +61,24 @@ const Projects = () => {
     }
   }
 
-  const dueDateChanger = async(subTaskId,date)=>{
+  const dueDateChanger = async(taskId,subTaskId,date)=>{
     const dateChangeResponse = await dueDateUpdate(subTaskId,date)
+    setSelectedProject(previous=>previous.map(task=>task._id === taskId ? {...task,subTasks:task.subTasks.map(subTasks=>subTasks._id === subTaskId ? {...subTasks,dueDate:date} : subTasks)} : task))
     if(!dateChangeResponse?.status){
       toast.error(dateChangeResponse.message)
     }
   }
 
-  const subTaskChatModalHandler = ()=>setOpenChat(previous=>!previous)
-
-  const selectSubTaskChat = (taskid,subtaskid)=>{
-    setTaskId(taskid)
-    setSubTaskId(subtaskid)
-    subTaskChatModalHandler()
+  const subTaskChatModalHandler = ()=>{
+    setOpenChat(previous=>!previous)
   }
+
 
 
   return (
     <div className="flex-1 mt-14 p-5 w-96 h-[calc(100vh-3.5rem)]">
       <h1 className="text-2xl font-bold capitalize">{state?.name ?? "Project"}</h1>
-      <p className="capitalize">{state.description}</p>
+      <p className="capitalize">{state?.description}</p>
       <div className="mt-2 flex gap-2">
         <Button onClick={formHandler} className="capitalize flex items-center gap-1 transition py-1 px-2 rounded">
           Add Task
@@ -125,18 +110,17 @@ const Projects = () => {
               addSubTask={addSubTask}
               dueDateChanger={dueDateChanger}
               classes={classes}
-              selectSubTaskChat={selectSubTaskChat}
+              subTaskChatModalHandler={subTaskChatModalHandler}
               isAdmin={isAdmin}
               dueDatePermitted={dueDatePermitted}
               priorityPermitted={priorityPermitted}
               peoplePermitted={peoplePermitted}
-              socket={socketRef}
             />
           ))}
         </div>
       </div>
       <Dialog dismiss={{escapeKey:false,outsidePress:false}} open={openChat} handler={subTaskChatModalHandler} size="md" className="outline-none">
-        <SubTaskChat socket={socketRef} taskId={taskId} subTaskId={subTaskId} subTaskChatModalHandler={subTaskChatModalHandler} />
+        <SubTaskChat subTaskChatModalHandler={subTaskChatModalHandler} />
       </Dialog>
     </div>
   );

@@ -9,3 +9,8 @@ export const currentProjectAtom = atom({
     key:"currentProjectAtom",
     default: []
 })
+
+export const taskSubTaskAtom = atom({
+    key:"taskSubTaskAtom",
+    default: {taskId:"",subTaskId:""}
+})

@@ -9,13 +9,17 @@ import { MdEdit } from "react-icons/md";
 import { InputComponent } from "../Home/InputComponent";
 import { toast } from "react-toastify";
 import { subTaskToPerson, updatePriority, updateStatus, updateSubTaskName, updateSubTaskNote } from "../../api/apiConnections/projectConnections";
-import { useSetRecoilState } from "recoil";
-import { currentProjectAtom } from "../../recoil/atoms/projectAtoms";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import { currentProjectAtom, taskSubTaskAtom } from "../../recoil/atoms/projectAtoms";
 import { TextAreaComponent } from "../Home/TextAreaComponent";
 import { getUsersForAssignSubTask } from "../../api/apiConnections/userConnections";
+import { userDataAtom } from "../../recoil/atoms/userAtoms";
+import { assignNotifyAtom } from "../../recoil/atoms/chatAtoms";
+import { TbAlertSquareRoundedFilled } from "react-icons/tb";
 
 
-export const SubTask = ({ index,
+export const SubTask = ({ 
+    index,
     subTask,
     taskId,
     classes,
@@ -24,15 +28,16 @@ export const SubTask = ({ index,
     dueDateChanger,
     selectedSubTasks,
     singleSubTaskSelectionhandler,
-    selectSubTaskChat,
+    subTaskChatModalHandler,
     isAdmin,
     dueDatePermitted,
     priorityPermitted,
-    peoplePermitted,
-    socket
+    peoplePermitted
 }) => {
-
+    const user = useRecoilValue(userDataAtom)
     const setSelectedProject = useSetRecoilState(currentProjectAtom)
+    const setPeopleAssignNotification = useSetRecoilState(assignNotifyAtom)
+    const setTaskSubTaskId = useSetRecoilState(taskSubTaskAtom)
     const [selectedDate, setSelectedDate] = useState(subTask.dueDate ? dayjs(subTask.dueDate) : null)
     const checkboxSelected = selectedSubTasks?.includes(subTask?._id)
     const [editToggle,setEditToggle] = useState(false)
@@ -45,6 +50,11 @@ export const SubTask = ({ index,
     const [openPopoverHover, setOpenPopoverHover] = useState(false);
     const[openPeopleModal,setOpenPeopleModal] = useState(false)
 
+
+    const openChatBox = ()=>{
+        setTaskSubTaskId({taskId,subTaskId:subTask._id})
+        subTaskChatModalHandler()
+    }
 
     const peopleModalhandler = async()=>{
         if(peoplePermitted || isAdmin){
@@ -60,8 +70,13 @@ export const SubTask = ({ index,
 
     const assignPerson = async(userData)=>{
         const response = await subTaskToPerson(subTask._id,userData._id)
-        if(response.status){
+        if(response?.status){
             setSelectedProject(previous=>previous.map(task=>task._id === taskId ? {...task,subTasks:task.subTasks.map(subTasks=>subTask._id === subTasks._id ? {...subTasks,peopleName:userData.email,peopleImg:userData.profilePhotoURL} : subTasks)} : task))
+
+            const assigner = user.email.split("@")[0]
+            const assignee = userData.email.split("@")[0]    
+            
+            setPeopleAssignNotification({assigner,assignee})
             setOpenPeopleModal(previous=>!previous)
         }
     }
@@ -77,7 +92,7 @@ export const SubTask = ({ index,
 
     const dateChange = (date)=> {
         setSelectedDate(date)
-        dueDateChanger(subTask._id,date)
+        dueDateChanger(taskId,subTask._id,date)
     }
 
     const selectSubTask = (event)=>{
@@ -130,6 +145,7 @@ export const SubTask = ({ index,
       }
 
       const updateSubTaskOption = async(headerType,option)=>{
+        setSelectedProject(previous=>previous.map(task=>task._id === taskId ? {...task,subTasks:task.subTasks.map(subTasks=>subTask._id === subTasks._id ? {...subTasks,headerType:option} : subTasks)} : task))
         if(headerType === "status"){
             const response = await updateStatus(subTask._id,option)
             if(!response?.status){
@@ -159,7 +175,7 @@ export const SubTask = ({ index,
                 </>}
             </td>
 
-            <td onClick={()=>selectSubTaskChat(taskId,subTask._id)} className={`${classes} cursor-pointer w-16`}>
+            <td onClick={openChatBox} className={`${classes} cursor-pointer w-16`}>
                 <div className="relative flex justify-center items-center">
                     <HiOutlineChatBubbleOvalLeft className="w-6 h-6" />
                     {subTask?.chatUnreadCount ? <div className="absolute top-2 right-1 rounded-full w-4 h-4 flex items-center justify-center text-white bg-green-500">
@@ -170,19 +186,25 @@ export const SubTask = ({ index,
             
             <SelectComponent currentValue={subTask.status} valueGroup={statusGroup} updateSubTaskOption={updateSubTaskOption} headerType={"status"} classes={classes} isAdmin={true} permission={true} />
             
-            <td className={`${classes} text-center w-32`}>
-                <Space direction="vertical">
-                    <DatePicker
-                        size="small"
-                        disabled={!dueDatePermitted && !isAdmin}
-                        onChange={dateChange}
-                        allowClear={false}
-                        className="px-0 border-none bg-transparent outline-none"
-                        format="DD-MMM-YYYY"
-                        defaultValue={selectedDate}
-                        disabledDate={disabledDate}
-                    />
-                </Space>
+            <td className={`${classes} text-center w-36`}>
+                <div className="flex items-center justify-around">
+                    {selectedDate && <TbAlertSquareRoundedFilled className={`${selectedDate < Date().now ? "text-red-500" : "text-green-500"} w-5 h-5`} /> }
+                    <Space direction="vertical">
+                        <DatePicker
+                            size="small"
+                            placeholder=""
+                            variant={false}
+                            suffixIcon={null}
+                            disabled={!dueDatePermitted && !isAdmin}
+                            onChange={dateChange}
+                            allowClear={false}
+                            className=" bg-transparent"
+                            disabledDate={disabledDate}
+                            format="DD-MMM-YYYY"
+                            defaultValue={selectedDate}
+                        />
+                    </Space>
+                </div>
             </td>
 
             <SelectComponent currentValue={subTask.priority} valueGroup={priorityGroup} updateSubTaskOption={updateSubTaskOption} headerType={"priority"} classes={classes} isAdmin={isAdmin} permission={priorityPermitted} />
