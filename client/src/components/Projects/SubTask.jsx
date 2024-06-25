@@ -145,7 +145,7 @@ export const SubTask = ({
       }
 
       const updateSubTaskOption = async(headerType,option)=>{
-        setSelectedProject(previous=>previous.map(task=>task._id === taskId ? {...task,subTasks:task.subTasks.map(subTasks=>subTask._id === subTasks._id ? {...subTasks,headerType:option} : subTasks)} : task))
+        setSelectedProject(previous=>previous.map(task=>task._id === taskId ? {...task,subTasks:task.subTasks.map(subTasks=>subTask._id === subTasks._id ? {...subTasks,[`${headerType}`]:option} : subTasks)} : task))
         if(headerType === "status"){
             const response = await updateStatus(subTask._id,option)
             if(!response?.status){
