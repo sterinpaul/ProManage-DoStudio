@@ -1,6 +1,7 @@
-import { DialogBody } from "@material-tailwind/react"
+import { Button, Dialog,DialogBody, Spinner } from "@material-tailwind/react"
 import { useEffect, useRef, useState } from "react"
 import { MdImage, MdClose, MdAttachFile } from "react-icons/md"
+import { CiCircleRemove } from "react-icons/ci"
 import { getSubTaskChatMessages, readChatUpdation, sendSingleMessage } from "../../api/apiConnections/chatConnections"
 import InputEmoji from "react-input-emoji"
 import moment from "moment"
@@ -18,8 +19,9 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
     const [messages, setMessages] = useRecoilState(allChatMessageAtom)
     const [singleMessage, setSingleMessage] = useState("")
     const setSocketMessage = useSetRecoilState(socketMessageAtom)
-    const [users, setUsers] = useState([])
     const [openUploadModal, setOpenUploadModal] = useState(false)
+    const [imgChat, setImgChat] = useState(null)
+    const [loading, setLoading] = useState(false)
 
 
     const chatRef = useRef(null)
@@ -58,7 +60,7 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
     }, [messages])
 
     const send = async () => {
-        const response = await sendSingleMessage({ roomId: taskSubTaskId.subTaskId, sender: userData._id, message: singleMessage })
+        const response = await sendSingleMessage({ roomId: taskSubTaskId.subTaskId, sender: userData._id, type:"text", message: singleMessage })
         if (response?.status) {
             setSocketMessage({ ...response.data, user: userData.email,taskId:taskSubTaskId.taskId })
             setMessages(previous => [...previous, { ...response.data, user: userData.email }])
@@ -66,8 +68,22 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
         }
     }
 
+    const sendImage = async()=>{
+        setLoading(true)
+        const response = await sendSingleImage(taskSubTaskId.subTaskId,userData._id,"image",imgChat)
+        if(!response?.status){
+            toast.error(response.message)
+        }
+        setLoading(false)
+    }
 
-    const uploadModalHandler = () => setOpenUploadModal(previous => !previous)
+
+    const uploadModalHandler = () => {
+        if(openUploadModal && imgChat){
+            setImgChat(null)
+        }
+        setOpenUploadModal(previous => !previous)
+    }
 
     return (
         <div className="relative w-full flex flex-col justify-between">
@@ -93,18 +109,42 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
                 </div>
             </DialogBody>
             <div className="flex flex-nowrap justify-center items-center px-4 mb-4">
-                <MdImage onClick={setOpenUploadModal} className="w-5 h-5" />
+                <div onClick={setOpenUploadModal} className="cursor-pointer p-1 border rounded-full hover:shadow-lg bg-gray-100 group">
+                    <MdImage className="w-5 h-5 group-hover:text-blue-500" />
+                </div>
                 <InputEmoji ref={textAreaRef} onChange={setSingleMessage} value={singleMessage} cleanOnEnter onEnter={send} maxLength={2000} shouldReturn placeholder="Type something" />
                 <MdAttachFile className="w-5 h-5 rotate-45" />
             </div>
 
             {/* Image Upload */}
-            {/* <Dialog open={openUploadModal} handler={uploadModalHandler} size="xs" className="outline-none">
-                <input onChange={imageLoad} type="file" />
-                
-                <img src={image} />
-                
-            </Dialog> */}
+            <Dialog dismiss={{ escapeKey: false, outsidePress: false }} open={openUploadModal} handler={uploadModalHandler} size="xs" className="outline-none" >
+
+                <div className="m-2 flex flex-col justify-center items-center">
+                  
+                    <div className="flex flex-col justify-center items-center">
+                      {imgChat ? (
+                        <div className="relative">
+                            <img className="max-h-96 max-w-96 w-fit" src={imgChat && URL.createObjectURL(imgChat)} />
+                            <div onClick={()=>setImgChat(null)} className="absolute cursor-pointer group top-0 flex justify-center items-center w-full h-full bg-opacity-0 hover:bg-opacity-50 bg-blue-gray-500">
+                                <CiCircleRemove className="w-12 h-12 hidden group-hover:block text-white"/>
+                            </div>
+                            {loading && <div className="absolute top-0 flex justify-center items-center w-full h-full bg-white"><Spinner color="blue" className="w-12 h-12"/></div>}
+                        </div>
+                      ) : <><label className="w-20 bg-blue-500 hover:bg-blue-600 text-white text-center py-1 rounded-lg cursor-pointer">Choose
+                        <input className="hidden" onChange={(e) => setImgChat(e.target?.files?.[0])} name='image' type="file" accept=".jpg,.jpeg,.png,.gif" />
+                      </label>
+                      <p className="file-label">Allowed formats: jpg, jpeg, png, gif</p></>}
+                      
+
+                      <div className="flex gap-4 mt-2">
+                        <Button onClick={sendImage} disabled={imgChat ? false : true} color="black" className="w-24 py-2">Send</Button>
+                        <Button onClick={uploadModalHandler} color="black" className="w-24 py-2">Cancel</Button>
+                      </div>
+                    </div>
+
+                  
+                </div>
+              </Dialog>
         </div>
     )
 }

@@ -243,8 +243,8 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                                                 </Typography>
                                             </DialogBody>
                                             <DialogFooter className="mx-auto text-center flex justify-center items-center gap-4">
-                                                <Button onClick={removeSubTask} color="black" className="w-24 py-2">Yes</Button>
-                                                <Button onClick={removeSubTaskHandler} color="red" className="w-24 py-2">Cancel</Button>
+                                                <Button onClick={removeSubTask} color="red" className="w-24 py-2">Yes</Button>
+                                                <Button onClick={removeSubTaskHandler} color="black" className="w-24 py-2">Cancel</Button>
                                             </DialogFooter>
                                         </Dialog>
                                     </> : null}

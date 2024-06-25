@@ -138,9 +138,12 @@ const Projects = () => {
           ))}
         </div>
       </div>
+      
       <Dialog dismiss={{ escapeKey: false, outsidePress: false }} open={openChat} handler={subTaskChatModalHandler} size="md" className="outline-none">
         <SubTaskChat subTaskChatModalHandler={subTaskChatModalHandler} />
       </Dialog>
+
+
       <Dialog open={openRemoveTaskModal} handler={removeTaskModalHandler} size="sm" className="outline-none text-center">
         <DialogBody>
           <Typography variant="h4" className="pt-4 px-8">
@@ -148,8 +151,8 @@ const Projects = () => {
           </Typography>
         </DialogBody>
         <DialogFooter className="mx-auto text-center flex justify-center items-center gap-4">
-          <Button onClick={removeTask} color="black" className="w-24 py-2">Yes</Button>
-          <Button onClick={removeTaskModalHandler} color="red" className="w-24 py-2">Cancel</Button>
+          <Button onClick={removeTask} color="red" className="w-24 py-2">Yes</Button>
+          <Button onClick={removeTaskModalHandler} color="black" className="w-24 py-2">Cancel</Button>
         </DialogFooter>
       </Dialog>
     </div>

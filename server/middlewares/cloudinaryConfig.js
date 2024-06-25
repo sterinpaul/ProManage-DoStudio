@@ -10,16 +10,16 @@ cloudinary.config({
     api_secret: configKeys.CLOUDINARY_SECRET_KEY
 })
 
-const ticketOptions = {
-    cloudinary:cloudinary,
+const chatImageOptions = {
+    cloudinary,
     params:{
-        folder: 'tickets',
-        allowed_formats : ["pdf"],
+        folder: 'chatImages',
+        allowed_formats : ["jpg","jpeg","png","gif"],
         public_id: (req,file) => {
-            return `ticket-${Date.now()}-${file.originalname.split(".")[0]}`
+            return `chat-${Date.now()}-${file.originalname.split(".")[0]}`
         }
     }
 }
 
-const ticketStorage = new CloudinaryStorage(ticketOptions)
-export const uploadTicket = multer({storage:ticketStorage }).single('ticket')
+const chatImageStorage = new CloudinaryStorage(chatImageOptions)
+export const uploadChatImage = multer({storage:chatImageStorage }).single('image')

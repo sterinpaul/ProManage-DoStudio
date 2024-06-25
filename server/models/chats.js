@@ -20,6 +20,9 @@ const ChatSchema = new Schema (
             type: Boolean,
             default: true
         },
+        type:{
+            type: String
+        },
         url:{
             type: String
         }

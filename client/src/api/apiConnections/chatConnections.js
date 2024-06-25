@@ -26,6 +26,28 @@ export const sendSingleMessage = async(messageData) => {
     }
 }
 
+export const sendSingleImage = async(roomId,sender,type,image) => {
+    try{
+        const formData = new FormData()
+        
+        formData.append('roomId',roomId)
+        formData.append('sender',sender)
+        formData.append('type',type)
+        formData.append('image',image)
+
+        const response = await baseURL.post(`/chat/sendImage`,formData,{
+            headers:{'Content-Type' : 'multipart/form-data'}
+        });
+
+        if (response) {
+            return response.data;
+        }
+    }catch(error){
+        console.error(`Error sending message: ${error.message}`);
+        toast.error("Internal error")
+    }
+}
+
 export const readChatUpdation = async(userId,roomId) => {
     try{
         const response = await baseURL.patch(`/chat/updateUnreadChat`,{userId,roomId});
