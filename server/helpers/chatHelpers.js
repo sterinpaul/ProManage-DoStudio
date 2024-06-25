@@ -59,6 +59,9 @@ const chatHelpers = {
         const newMessage = new ChatModel(messageData)
         return await newMessage.save()
     },
+    removeChats:async(roomId)=>{
+      return await ChatModel.updateMany({roomId},{$set:{isActive:false}})
+    }
 }
 
 export default chatHelpers;

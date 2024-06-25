@@ -63,11 +63,18 @@ const subTaskHelpers = {
         try {
             return await SubTaskModel.updateOne({_id},{$set:{isActive:false}});
         } catch (error) {
-            console.error('Error updating due date:', error);
+            console.error('Error removing sub task:', error);
             throw error;
         }
     },
-    
+    removeAllSubTasks:async(taskId)=>{
+        try {
+            return await SubTaskModel.updateMany({taskId},{$set:{isActive:false}});
+        } catch (error) {
+            console.error('Error removing sub tasks:', error);
+            throw error;
+        }
+    }
 }
 
 export default subTaskHelpers;

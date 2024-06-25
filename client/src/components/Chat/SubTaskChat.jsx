@@ -70,20 +70,20 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
     const uploadModalHandler = () => setOpenUploadModal(previous => !previous)
 
     return (
-        <div className="relative w-full">
+        <div className="relative w-full flex flex-col justify-between">
             <div onClick={subTaskChatModalHandler} className="absolute z-10 group cursor-pointer right-2 top-2 rounded-full p-1 transition hover:bg-black bg-blue-gray-100 ">
                 <MdClose className="w-4 h-4 transition text-black group-hover:text-white" />
             </div>
             <DialogBody>
-                <div className="flex w-full max-h-96 overflow-y-scroll mt-6 flex-col items-center gap-2 rounded border border-gray-900/10 bg-gray-900/5 p-2">
+                <div className="flex w-full h-96 overflow-y-scroll mt-6 flex-col items-center gap-2 rounded border border-gray-900/10 bg-gray-900/5 p-2">
                     {messages?.length ? messages.map((singleMessage, index) => {
                         const userId = singleMessage.user ? singleMessage.user.split("@")[0] : "admin"
                         return (
-                            userData._id === singleMessage.sender ? <div ref={index === messages.length - 1 ? chatRef : null} className="self-end p-1.5 w-4/5 md:w-fit rounded-s-3xl rounded-t-3xl bg-brown-100" key={singleMessage._id}>
+                            userData._id === singleMessage.sender ? <div ref={index === messages.length - 1 ? chatRef : null} className="self-end p-1.5 w-fit rounded-s-3xl rounded-t-3xl bg-brown-100" key={singleMessage._id}>
                                 <p className="px-2 font-semibold capitalize max-w-36 whitespace-nowrap overflow-hidden overflow-ellipsis">{userId}</p>
                                 <p className="text-black px-2 break-words max-w-xs md:max-w-96">{singleMessage.message}</p>
                                 <p className="text-xs text-right px-2">{moment(singleMessage.createdAt).startOf('seconds').fromNow()}</p>
-                            </div> : <div ref={index === messages.length - 1 ? chatRef : null} className="self-start p-1.5 rounded-e-3xl rounded-t-3xl bg-light-blue-100" key={singleMessage._id}>
+                            </div> : <div ref={index === messages.length - 1 ? chatRef : null} className="self-start p-1.5 w-fit rounded-e-3xl rounded-t-3xl bg-light-blue-100" key={singleMessage._id}>
                                 <p className="px-2 font-semibold capitalize max-w-36 whitespace-nowrap overflow-hidden overflow-ellipsis">{userId}</p>
                                 <p className="text-black px-2 break-words max-w-xs md:max-w-96">{singleMessage.message}</p>
                                 <p className="text-xs text-left px-2">{moment(singleMessage.createdAt).startOf('seconds').fromNow()}</p>

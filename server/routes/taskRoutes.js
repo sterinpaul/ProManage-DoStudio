@@ -6,7 +6,8 @@ const taskRoutes = ()=>{
     const controllers = taskControllers()
     
     router.post('/addTask',controllers.addTask)
-    router.get('/getSingleProject/:projectid',controllers.getSingleProject)
+    router.get('/getSingleProject/:projectId',controllers.getSingleProject)
+    router.delete('/removeTask/:taskId',controllers.removeTask)
     
     return router
 }

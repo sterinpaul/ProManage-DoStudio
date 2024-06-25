@@ -16,9 +16,9 @@ export const getAllProjects = async() => {
     }
 }
 
-export const getSingleProject = async(projectid) => {
+export const getSingleProject = async(projectId) => {
     try{
-        const response = await baseURL.get(`/tasks/getSingleProject/${projectid}`);
+        const response = await baseURL.get(`/tasks/getSingleProject/${projectId}`);
         if (response) {
             return response.data;
         } else {
@@ -166,6 +166,20 @@ export const subTaskToPerson = async(subTaskId,userId) => {
         }
     }catch(error){
         console.error(`Error assigning sub task: ${error.message}`);
+        toast.error(error.message)
+    }
+}
+
+export const removeATask = async(taskId) => {
+    try{
+        const response = await baseURL.delete(`/tasks/removeTask/${taskId}`);
+        if (response) {
+            return response.data;
+        } else {
+            throw new Error('Failed to remove the task');
+        }
+    }catch(error){
+        console.error(`Error removing task: ${error.message}`);
         toast.error(error.message)
     }
 }

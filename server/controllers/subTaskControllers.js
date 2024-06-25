@@ -1,5 +1,6 @@
 import Joi from "joi"
 import subTaskHelpers from "../helpers/subTaskHelpers.js"
+import chatHelpers from "../helpers/chatHelpers.js"
 
 
 const subTaskControllers = () => {
@@ -170,10 +171,11 @@ const subTaskControllers = () => {
             const queryArray = []
             value.forEach(id=>{
                 queryArray.push(subTaskHelpers.removeSubTask(id))
+                queryArray.push(chatHelpers.removeChats(id))
             })
 
             const subTaskRemoveResponse = await Promise.all(queryArray)
-            const removeStatus = subTaskRemoveResponse.every(response=>response.modifiedCount === 1)
+            const removeStatus = subTaskRemoveResponse.every(response=>response.acknowledged)
             if(removeStatus){
                 return res.status(200).json({status:true,message:`${value.length>1 ? "Sub tasks" : "Sub task"} removed`})
             }
