@@ -10,6 +10,7 @@ import { currentProjectAtom } from "../../recoil/atoms/projectAtoms"
 import { useSetRecoilState } from "recoil"
 import moment from "moment"
 import { OptionsConsolidationComp } from "./elements/OptionsConsolidationComp"
+import { Avatar } from "antd"
 
 
 const tableCol = ["Task", "Status", "Due Date", "Priority", "Notes", "People"]
@@ -87,9 +88,39 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
     }
 
     const openTaskTableHandler = () => {
-        if (setOpenTaskTable) {
-            setTaskStatus(singleTable?.subTasks?.map(subTask => subTask.status).sort())
-            setTaskPriority(singleTable?.subTasks?.map(subTask => subTask.priority).sort())
+        if (openTaskTable) {
+            // setTaskStatus(singleTable?.subTasks?.map(subTask => subTask.status).sort())
+            // setTaskPriority(singleTable?.subTasks?.map(subTask => subTask.priority).sort())
+            const taskArr = singleTable?.subTasks?.map(subTask => subTask.status)
+            const taskMap = new Map()
+            taskArr.forEach(each=>{
+                if(taskMap.has(each)){
+                    taskMap.set(each,taskMap.get(each)+1)
+                }else{
+                    taskMap.set(each,1)
+                }
+            })
+            const updatedTaskArr = []
+            taskMap.forEach((value,key)=>{
+                updatedTaskArr.push({label:key,count:value})
+            })
+            setTaskStatus(updatedTaskArr)
+
+            const priorityArr = singleTable?.subTasks?.map(subTask => subTask.priority)
+            const priorityMap = new Map()
+            priorityArr.forEach(each=>{
+                if(priorityMap.has(each)){
+                    priorityMap.set(each,priorityMap.get(each)+1)
+                }else{
+                    priorityMap.set(each,1)
+                }
+            })
+            const updatePrioritydArr = []
+            priorityMap.forEach((value,key)=>{
+                updatePrioritydArr.push({label:key,count:value})
+            })
+            setTaskPriority(updatePrioritydArr)
+
             const dueDateArray = singleTable?.subTasks?.map(subTask => subTask.dueDate).filter(each => each !== "").sort((date1, date2) => {
                 let d1 = new Date(date1);
                 let d2 = new Date(date2);
@@ -120,7 +151,7 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                     <div>
                         <BiChevronDownCircle onClick={openTaskTableHandler} className="cursor-pointer w-5 h-5 mt-1" />
                     </div>
-                    <div className={`${!openTaskTable && "min-w-[16.2rem] w-[16.2rem]"}`}>
+                    <div className={`${!openTaskTable && "min-w-[17.5rem] w-[17.5rem]"}`}>
                         <Typography className="capitalize relative" variant="h5" color="blue-gray">
                             {singleTable.name}
                             {openTaskTable && <p className="absolute -right-12 top-0 text-xs font-light text-gray-500">{`${singleTable?.subTasks?.length === 1 ? "1 Task" : singleTable.subTasks.length + " Tasks"}`}</p>}
@@ -138,7 +169,7 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                                     <th className="w-36 border-l pt-2">Status</th>
                                     <th className="w-36 border-l">Due Date</th>
                                     <th className="w-36 border-l">Priority</th>
-                                    <th className="w-48 border-l"></th>
+                                    <th className="min-w-48 border-l"></th>
                                     <th className="border-l">People</th>
                                 </tr>
                             </thead>
@@ -148,7 +179,7 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                                         <div className="h-full flex p-1 rounded">
                                             {taskStatus?.map((eachOption, index) =>
                                                 (
-                                                    <OptionsConsolidationComp key={index} eachOption={eachOption} optionGroup={statusGroup} />
+                                                    <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={statusGroup} />
                                                 )
                                             )}
                                         </div>
@@ -162,13 +193,27 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                                     <div className="h-full flex p-1 rounded">
                                             {taskPriority?.map((eachOption, index) =>
                                                 (
-                                                    <OptionsConsolidationComp key={index} eachOption={eachOption} optionGroup={priorityGroup} />
+                                                    <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={priorityGroup} />
                                                 )
                                             )}
                                         </div>
                                     </td>
-                                    <td className="border-l"></td>
-                                    <td className="border-l"></td>
+                                    <td className="border-l">
+                                        <div className="w-44 xl:w-52 2xl:w-96"></div>
+                                    </td>
+                                    <td className="border-l">
+                                        <div className="w-fit m-auto -space-x-4 relative">
+                                        {singleTable?.subTasks?.length > 2 ? (
+                                            <>
+                                                <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[0]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                                <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[1]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                                <div className="absolute -right-3 top-1 text-xs text-black"> +{singleTable?.subTasks.length - 2}</div>
+                                            </>
+                                        ) : singleTable?.subTasks?.map((subTask,index)=>(
+                                            <Avatar key={index} className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                        ))}
+                                        </div>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

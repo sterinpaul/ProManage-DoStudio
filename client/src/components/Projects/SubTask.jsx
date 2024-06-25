@@ -167,12 +167,12 @@ export const SubTask = ({
                 {isAdmin ? <input checked={checkboxSelected} onChange={selectSubTask} type="checkbox" className="w-3 h-3 rounded cursor-pointer" /> : <p>{index+1}</p>}
             </td>
 
-            <td className={`${nameError && "outline-2 outline-dashed outline-red-600"} ${classes} relative w-44 group cursor-pointer`}>
+            <td className={`${nameError && "outline-2 outline-dashed outline-red-600"} ${classes} relative group cursor-pointer w-44`}>
                 {editToggle ? <InputComponent subTaskName={subTaskName} setSubTaskName={setSubTaskName} updateName={updateName} /> :
-                <>
-                    <p className="capitalize">{subTaskName}</p>
+                <div className="w-44">
+                    <p className="whitespace-nowrap overflow-hidden overflow-ellipsis capitalize">{subTaskName}</p>
                     <MdEdit onClick={openEditNameInput} className="absolute hidden right-0 top-2 group-hover:block w-4 h-4" />
-                </>}
+                </div>}
             </td>
 
             <td onClick={openChatBox} className={`${classes} cursor-pointer w-16`}>
@@ -209,9 +209,9 @@ export const SubTask = ({
 
             <SelectComponent currentValue={subTask.priority} valueGroup={priorityGroup} updateSubTaskOption={updateSubTaskOption} headerType={"priority"} classes={classes} isAdmin={isAdmin} permission={priorityPermitted} />
             
-            <td className={`${notesError && "outline-2 outline-dashed outline-red-600"} ${classes} relative w-44 group cursor-pointer`}>
+            <td className={`${notesError && "outline-2 outline-dashed outline-red-600"} ${classes} relative group cursor-pointer`}>
                 {editNotesToggle ? <TextAreaComponent subTaskNotes={subTaskNotes} setSubTaskNotes={setSubTaskNotes} updateNotes={updateNotes} /> :
-                <div className="w-44">
+                <div className="w-44 xl:w-52 2xl:w-96">
                     <Popover open={openPopoverHover} handler={setOpenPopoverHover}>
                         <PopoverHandler {...triggers}>
                             <p className="whitespace-nowrap overflow-hidden overflow-ellipsis">{subTaskNotes}</p>
@@ -225,15 +225,15 @@ export const SubTask = ({
                 }
             </td>
 
-            <td className={`${classes} text-center`}>
+            <td className={`${classes} text-center p-0.5`}>
                 <Popover open={openPeopleModal} handler={peopleModalhandler} dismiss={{ancestorScroll:false}} placement="top-end" >
                     <PopoverHandler>
-                        {subTask?.peopleName ? <div className="relative group">
-                                <Avatar className="w-8 h-8 cursor-pointer" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                        {subTask?.peopleName ? <div className="relative group w-full h-full">
+                                <Avatar className="w-6 h-6 cursor-pointer border border-blue-500" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
                                 <p className="absolute hidden group-hover:block -top-7 right-0 px-2 shadow-xl border bg-white rounded-full ">{subTask?.peopleName?.split("@")[0]}</p>
                             </div>
                         : (
-                            <Avatar className="w-8 h-8 cursor-pointer" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                            <Avatar className="w-6 h-6" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
                         )}
                     </PopoverHandler>
                     <PopoverContent>
