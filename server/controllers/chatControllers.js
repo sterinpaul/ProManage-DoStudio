@@ -23,7 +23,6 @@ const chatControllers = () => {
             const messageSchema = Joi.object({
                 roomId: Joi.string().required(),
                 sender: Joi.string().required(),
-                type: Joi.string().valid("text").required(),
                 message: Joi.string().min(1).max(2000).required()
             })
             const { error, value } = messageSchema.validate(req.body)
@@ -46,14 +45,15 @@ const chatControllers = () => {
         }
     }
 
-    const sendImage = async (req,res)=>{
+    const sendFile = async (req,res)=>{
         try {
             const url = req.file.path
             const messageSchema = Joi.object({
                 roomId: Joi.string().required(),
                 sender: Joi.string().required(),
-                type: Joi.string().valid("image").required()
+                type: Joi.string().required()
             })
+
             const { error, value } = messageSchema.validate(req.body)
     
             if (error) {
@@ -61,7 +61,7 @@ const chatControllers = () => {
             }
             
             const [sendResponse,unreadResponse] = await Promise.allSettled([
-                chatHelpers.sendMessage({...value,url}),
+                chatHelpers.sendMessage({...value,message:req.file.originalname,url}),
                 unreadChatHelpers.updateChatUnreadCount(value.roomId,value.sender)
             ])
             
@@ -95,25 +95,12 @@ const chatControllers = () => {
         }
     }
 
-    const uploadFile = async (req, res) => {
-        try {
-            const ticketUrl = req.file.path
-            const { orderId } = req.params
-
-            return res.status(200).json({ status: false, message: "Ticket could not be uploaded" })
-        } catch (error) {
-            console.error("Error uploading invoice", error);
-            return res.status(500).json({ status: false, message: error.message });
-        }
-    }
-
 
     return {
         getChatMessages,
         sendMessage,
-        sendImage,
-        updateUnreadChat,
-        uploadFile
+        sendFile,
+        updateUnreadChat
     }
 }
 

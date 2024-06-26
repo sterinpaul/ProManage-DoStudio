@@ -1,5 +1,6 @@
 import { toast } from 'react-toastify';
 import baseURL from '../baseURL'
+import axios from 'axios';
 
 
 export const getSubTaskChatMessages = async(roomId) => {
@@ -26,16 +27,16 @@ export const sendSingleMessage = async(messageData) => {
     }
 }
 
-export const sendSingleImage = async(roomId,sender,type,image) => {
+export const sendSingleFile = async(roomId,sender,type,file) => {
     try{
         const formData = new FormData()
         
         formData.append('roomId',roomId)
         formData.append('sender',sender)
         formData.append('type',type)
-        formData.append('image',image)
+        formData.append('file',file)
 
-        const response = await baseURL.post(`/chat/sendImage`,formData,{
+        const response = await baseURL.post(`/chat/sendFile`,formData,{
             headers:{'Content-Type' : 'multipart/form-data'}
         });
 
@@ -56,6 +57,22 @@ export const readChatUpdation = async(userId,roomId) => {
         }
     }catch(error){
         console.error(`Error updating read status: ${error.message}`);
+        toast.error("Internal error")
+    }
+}
+
+export const getBlobFileDownload = async(fileUrl) => {
+    try{
+        const response = await axios({
+            url: fileUrl,
+            method: 'GET',
+            responseType: 'blob',
+        })
+        if (response) {
+            return response.data;
+        }
+    }catch(error){
+        console.error(`Error getting file ${error.message}`);
         toast.error("Internal error")
     }
 }

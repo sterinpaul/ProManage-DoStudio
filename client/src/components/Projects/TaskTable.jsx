@@ -143,10 +143,10 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
         <Card className="h-full w-full shadow-none border">
             <div className="flex">
                 <div className="flex gap-2 m-2 mx-2">
-                    <div className="flex flex-col justify-center h-12 gap-1 mt-0.5 items-center">
+                    <div className="flex flex-col  h-12 gap-1 mt-1 items-center">
                         <BiChevronDownCircle onClick={openTaskTableHandler} className="cursor-pointer w-5 h-5" />
 
-                        <div className="relative group">
+                        {openTaskTable && <div className="relative group">
                             <BiDotsVerticalRounded className="cursor-pointer w-5 h-5" />
 
                             <div className="absolute bg-white hidden group-hover:flex flex-col justify-center items-center border z-10 p-1 shadow-lg rounded w-20 max-w-52">
@@ -155,16 +155,16 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                                     <p className="p-1 pl-2 text-sm hover:bg-gray-200 rounded">Export</p>
                                 </div>
                             </div>
-                        </div>
+                        </div>}
                     </div>
                     <div className={`${!openTaskTable && "min-w-[17.5rem] w-[17.5rem]"}`}>
                         <Typography className="capitalize relative" variant="h5" color="blue-gray">
                             {singleTable.name}
-                            {openTaskTable && <p className="absolute -right-12 top-0 text-xs font-light text-gray-500">{`${singleTable?.subTasks?.length === 1 ? "1 Task" : singleTable.subTasks.length + " Tasks"}`}</p>}
+                            {openTaskTable && <p className="absolute -right-12 top-0 text-xs font-light text-gray-500">{`${singleTable?.subTasks?.length && singleTable.subTasks.length === 1 ? "1 Task" : singleTable.subTasks.length + " Tasks"}`}</p>}
                         </Typography>
                         {openTaskTable ? <p>
                             {singleTable.description}
-                        </p> : <p className="mb-2">{`${singleTable?.subTasks?.length === 1 ? "1 Task" : singleTable.subTasks.length + " Tasks"}`}</p>}
+                        </p> : <p className="mb-2">{`${singleTable?.subTasks?.length && singleTable.subTasks.length === 1 ? "1 Task" : singleTable.subTasks.length + " Tasks"}`}</p>}
                     </div>
                 </div>
                 {!openTaskTable && (

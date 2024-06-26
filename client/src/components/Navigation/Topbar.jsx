@@ -30,7 +30,6 @@ const Topbar = () => {
     if (socket.current) {
       socket.current.on("chatMessage", (msg) => {
         const { taskId,...data } = msg;
-        console.log("taskSubTaskId",taskSubTaskId,'data',data);
         if (data.roomId == taskSubTaskId?.subTaskId) {
           setMessages(previous => [...previous, data]);
           setSelectedProject(previous=>previous.map(task=>task._id === taskId ? {...task,subTasks:task.subTasks.map(subTask=>subTask._id === data.roomId ? {...subTask,chatUnreadCount:0} : subTask)} : task))
