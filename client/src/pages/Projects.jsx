@@ -1,6 +1,6 @@
-import { BiPlus, BiSearchAlt2, BiFilterAlt, BiSort } from "react-icons/bi"
+import { BiPlus, BiSearchAlt2, BiUserCircle, BiFilterAlt, BiSort } from "react-icons/bi"
 import { TaskTable } from "../components/Projects/TaskTable";
-import { Button, Dialog, DialogBody, DialogFooter, Typography } from "@material-tailwind/react";
+import { Button, Dialog, DialogBody, DialogFooter, Popover, PopoverContent, PopoverHandler, Typography } from "@material-tailwind/react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -26,6 +26,7 @@ const Projects = () => {
   const peoplePermitted = projectPermitted?.allowedPermissions?.includes("people") ?? false
   const [openRemoveTaskModal, setOpenRemoveTaskModal] = useState(false)
   const [taskId, setTaskId] = useState("")
+  const [openPersonDropdown, setOpenPersonDropdown] = useState(false)
   const classes = "border border-blue-gray-200"
 
 
@@ -92,6 +93,8 @@ const Projects = () => {
     }
   }
 
+  const personDropdownHandler = ()=>setOpenPersonDropdown(previous=>!previous)
+
 
   return (
     <div className="flex-1 mt-14 p-5 w-96 h-[calc(100vh-3.5rem)]">
@@ -106,13 +109,24 @@ const Projects = () => {
         <Dialog size="xs" open={isFormOpen} handler={formHandler}>
           <FormComponent formHandler={formHandler} projectId={state?.id ?? 1} />
         </Dialog>
-        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:text-black py-1 px-2 rounded">
+        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
           <BiSearchAlt2 />
           Search</button>
-        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:text-black py-1 px-2 rounded">
+        <Popover open={openPersonDropdown} handler={personDropdownHandler} placement="bottom">
+          <PopoverHandler>
+            <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 hover:bg-blue-200 ${openPersonDropdown && "bg-blue-200 shadow-lg"}`}>
+              <BiUserCircle className="w-4 h-4" />
+              Person
+            </button>
+          </PopoverHandler>
+          <PopoverContent>
+            
+          </PopoverContent>
+        </Popover>
+        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
           <BiFilterAlt />
           Filter</button>
-        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:text-black py-1 px-2 rounded">
+        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
           <BiSort />
           Sort</button>
       </div>
