@@ -155,7 +155,7 @@ const taskHelpers = {
         },
         {
           $sort: {
-            createdAt: 1
+            createdAt: -1
           }
         }
       ]

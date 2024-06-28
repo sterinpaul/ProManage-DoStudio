@@ -1,6 +1,7 @@
 import { BiPlus, BiSearchAlt2, BiUserCircle, BiFilterAlt, BiSort } from "react-icons/bi"
+import { IoMdCloseCircle } from "react-icons/io";
 import { TaskTable } from "../components/Projects/TaskTable";
-import { Button, Dialog, DialogBody, DialogFooter, Popover, PopoverContent, PopoverHandler, Typography } from "@material-tailwind/react";
+import { Avatar, Button, Dialog, DialogBody, DialogFooter, Popover, PopoverContent, PopoverHandler, Typography } from "@material-tailwind/react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -26,7 +27,11 @@ const Projects = () => {
   const peoplePermitted = projectPermitted?.allowedPermissions?.includes("people") ?? false
   const [openRemoveTaskModal, setOpenRemoveTaskModal] = useState(false)
   const [taskId, setTaskId] = useState("")
+  const [allUsers, setAllUsers] = useState([])
   const [openPersonDropdown, setOpenPersonDropdown] = useState(false)
+  const [person, setPerson] = useState({})
+  const [currentProject, setCurrentProject] = useState([])
+
   const classes = "border border-blue-gray-200"
 
 
@@ -82,60 +87,124 @@ const Projects = () => {
     removeTaskModalHandler()
   }
 
-  const removeTask = async()=>{
+  const removeTask = async () => {
     removeTaskModalHandler()
     const response = await removeATask(taskId)
-    if(response?.status){
-      setSelectedProject(previous=>previous.filter(task=>task._id !== taskId))
+    if (response?.status) {
+      setSelectedProject(previous => previous.filter(task => task._id !== taskId))
       toast.success(response.message)
-    }else{
+    } else {
       toast.error(response.message)
     }
   }
 
-  const personDropdownHandler = ()=>setOpenPersonDropdown(previous=>!previous)
+  const personDropdownHandler = async () => {
+    if (!openPersonDropdown) {
+
+      const unique = {}
+      selectedProject.forEach(task =>
+        task.subTasks
+          .filter(subTask => subTask.people)
+          .forEach(subTask => {
+            const { people, peopleName, peopleImg } = subTask;
+            if (!unique[people]) {
+              unique[people] = { _id: people, peopleName, peopleImg }
+            }
+          }
+          )
+      );
+      setAllUsers(Object.values(unique))
+    }
+    setOpenPersonDropdown(previous => !previous)
+    if (!person?._id) {
+      setCurrentProject(selectedProject)
+    }
+  }
+
+  const setSinglePersonFilter = (selectedPerson) => {
+    setPerson(selectedPerson)
+    setSelectedProject(previous =>
+      previous.map(task => {
+        const filteredSubTasks = task.subTasks?.filter(subTask =>subTask?.people === selectedPerson._id)
+        if (filteredSubTasks.length) {
+          return {
+            ...task, subTasks: filteredSubTasks
+          }
+        }
+        return null
+      }).filter(each=>each !== null)
+    )
+    personDropdownHandler()
+  }
+
+  const removePersonFilter = ()=>{
+    setPerson({})
+    setSelectedProject(currentProject)
+  }
 
 
   return (
-    <div className="flex-1 mt-14 p-5 w-96 h-[calc(100vh-3.5rem)]">
+    <div className="mt-14 mr-1 mb-1 p-5 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
       <h1 className="text-2xl font-bold capitalize">{state?.name ?? "Project"}</h1>
       <p className="capitalize">{state?.description}</p>
-      <div className="mt-2 flex gap-2">
+      <div className="mt-2 flex gap-2 h-8">
         <Button onClick={formHandler} className="capitalize flex items-center gap-1 transition py-1 px-2 rounded">
-          Add Task
+          <p className="hidden md:block">Add Task</p>
           <BiPlus className="w-4 h-4" />
         </Button>
-
         <Dialog size="xs" open={isFormOpen} handler={formHandler}>
           <FormComponent formHandler={formHandler} projectId={state?.id ?? 1} />
         </Dialog>
         <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
           <BiSearchAlt2 />
-          Search</button>
-        <Popover open={openPersonDropdown} handler={personDropdownHandler} placement="bottom">
+          <p className="hidden md:block">Search</p>
+        </button>
+
+        {person?._id ? (
+          <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 bg-blue-200 shadow-lg`}>
+            <img className="w-5 h-5 rounded-full" src={person.peopleImg ?? "/avatar-icon.jpg"} alt="Person Photo" />
+            <p className="hidden md:block">Person</p>
+            <IoMdCloseCircle onClick={removePersonFilter} className="w-4 h-4"/>
+        </button>
+        ) : (
+          <Popover open={openPersonDropdown} handler={personDropdownHandler} placement="bottom">
           <PopoverHandler>
             <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 hover:bg-blue-200 ${openPersonDropdown && "bg-blue-200 shadow-lg"}`}>
               <BiUserCircle className="w-4 h-4" />
-              Person
+              <p className="hidden md:block">Person</p>
             </button>
           </PopoverHandler>
           <PopoverContent>
-            
+            <div className="flex items-end justify-center overflow-x-scroll w-52 h-20">
+              {allUsers?.length ? allUsers.map((user, index) => {
+                const userId = user.peopleName.split("@")[0]
+                return (
+                  <div key={user._id} className="relative group">
+                    <Avatar onClick={() => setSinglePersonFilter(user)} className="w-7 h-7 cursor-pointer border" src={user?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                    <p className={`absolute hidden group-hover:block z-10 -top-5 ${index === 0 ? "left-0" : "right-0"} px-1 py-0 shadow border bg-white rounded-full text-sm`}>{userId}</p>
+                  </div>
+                )
+              }) : <p className="text-gray-500 m-auto text-center">No users</p>}
+            </div>
           </PopoverContent>
-        </Popover>
+        </Popover>)
+        }
+
         <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
           <BiFilterAlt />
-          Filter</button>
+          <p className="hidden md:block">Filter</p>
+        </button>
         <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
           <BiSort />
-          Sort</button>
+          <p className="hidden md:block">Sort</p>
+        </button>
       </div>
 
 
-      {/* Task Table */}
-      <div>
-        <div className="overflow-y-scroll mt-4 flex flex-col gap-4">
-          {selectedProject?.map((singleTable) => (
+      {/* Tasks Table */}
+      <div className="mt-4 overflow-y-scroll h-[calc(100vh-13rem)]">
+        <div className="flex flex-col gap-4 ">
+          {selectedProject.length ? selectedProject.map((singleTable) => (
             <TaskTable
               key={singleTable._id}
               singleTable={singleTable}
@@ -149,10 +218,10 @@ const Projects = () => {
               peoplePermitted={peoplePermitted}
               removeTaskModalOpen={removeTaskModalOpen}
             />
-          ))}
+          )) : <p>No Projects found</p>}
         </div>
       </div>
-      
+
       <Dialog dismiss={{ escapeKey: false, outsidePress: false }} open={openChat} handler={subTaskChatModalHandler} size="md" className="outline-none">
         <SubTaskChat subTaskChatModalHandler={subTaskChatModalHandler} />
       </Dialog>

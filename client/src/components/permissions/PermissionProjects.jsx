@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react"
 import { getAllProjects } from "../../api/apiConnections/projectConnections"
 import { allProjectsAtom } from "../../recoil/atoms/projectAtoms";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useRecoilState } from "recoil";
 import { Button, DialogBody, DialogFooter, DialogHeader } from "@material-tailwind/react";
 import { SingleProject } from "./SingleProject";
 import { updatePermissions } from "../../api/apiConnections/adminConnections";
 import { toast } from "react-toastify";
-import { allUserAtom } from "../../recoil/atoms/userAtoms";
 
 
-export const PermissionProjects = ({ selectedUserId,userPermissions,permissionModalHandler }) => {
-    const setUsers = useSetRecoilState(allUserAtom)
+export const PermissionProjects = ({ selectedUserId,userPermissions,permissionModalHandler,setUsers }) => {
     const [projects, setProjects] = useRecoilState(allProjectsAtom);
     const [permissions,setPermissions] = useState(userPermissions)
 

@@ -147,7 +147,7 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
         <Card className="h-full w-full shadow-none border">
             <div className="flex">
                 <div className="flex gap-2 m-2 mx-2">
-                    <div className="flex flex-col  h-12 gap-1 mt-1 items-center">
+                    <div className="flex flex-col h-12 gap-1 mt-1 items-center">
                         <BiChevronDownCircle onClick={openTaskTableHandler} className="cursor-pointer w-5 h-5" />
 
                         {openTaskTable && <div className="relative group">
@@ -173,7 +173,7 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                 </div>
                 {!openTaskTable && (
                     <div className="overflow-x-scroll w-full no-scrollbar mr-2 border-l">
-                        <table className="w-full min-w-max h-full table-auto rounded-lg">
+                        <table className="w-full min-w-max h-full table-auto">
                             <thead>
                                 <tr className="align-middle">
                                     <th className="w-36 border-l pt-2">Status</th>

@@ -14,8 +14,3 @@ export const userDataAtom = atom({
     key:"userDataAtom",
     default: {}
 })
-
-export const allUserAtom = atom({
-    key:"allUserAtom",
-    default: []
-})

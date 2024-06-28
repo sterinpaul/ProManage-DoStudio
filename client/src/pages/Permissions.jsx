@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { allUserAtom } from "../recoil/atoms/userAtoms";
-import { useRecoilState } from "recoil";
 import { toast } from "react-toastify";
 import { SingleUserPermissions } from "../components/permissions/SingleUserPermissions";
 import { updateSingleUserActivity } from "../api/apiConnections/adminConnections";
@@ -12,7 +10,7 @@ import { PermissionProjects } from "../components/permissions/PermissionProjects
 const TABLE_HEADER = ["Sl.No.", "User Id", "Email", "Status"]
 
 const Permissions = () => {
-  const [users, setUsers] = useRecoilState(allUserAtom)
+  const [users, setUsers] = useState([])
   const [openPermissionModal, setOpenPermissionModal] = useState(false)
   const [selectedUser,setSelectedUser] = useState({})
 
@@ -48,7 +46,7 @@ const Permissions = () => {
 
 
   return (
-    <div className="flex-1 w-full mt-14 p-5 h-[calc(100vh-3.5rem)]">
+    <div className="mt-14 mr-1 mb-1 p-5 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
 
       <h1 className="text-2xl font-bold">Permissions</h1>
       <p className="mt-2">Choose a user to manage their permissions</p>
@@ -75,7 +73,7 @@ const Permissions = () => {
         
       </div>
       <Dialog open={openPermissionModal} handler={permissionModalHandler} size="md">
-        <PermissionProjects selectedUserId={selectedUser?._id} userPermissions={selectedUser?.permissions} permissionModalHandler={permissionModalHandler} />
+        <PermissionProjects selectedUserId={selectedUser?._id} userPermissions={selectedUser?.permissions} permissionModalHandler={permissionModalHandler} setUsers={setUsers} />
       </Dialog>
     </div>
   )
