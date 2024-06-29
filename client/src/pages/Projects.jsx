@@ -41,6 +41,8 @@ const Projects = () => {
   const [allUsers, setAllUsers] = useState([])
   const [filteredUsers, setFilteredUsers] = useState([])
 
+  const [openSort, setOpenSort] = useState(false)
+
   const [currentProject, setCurrentProject] = useState([])
 
   const classes = "border border-blue-gray-200"
@@ -269,6 +271,31 @@ const Projects = () => {
     }
   }
 
+  const handleSortToggle = () => setOpenSort(previous => !previous)
+
+  const sortTasks = (method) => {
+    setSelectedProject(previous =>
+      previous
+        .map(task => ({
+          ...task,
+          subTasks: task.subTasks ? [...task.subTasks] : []
+        }))
+        .sort((a, z) => {
+          return method === "A-Z" ? a.name.localeCompare(z.name) : z.name.localeCompare(a.name);
+        })
+        .map(sortedTask => (
+          sortedTask.subTasks.length 
+            ? { ...sortedTask, subTasks: sortedTask.subTasks.sort((a, z) => {
+                return method === "A-Z" ? a.name.localeCompare(z.name) : z.name.localeCompare(a.name);
+              })
+            }
+            : sortedTask
+        ))
+    );
+  
+    handleSortToggle();
+  }
+  
 
   return (
     <div className="mt-14 mr-1 mb-1 p-5 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
@@ -321,7 +348,7 @@ const Projects = () => {
         ) : (
           <Popover open={openPersonDropdown} handler={personDropdownHandler} placement="bottom">
             <PopoverHandler>
-              <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 hover:bg-blue-200 outline-none ${openPersonDropdown && "bg-blue-200 shadow-lg"}`}>
+              <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 hover:bg-blue-200 hover:shadow-md outline-none ${openPersonDropdown && "bg-blue-200 shadow-lg"}`}>
                 <BiUserCircle className="w-4 h-4" />
                 <p className="hidden md:block">Person</p>
               </button>
@@ -351,10 +378,21 @@ const Projects = () => {
           <BiFilterAlt />
           <p className="hidden md:block">Filter</p>
         </button>
-        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none">
-          <BiSort />
-          <p className="hidden md:block">Sort</p>
-        </button>
+
+
+        <Popover placement="bottom" open={openSort} handler={handleSortToggle}>
+          <PopoverHandler>
+            <button className={`flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none ${openSort && "bg-blue-200"}`}>
+              <BiSort />
+              <p className="hidden md:block">Sort</p>
+            </button>
+          </PopoverHandler>
+          <PopoverContent className="p-1 rounded flex flex-col gap-1 cursor-pointer">
+            <p onClick={() => sortTasks("A-Z")} className="px-2 hover:bg-gray-100 rounded">A - Z</p>
+            <p onClick={() => sortTasks("Z-A")} className="px-2 hover:bg-gray-100 rounded">Z - A</p>
+          </PopoverContent>
+        </Popover>
+
       </div>
 
 
