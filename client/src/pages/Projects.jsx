@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { SubTaskChat } from "../components/Chat/SubTaskChat";
 import { configKeys } from "../api/config";
 import { userDataAtom } from "../recoil/atoms/userAtoms";
+import { Input } from "antd";
 
 
 const Projects = () => {
@@ -27,9 +28,17 @@ const Projects = () => {
   const peoplePermitted = projectPermitted?.allowedPermissions?.includes("people") ?? false
   const [openRemoveTaskModal, setOpenRemoveTaskModal] = useState(false)
   const [taskId, setTaskId] = useState("")
-  const [allUsers, setAllUsers] = useState([])
+
+  const [openSearchInput, setOpenSearchInput] = useState(false)
+  const [searchedSubTask, setSearchedSubTask] = useState({})
+  const [allSubTasks, setAllSubTasks] = useState([])
+  const [filteredSubTasks, setFilteredSubTasks] = useState([])
+
   const [openPersonDropdown, setOpenPersonDropdown] = useState(false)
   const [person, setPerson] = useState({})
+  const [allUsers, setAllUsers] = useState([])
+  const [filteredUsers, setFilteredUsers] = useState([])
+  
   const [currentProject, setCurrentProject] = useState([])
 
   const classes = "border border-blue-gray-200"
@@ -98,6 +107,23 @@ const Projects = () => {
     }
   }
 
+  // Search a Sub task Toggle
+  const searchInputToggle = ()=>{
+    setOpenSearchInput(previous=>!previous)
+  }
+
+  const searchSubTask = (event)=>{
+    const {value} = event.target
+    const trimmed = value.trim()
+    
+    if(trimmed.length){
+      const regex = new RegExp(trimmed,"i")
+      setAllUsers(filteredUsers.filter(each=>regex.test(each.peopleName)))
+    }else{
+      setAllUsers(filteredUsers)
+    }
+  }
+
   const personDropdownHandler = async () => {
     if (!openPersonDropdown) {
 
@@ -106,18 +132,33 @@ const Projects = () => {
         task.subTasks
           .filter(subTask => subTask.people)
           .forEach(subTask => {
-            const { people, peopleName, peopleImg } = subTask;
+            const { people, peopleName, peopleImg } = subTask
+            const name = peopleName.split("@")[0]
             if (!unique[people]) {
-              unique[people] = { _id: people, peopleName, peopleImg }
+              unique[people] = { _id: people, peopleName:name, peopleImg }
             }
           }
-          )
+        )
       );
-      setAllUsers(Object.values(unique))
+      const uniqueUsers = Object.values(unique)
+      setAllUsers(uniqueUsers)
+      setFilteredUsers(uniqueUsers)
     }
     setOpenPersonDropdown(previous => !previous)
-    if (!person?._id) {
+    if (!person?._id && !currentProject.length) {
       setCurrentProject(selectedProject)
+    }
+  }
+
+  const searchPerson = (event)=>{
+    const {value} = event.target
+    const trimmed = value.trim()
+    
+    if(trimmed.length){
+      const regex = new RegExp(trimmed,"i")
+      setAllUsers(filteredUsers.filter(each=>regex.test(each.peopleName)))
+    }else{
+      setAllUsers(filteredUsers)
     }
   }
 
@@ -155,13 +196,21 @@ const Projects = () => {
         <Dialog size="xs" open={isFormOpen} handler={formHandler}>
           <FormComponent formHandler={formHandler} projectId={state?.id ?? 1} />
         </Dialog>
-        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
-          <BiSearchAlt2 />
-          <p className="hidden md:block">Search</p>
-        </button>
+        {openSearchInput ? (
+          <div className="relative">
+            <Input onChange={searchSubTask} className="rounded pr-5" placeholder="Search" maxLength={25} />
+            <BiSearchAlt2 className="absolute bottom-1/2 translate-y-1/2 right-1 w-3 h-3" />
+          </div>
+        ) : (
+          <button onClick={searchInputToggle} className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none">
+            <BiSearchAlt2 />
+            <p className="hidden md:block">Search</p>
+          </button>
+          )
+        }
 
         {person?._id ? (
-          <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 bg-blue-200 shadow-lg`}>
+          <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 bg-blue-200 shadow-lg outline-none`}>
             <img className="w-5 h-5 rounded-full" src={person.peopleImg ?? "/avatar-icon.jpg"} alt="Person Photo" />
             <p className="hidden md:block">Person</p>
             <IoMdCloseCircle onClick={removePersonFilter} className="w-4 h-4"/>
@@ -169,32 +218,37 @@ const Projects = () => {
         ) : (
           <Popover open={openPersonDropdown} handler={personDropdownHandler} placement="bottom">
           <PopoverHandler>
-            <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 hover:bg-blue-200 ${openPersonDropdown && "bg-blue-200 shadow-lg"}`}>
+            <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 hover:bg-blue-200 outline-none ${openPersonDropdown && "bg-blue-200 shadow-lg"}`}>
               <BiUserCircle className="w-4 h-4" />
               <p className="hidden md:block">Person</p>
             </button>
           </PopoverHandler>
-          <PopoverContent>
-            <div className="flex items-end justify-center overflow-x-scroll w-52 h-20">
+          <PopoverContent className="p-3 w-52 flex flex-col justify-between gap-2 shadow-xl">
+            <h2>Filter this board by person</h2>
+            <div className="relative">
+              <Input onChange={searchPerson} className="rounded pr-5" placeholder="Search" maxLength={25} />
+              <BiSearchAlt2 className="absolute bottom-1/2 translate-y-1/2 right-1 w-3 h-3" />
+            </div>
+            <div className="flex items-end gap-1 overflow-x-scroll no-scrollbar h-14">
               {allUsers?.length ? allUsers.map((user, index) => {
-                const userId = user.peopleName.split("@")[0]
                 return (
                   <div key={user._id} className="relative group">
-                    <Avatar onClick={() => setSinglePersonFilter(user)} className="w-7 h-7 cursor-pointer border" src={user?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                    <p className={`absolute hidden group-hover:block z-10 -top-5 ${index === 0 ? "left-0" : "right-0"} px-1 py-0 shadow border bg-white rounded-full text-sm`}>{userId}</p>
+                    <Avatar onClick={() => setSinglePersonFilter(user)} className="min-w-7 w-7 h-7 cursor-pointer border" src={user?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                    <p className={`absolute hidden group-hover:block z-10 -top-6 ${index === 0 && "left-0"} px-1 py-0 shadow border bg-black text-white rounded text-sm`}>{user.peopleName}</p>
                   </div>
                 )
               }) : <p className="text-gray-500 m-auto text-center">No users</p>}
+
             </div>
           </PopoverContent>
         </Popover>)
         }
 
-        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
+        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none">
           <BiFilterAlt />
           <p className="hidden md:block">Filter</p>
         </button>
-        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
+        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none">
           <BiSort />
           <p className="hidden md:block">Sort</p>
         </button>
