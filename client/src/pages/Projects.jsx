@@ -2,7 +2,7 @@ import { BiPlus, BiSearchAlt2, BiUserCircle, BiFilterAlt, BiSort } from "react-i
 import { IoMdCloseCircle } from "react-icons/io";
 import { TaskTable } from "../components/Projects/TaskTable";
 import { Avatar, Button, Dialog, DialogBody, DialogFooter, Popover, PopoverContent, PopoverHandler, Typography } from "@material-tailwind/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { addSingleSubTask, dueDateUpdate, getSingleProject, removeATask } from "../api/apiConnections/projectConnections";
@@ -31,14 +31,16 @@ const Projects = () => {
 
   const [openSearchInput, setOpenSearchInput] = useState(false)
   const [searchedSubTask, setSearchedSubTask] = useState({})
+  const [subTaskName, setSubTaskName] = useState("")
   const [allSubTasks, setAllSubTasks] = useState([])
   const [filteredSubTasks, setFilteredSubTasks] = useState([])
+  const searchInputRef = useRef(null)
 
   const [openPersonDropdown, setOpenPersonDropdown] = useState(false)
   const [person, setPerson] = useState({})
   const [allUsers, setAllUsers] = useState([])
   const [filteredUsers, setFilteredUsers] = useState([])
-  
+
   const [currentProject, setCurrentProject] = useState([])
 
   const classes = "border border-blue-gray-200"
@@ -107,23 +109,111 @@ const Projects = () => {
     }
   }
 
-  // Search a Sub task Toggle
-  const searchInputToggle = ()=>{
-    setOpenSearchInput(previous=>!previous)
+
+
+  // Filter project according to selection
+  const filterProject = (type, selection) => {
+    setSelectedProject(previous =>
+      previous.map(task => {
+        const filteredSubTasks = task.subTasks?.filter(subTask => subTask[type] === selection._id)
+        if (filteredSubTasks.length) {
+          return {
+            ...task, subTasks: filteredSubTasks
+          }
+        }
+        return null
+      }).filter(each => each !== null)
+    )
   }
 
-  const searchSubTask = (event)=>{
-    const {value} = event.target
-    const trimmed = value.trim()
-    
-    if(trimmed.length){
-      const regex = new RegExp(trimmed,"i")
-      setAllUsers(filteredUsers.filter(each=>regex.test(each.peopleName)))
-    }else{
-      setAllUsers(filteredUsers)
+
+  // Filter project after removing one selection
+  const removedSelectionFilterProject = (type, selection) => {
+    setSelectedProject(currentProject.map(task => {
+      const filteredSubTasks = task.subTasks?.filter(subTask => subTask[type] === selection._id)
+      if (filteredSubTasks.length) {
+        return {
+          ...task, subTasks: filteredSubTasks
+        }
+      }
+      return null
+    }).filter(each => each !== null)
+    )
+  }
+
+
+  // Search Sub task Toggle
+  const searchInputToggle = () => {
+    if (!openSearchInput) {
+      const allTasks = selectedProject.flatMap(task =>
+        task.subTasks
+          .filter(subTask => subTask.name)
+          .map(subTask => {
+            const { _id, name } = subTask
+            return { _id, name }
+          }
+          )
+      );
+      setAllSubTasks(allTasks)
+      setFilteredSubTasks(allTasks)
+    }
+
+    setOpenSearchInput(previous => !previous)
+
+    if (!searchedSubTask?._id && !currentProject.length) {
+      setCurrentProject(selectedProject)
     }
   }
 
+  const searchSubTask = (event) => {
+    const { value } = event.target
+    const trimmed = value.trim()
+
+    setSubTaskName(trimmed)
+
+    if (trimmed.length) {
+      const regex = new RegExp(trimmed, "i")
+      setAllSubTasks(filteredSubTasks.filter(each => regex.test(each.name)))
+    } else {
+      setAllSubTasks(filteredSubTasks)
+    }
+  }
+
+
+  const selectSubtask = (selectedSubTask) => {
+    setSearchedSubTask(selectedSubTask)
+    filterProject("_id", selectedSubTask)
+    searchInputToggle()
+  }
+
+  const removeSubTaskFilter = () => {
+    setSearchedSubTask({})
+    setSubTaskName("")
+    if (person?._id) {
+      removedSelectionFilterProject("people", person)
+    } else {
+      setSelectedProject(currentProject)
+    }
+  }
+
+  const handleClickOutside = useCallback((event) => {
+    if (searchInputRef.current && !searchInputRef.current.contains(event.target)) {
+      searchInputToggle()
+      setSubTaskName("")
+      setSearchedSubTask({})
+    }
+  }, [searchInputToggle])
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [handleClickOutside])
+
+
+
+  // Search a Person Toggle
   const personDropdownHandler = async () => {
     if (!openPersonDropdown) {
 
@@ -135,52 +225,48 @@ const Projects = () => {
             const { people, peopleName, peopleImg } = subTask
             const name = peopleName.split("@")[0]
             if (!unique[people]) {
-              unique[people] = { _id: people, peopleName:name, peopleImg }
+              unique[people] = { _id: people, peopleName: name, peopleImg }
             }
           }
-        )
+          )
       );
       const uniqueUsers = Object.values(unique)
       setAllUsers(uniqueUsers)
       setFilteredUsers(uniqueUsers)
     }
+
     setOpenPersonDropdown(previous => !previous)
+
     if (!person?._id && !currentProject.length) {
       setCurrentProject(selectedProject)
     }
   }
 
-  const searchPerson = (event)=>{
-    const {value} = event.target
+  const searchPerson = (event) => {
+    const { value } = event.target
     const trimmed = value.trim()
-    
-    if(trimmed.length){
-      const regex = new RegExp(trimmed,"i")
-      setAllUsers(filteredUsers.filter(each=>regex.test(each.peopleName)))
-    }else{
+
+    if (trimmed.length) {
+      const regex = new RegExp(trimmed, "i")
+      setAllUsers(filteredUsers.filter(each => regex.test(each.peopleName)))
+    } else {
       setAllUsers(filteredUsers)
     }
   }
 
   const setSinglePersonFilter = (selectedPerson) => {
     setPerson(selectedPerson)
-    setSelectedProject(previous =>
-      previous.map(task => {
-        const filteredSubTasks = task.subTasks?.filter(subTask =>subTask?.people === selectedPerson._id)
-        if (filteredSubTasks.length) {
-          return {
-            ...task, subTasks: filteredSubTasks
-          }
-        }
-        return null
-      }).filter(each=>each !== null)
-    )
+    filterProject("people", selectedPerson)
     personDropdownHandler()
   }
 
-  const removePersonFilter = ()=>{
+  const removePersonFilter = () => {
     setPerson({})
-    setSelectedProject(currentProject)
+    if (searchedSubTask?._id) {
+      removedSelectionFilterProject("_id", searchedSubTask)
+    } else {
+      setSelectedProject(currentProject)
+    }
   }
 
 
@@ -193,55 +279,72 @@ const Projects = () => {
           <p className="hidden md:block">Add Task</p>
           <BiPlus className="w-4 h-4" />
         </Button>
+
+        {/* Add Task */}
         <Dialog size="xs" open={isFormOpen} handler={formHandler}>
           <FormComponent formHandler={formHandler} projectId={state?.id ?? 1} />
         </Dialog>
+
         {openSearchInput ? (
-          <div className="relative">
-            <Input onChange={searchSubTask} className="rounded pr-5" placeholder="Search" maxLength={25} />
+          <div ref={searchInputRef} className="relative">
+            <Input onChange={searchSubTask} defaultValue={subTaskName} className="rounded pr-5" placeholder="Search" maxLength={25} />
             <BiSearchAlt2 className="absolute bottom-1/2 translate-y-1/2 right-1 w-3 h-3" />
+            {subTaskName && (
+              <div className="absolute p-1 flex flex-col gap-1 shadow-lg w-full max-h-32 bg-white overflow-y-scroll border z-10">
+                {allSubTasks?.length ? allSubTasks.map(subtask => (
+                  <p key={subtask._id} className="cursor-pointer rounded hover:bg-gray-100 pl-1 text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis" onClick={() => selectSubtask(subtask)}>{subtask.name}</p>
+                )) : <p className="text-gray-500 m-auto text-center">No tasks found</p>
+                }
+              </div>
+            )}
           </div>
         ) : (
-          <button onClick={searchInputToggle} className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none">
-            <BiSearchAlt2 />
-            <p className="hidden md:block">Search</p>
-          </button>
+          searchedSubTask?._id ? (
+            <button className="max-w-28 flex items-center gap-1 transition duration-150 text-slate-500 bg-blue-200 shadow-md py-1 px-2 rounded outline-none">
+              <p className="text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis">{searchedSubTask.name}</p>
+              <IoMdCloseCircle onClick={removeSubTaskFilter} className="w-4 h-4" />
+            </button>
+          ) : (
+            <button onClick={searchInputToggle} className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none">
+              <BiSearchAlt2 />
+              <p className="hidden md:block">Search</p>
+            </button>
           )
-        }
+        )}
 
         {person?._id ? (
           <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 bg-blue-200 shadow-lg outline-none`}>
             <img className="w-5 h-5 rounded-full" src={person.peopleImg ?? "/avatar-icon.jpg"} alt="Person Photo" />
             <p className="hidden md:block">Person</p>
-            <IoMdCloseCircle onClick={removePersonFilter} className="w-4 h-4"/>
-        </button>
+            <IoMdCloseCircle onClick={removePersonFilter} className="w-4 h-4" />
+          </button>
         ) : (
           <Popover open={openPersonDropdown} handler={personDropdownHandler} placement="bottom">
-          <PopoverHandler>
-            <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 hover:bg-blue-200 outline-none ${openPersonDropdown && "bg-blue-200 shadow-lg"}`}>
-              <BiUserCircle className="w-4 h-4" />
-              <p className="hidden md:block">Person</p>
-            </button>
-          </PopoverHandler>
-          <PopoverContent className="p-3 w-52 flex flex-col justify-between gap-2 shadow-xl">
-            <h2>Filter this board by person</h2>
-            <div className="relative">
-              <Input onChange={searchPerson} className="rounded pr-5" placeholder="Search" maxLength={25} />
-              <BiSearchAlt2 className="absolute bottom-1/2 translate-y-1/2 right-1 w-3 h-3" />
-            </div>
-            <div className="flex items-end gap-1 overflow-x-scroll no-scrollbar h-14">
-              {allUsers?.length ? allUsers.map((user, index) => {
-                return (
-                  <div key={user._id} className="relative group">
-                    <Avatar onClick={() => setSinglePersonFilter(user)} className="min-w-7 w-7 h-7 cursor-pointer border" src={user?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                    <p className={`absolute hidden group-hover:block z-10 -top-6 ${index === 0 && "left-0"} px-1 py-0 shadow border bg-black text-white rounded text-sm`}>{user.peopleName}</p>
-                  </div>
-                )
-              }) : <p className="text-gray-500 m-auto text-center">No users</p>}
+            <PopoverHandler>
+              <button className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 hover:bg-blue-200 outline-none ${openPersonDropdown && "bg-blue-200 shadow-lg"}`}>
+                <BiUserCircle className="w-4 h-4" />
+                <p className="hidden md:block">Person</p>
+              </button>
+            </PopoverHandler>
+            <PopoverContent className="p-3 w-52 flex flex-col justify-between gap-2 shadow-xl">
+              <h2>Filter this board by person</h2>
+              <div className="relative">
+                <Input onChange={searchPerson} className="rounded pr-5" placeholder="Search" maxLength={25} />
+                <BiSearchAlt2 className="absolute bottom-1/2 translate-y-1/2 right-1 w-3 h-3" />
+              </div>
+              <div className="flex items-end gap-1 overflow-x-scroll no-scrollbar h-14">
+                {allUsers?.length ? allUsers.map((user, index) => {
+                  return (
+                    <div key={user._id} className="relative group">
+                      <Avatar onClick={() => setSinglePersonFilter(user)} className="min-w-7 w-7 h-7 cursor-pointer border" src={user?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                      <p className={`absolute font-light hidden group-hover:block z-10 -top-6 ${index === 0 && "left-0"} px-1 py-0 shadow border bg-black text-white rounded text-sm`}>{user.peopleName}</p>
+                    </div>
+                  )
+                }) : <p className="text-gray-500 m-auto text-center">No users found</p>}
 
-            </div>
-          </PopoverContent>
-        </Popover>)
+              </div>
+            </PopoverContent>
+          </Popover>)
         }
 
         <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none">
