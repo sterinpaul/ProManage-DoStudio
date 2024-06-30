@@ -13,6 +13,7 @@ import { SubTaskChat } from "../components/Chat/SubTaskChat";
 import { configKeys } from "../api/config";
 import { userDataAtom } from "../recoil/atoms/userAtoms";
 import { Input } from "antd";
+import { AddHeaderComponent } from "../components/Projects/elements/AddHeaderComponent";
 
 
 const Projects = () => {
@@ -21,11 +22,13 @@ const Projects = () => {
   const [selectedProject, setSelectedProject] = useRecoilState(currentProjectAtom)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [openChat, setOpenChat] = useState(false)
+
   const isAdmin = userData?.role === configKeys.ADMIN_ROLE ? true : false;
   const projectPermitted = userData?.permissions?.find(project => project?.projectId === state.id)
   const dueDatePermitted = projectPermitted?.allowedPermissions?.includes("dueDate") ?? false
   const priorityPermitted = projectPermitted?.allowedPermissions?.includes("priority") ?? false
   const peoplePermitted = projectPermitted?.allowedPermissions?.includes("people") ?? false
+
   const [openRemoveTaskModal, setOpenRemoveTaskModal] = useState(false)
   const [taskId, setTaskId] = useState("")
 
@@ -44,6 +47,14 @@ const Projects = () => {
   const [openSort, setOpenSort] = useState(false)
 
   const [currentProject, setCurrentProject] = useState([])
+
+  const [addHeaderOpen, setAddHeaderOpen] = useState(false)
+  
+
+  const addHeaderOpenHandler = () => {
+    setAddHeaderOpen(previous => !previous)
+  }
+
 
   const classes = "border border-blue-gray-200"
 
@@ -129,7 +140,7 @@ const Projects = () => {
   }
 
 
-  // Filter project after removing one selection
+  // Filter project after removing one filter selection
   const removedSelectionFilterProject = (type, selection) => {
     setSelectedProject(currentProject.map(task => {
       const filteredSubTasks = task.subTasks?.filter(subTask => subTask[type] === selection._id)
@@ -284,18 +295,19 @@ const Projects = () => {
           return method === "A-Z" ? a.name.localeCompare(z.name) : z.name.localeCompare(a.name);
         })
         .map(sortedTask => (
-          sortedTask.subTasks.length 
-            ? { ...sortedTask, subTasks: sortedTask.subTasks.sort((a, z) => {
+          sortedTask.subTasks.length
+            ? {
+              ...sortedTask, subTasks: sortedTask.subTasks.sort((a, z) => {
                 return method === "A-Z" ? a.name.localeCompare(z.name) : z.name.localeCompare(a.name);
               })
             }
             : sortedTask
         ))
     );
-  
+
     handleSortToggle();
   }
-  
+
 
   return (
     <div className="mt-14 mr-1 mb-1 p-5 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
@@ -412,6 +424,7 @@ const Projects = () => {
               priorityPermitted={priorityPermitted}
               peoplePermitted={peoplePermitted}
               removeTaskModalOpen={removeTaskModalOpen}
+              addHeaderOpenHandler={addHeaderOpenHandler}
             />
           )) : <p>No Projects found</p>}
         </div>
@@ -433,6 +446,11 @@ const Projects = () => {
           <Button onClick={removeTaskModalHandler} color="black" className="w-24 py-2">Cancel</Button>
         </DialogFooter>
       </Dialog>
+
+      <Dialog dismiss={{ escapeKey: false, outsidePress: false }} open={addHeaderOpen} handler={addHeaderOpenHandler} size="xs" className="outline-none">
+        <AddHeaderComponent addHeaderOpenHandler={addHeaderOpenHandler} />
+      </Dialog>
+
     </div>
   );
 };

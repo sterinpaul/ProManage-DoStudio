@@ -81,7 +81,6 @@ const taskHelpers = {
                   from: "unreadchats",
                   localField: "_id",
                   foreignField: "roomId",
-                  as: "chatUnreadCount",
                   pipeline: [
                     {
                       $match: {
@@ -94,7 +93,8 @@ const taskHelpers = {
                         unreadCount: 1
                       }
                     }
-                  ]
+                  ],
+                  as: "chatUnreadCount"
                 }
               },
               {
@@ -137,9 +137,8 @@ const taskHelpers = {
             name: { $first: "$name" },
             description: { $first: "$description" },
             createdAt: { $first: "$createdAt" },
-            subTasks: {
-              $push: "$subTasks"
-            }
+            headers: { $first: "$headers" },
+            subTasks: { $push: "$subTasks" }
           }
         },
         {
@@ -149,6 +148,12 @@ const taskHelpers = {
                 input: "$subTasks",
                 as: "subTask",
                 cond: { $ne: ["$$subTask._id", null] }
+              }
+            },
+            headers: {
+              $sortArray: {
+                input: "$headers",
+                sortBy: { order: 1 }
               }
             }
           }
@@ -163,6 +168,9 @@ const taskHelpers = {
   },
   removeTask: async (taskId) => {
     return await TaskModel.updateOne({ _id: taskId }, { $set: { isActive: false } })
+  },
+  addHeaderToTask: async (headerData)=>{
+    return await TaskModel.updateMany({isActive:true},{$push:{headers:headerData}})
   }
 }
 

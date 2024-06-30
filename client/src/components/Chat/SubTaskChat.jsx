@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogBody, Spinner } from "@material-tailwind/react"
+import { Button, Dialog, DialogBody } from "@material-tailwind/react"
 import { useEffect, useRef, useState } from "react"
 import { MdImage, MdClose, MdAttachFile } from "react-icons/md"
 import { CiCircleRemove } from "react-icons/ci"
@@ -10,6 +10,7 @@ import { toast } from "react-toastify"
 import { currentProjectAtom, taskSubTaskAtom } from "../../recoil/atoms/projectAtoms"
 import { allChatMessageAtom, socketMessageAtom } from "../../recoil/atoms/chatAtoms"
 import { SingleChat } from "./SingleChat"
+import {LoadingSpinner} from "../Home/LoadingSpinner"
 
 
 export const SubTaskChat = ({ subTaskChatModalHandler }) => {
@@ -158,7 +159,7 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
                                         <p className="text-center text-wrap whitespace-nowrap overflow-hidden overflow-ellipsis">{fileUpload.name}</p>
                                     </div>
                                 )}
-                                {loading && <div className="absolute top-0 flex justify-center items-center w-full h-full bg-white"><Spinner color="blue" className="w-12 h-12" /></div>}
+                                {loading && <div className="absolute top-0 flex justify-center items-center w-full h-full bg-white"><LoadingSpinner /></div>}
                             </div>
                         ) : <><label className=" bg-blue-500 hover:bg-blue-600 text-white text-center py-1 px-2 rounded cursor-pointer text-nowrap">Choose {uploadType}
                             <input className="hidden" onChange={(e) => setFileUpload(e.target?.files?.[0])} name='file' type="file" accept={uploadType === "image" ? ".jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.svg,.webp,.heic" : "application/*,audio/*,video/*,text/*"} />

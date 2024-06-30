@@ -2,6 +2,7 @@ import Joi from "joi"
 import taskHelpers from "../helpers/taskHelpers.js"
 import subTaskHelpers from "../helpers/subTaskHelpers.js"
 import chatHelpers from "../helpers/chatHelpers.js"
+import headerHelpers from "../helpers/headerHelpers.js"
 
 
 const taskControllers = () => {
@@ -16,20 +17,23 @@ const taskControllers = () => {
             const { error, value } = taskSchema.validate(req.body)
     
             if (error) {
-                return res.status(200).json({ status: false, message: error.details[0].message })
+                return res.status(400).json({ status: false, message: error.details[0].message })
             }
 
             value.name = value.name.toLowerCase()
             const taskExists = await taskHelpers.findTaskByName(value.name,value.projectId)
             if(taskExists){
-                return res.status(200).json({status:false,message:"Task name already exists"})
+                return res.status(400).json({status:false,message:"Task name already exists"})
             }
 
+            const allHeaders = await headerHelpers.getAllHeaders()
+
             const taskResponse = await taskHelpers.addTask(value)
+            taskResponse.headers = allHeaders
             if(taskResponse){
                 return res.status(200).json({status:true,data:taskResponse})
             }
-            return res.status(200).json({status:false,message:"Error adding task"})
+            return res.status(500).json({status:false,message:"Error adding task"})
         } catch (error) {
             return res.status(500).json({status:false,message:"Internal error"})
         }

@@ -6,6 +6,7 @@ import projectRoutes from './projectRoutes.js';
 import taskRoutes from './taskRoutes.js';
 import subTaskRoutes from './subTaskRoutes.js';
 import chatRoutes from './chatRoutes.js';
+import headerRoutes from './headerRoutes.js';
 
 
 const routes = (app)=>{
@@ -16,6 +17,7 @@ const routes = (app)=>{
     app.use('/api/tasks',authMiddleware,taskRoutes());
     app.use('/api/subTasks',authMiddleware,subTaskRoutes());
     app.use('/api/chat',authMiddleware,chatRoutes());
+    app.use('/api/headers',authMiddleware,headerRoutes());
 }
 
 export default routes

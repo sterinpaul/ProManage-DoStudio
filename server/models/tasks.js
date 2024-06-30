@@ -17,6 +17,10 @@ const TaskSchema = new Schema (
             type: String,
             required: true
         },
+        headers:{
+            type:Array,
+            default:[]
+        },
         isActive:{
             type: Boolean,
             default: true

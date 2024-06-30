@@ -1,7 +1,7 @@
 import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import { DialogHeader, DialogBody, DialogFooter, Button, Input } from "@material-tailwind/react";
 import { toast } from 'react-toastify';
-import * as Yup from 'yup';
 import { addProject, addTask } from '../../api/apiConnections/projectConnections';
 import { useState } from 'react';
 import { useSetRecoilState } from 'recoil';

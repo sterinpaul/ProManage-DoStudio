@@ -38,7 +38,7 @@ const priorityGroup = [
     }
 ]
 
-export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, subTaskChatModalHandler, isAdmin, dueDatePermitted, priorityPermitted, peoplePermitted, removeTaskModalOpen }) => {
+export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, subTaskChatModalHandler, isAdmin, dueDatePermitted, priorityPermitted, peoplePermitted, removeTaskModalOpen, addHeaderOpenHandler }) => {
     const setSelectedProject = useSetRecoilState(currentProjectAtom)
     const [selectedSubTasks, setSelectedSubTasks] = useState([])
     const [openRemoveDialog, setOpenRemoveDialog] = useState(false)
@@ -257,6 +257,11 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                             {tableCol?.map((singleHeader, index) => (
                                 <th key={index} className={classes} colSpan={index === 0 ? 2 : 1} >{singleHeader}</th>
                             ))}
+                            
+                            <th onClick={addHeaderOpenHandler} className={`${classes} group cursor-pointer`}>
+                                <BiPlus className="w-5 h-5 mx-auto group-hover:scale-150 transition delay-100" />
+                            </th>
+                            
                         </tr>
                     </thead>
                     <tbody>

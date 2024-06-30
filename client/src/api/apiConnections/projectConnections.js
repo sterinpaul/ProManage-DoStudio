@@ -183,3 +183,17 @@ export const removeATask = async(taskId) => {
         toast.error(error.message)
     }
 }
+
+export const addHeader = async(header) => {
+    try{
+        const response = await baseURL.post(`/headers/addHeader`,header);
+        if (response) {
+            return response.data;
+        } else {
+            throw new Error('Failed add header');
+        }
+    }catch(error){
+        console.error(`Error adding header: ${error.message}`);
+        toast.error(error.message)
+    }
+}
