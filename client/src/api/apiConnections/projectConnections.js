@@ -197,3 +197,31 @@ export const addHeader = async(header) => {
         toast.error(error.message)
     }
 }
+
+export const dynamicFieldUpdate = async(subTaskId,field,value)=>{
+    try{
+        const response = await baseURL.patch(`/subTasks/updateField`,{subTaskId,field,value});
+        if (response) {
+            return response.data;
+        } else {
+            throw new Error('Failed to update value');
+        }
+    }catch(error){
+        console.error(`Error updating value: ${error.message}`);
+        toast.error(error.message)
+    }
+}
+
+export const headerDnd = async(taskId,activeHeaderId,activeIndexOrder,overHeaderId,overIndexOrder)=>{
+    try{
+        const response = await baseURL.patch(`/tasks/dnd`,{taskId,activeHeaderId,activeIndexOrder,overHeaderId,overIndexOrder});
+        if (response) {
+            return response.data;
+        } else {
+            throw new Error('Failed to update');
+        }
+    }catch(error){
+        console.error(`Error updating dnd: ${error.message}`);
+        toast.error(error.message)
+    }
+}

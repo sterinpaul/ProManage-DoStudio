@@ -1,7 +1,7 @@
 import { SubTask } from "./SubTask"
 import { BiPlus, BiChevronDownCircle, BiDotsVerticalRounded } from "react-icons/bi"
 import { MdDeleteOutline } from "react-icons/md"
-import { Button, Typography, Card, CardBody, Dialog, DialogBody, DialogFooter, Popover, PopoverHandler, PopoverContent, ListItem, List } from "@material-tailwind/react"
+import { Button, Typography, Card, CardBody, Dialog, DialogBody, DialogFooter,Avatar } from "@material-tailwind/react"
 import { useEffect, useState, useCallback } from "react"
 import { toast } from "react-toastify"
 import { removeSubTasks } from "../../api/apiConnections/projectConnections"
@@ -9,10 +9,10 @@ import { currentProjectAtom } from "../../recoil/atoms/projectAtoms"
 import { useSetRecoilState } from "recoil"
 import moment from "moment"
 import { OptionsConsolidationComp } from "./elements/OptionsConsolidationComp"
-import { Avatar } from "antd"
+import { SingleHeader } from "./SingleHeader"
+// import { Avatar } from "antd"
 
 
-const tableCol = ["Task", "Status", "Due Date", "Priority", "Notes", "People"]
 const statusGroup = [
     {
         value: "not started",
@@ -38,7 +38,21 @@ const priorityGroup = [
     }
 ]
 
-export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, subTaskChatModalHandler, isAdmin, dueDatePermitted, priorityPermitted, peoplePermitted, removeTaskModalOpen, addHeaderOpenHandler }) => {
+export const TaskTable = ({ 
+    singleTable, 
+    addSubTask, 
+    dueDateChanger, 
+    classes, 
+    subTaskChatModalHandler, 
+    isAdmin, 
+    dueDatePermitted, 
+    priorityPermitted, 
+    peoplePermitted, 
+    removeTaskModalOpen, 
+    addHeaderOpenHandler, 
+    updateDynamicField,
+    addOptionModalToggle
+ }) => {
     const setSelectedProject = useSetRecoilState(currentProjectAtom)
     const [selectedSubTasks, setSelectedSubTasks] = useState([])
     const [openRemoveDialog, setOpenRemoveDialog] = useState(false)
@@ -171,64 +185,90 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                         </p> : <p className="mb-2">{`${singleTable?.subTasks?.length && singleTable.subTasks.length === 1 ? "1 Task" : singleTable.subTasks.length + " Tasks"}`}</p>}
                     </div>
                 </div>
+                
                 {!openTaskTable && (
                     <div className="overflow-x-scroll w-full no-scrollbar mr-2 border-l">
                         <table className="w-full min-w-max h-full table-auto">
                             <thead>
+                                
                                 <tr className="align-middle">
-                                    <th className="w-36 border-l pt-2">Status</th>
-                                    <th className="w-36 border-l pt-2">Due Date</th>
-                                    <th className="w-36 border-l pt-2">Priority</th>
-                                    <th className="min-w-48 border-l"></th>
-                                    <th className="border-l pt-2">People</th>
+                                    {singleTable?.headers?.map(header => {
+                                        if (header.key === "task") {
+                                            return
+                                        } else if (header.key === "status") {
+                                            return <th key={header._id} className="w-36 border-l pt-2">Status</th>
+                                        } else if (header.key === "dueDate") {
+                                            return <th key={header._id} className="w-36 border-l pt-2">Due Date</th>
+                                        } else if (header.key === "priority") {
+                                            return <th key={header._id} className="w-36 border-l pt-2">Priority</th>
+                                        } else if (header.key === "people") {
+                                            return <th key={header._id} className="border-l pt-2">People</th>
+                                        } else {
+                                            return <th key={header._id} className="min-w-48 border-l"></th>
+                                        }
+                                    })}
+                                    <td></td>
                                 </tr>
+                                
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td className="border-l p-0">
-                                        <div className="h-full flex p-1">
-                                            {taskStatus?.map((eachOption, index) =>
-                                            (
-                                                <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={statusGroup} />
-                                            )
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="border-l px-1">
-                                        {taskDue && <div className="flex p-1.5 cursor-default justify-center text-center rounded-full bg-blue-500 text-white">
-                                            {taskDue}
-                                        </div>}
-                                    </td>
-                                    <td className="border-l p-0">
-                                        <div className="h-full flex p-1">
-                                            {taskPriority?.map((eachOption, index) =>
-                                            (
-                                                <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={priorityGroup} />
-                                            )
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="border-l">
-                                        <div className="w-44 xl:w-52 2xl:w-96"></div>
-                                    </td>
-                                    <td className="border-l">
-                                        <div className="w-fit m-auto -space-x-4 relative">
-                                            {singleTable?.subTasks?.length > 2 ? (
-                                                <>
-                                                    <Avatar className="w-8 h-8 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[0]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                                                    <Avatar className="w-8 h-8 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[1]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                                                    <div className="absolute -right-3 top-2 text-xs text-black"> +{singleTable?.subTasks.length - 2}</div>
-                                                </>
-                                            ) : singleTable?.subTasks?.map((subTask, index) => (
-                                                <Avatar key={index} className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                                            ))}
-                                        </div>
-                                    </td>
+                                    {singleTable?.headers?.map(header => {
+                                        if (header.key === "task") {
+                                            return
+                                        } else if (header.key === "status") {
+                                            return <td key={header._id} className="border-l p-0">
+                                                <div className="h-full flex p-1">
+                                                    {taskStatus?.map((eachOption, index) =>
+                                                    (
+                                                        <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={statusGroup} />
+                                                    )
+                                                    )}
+                                                </div>
+                                            </td>
+                                        } else if (header.key === "dueDate") {
+                                            return <td key={header._id} className="border-l px-1">
+                                                {taskDue && <div className="flex p-1.5 cursor-default justify-center text-center rounded-full bg-blue-500 text-white">
+                                                    {taskDue}
+                                                </div>}
+                                            </td>
+                                        } else if (header.key === "priority") {
+                                            return <td key={header._id} className="border-l p-0">
+                                                <div className="h-full flex p-1">
+                                                    {taskPriority?.map((eachOption, index) =>
+                                                    (
+                                                        <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={priorityGroup} />
+                                                    )
+                                                    )}
+                                                </div>
+                                            </td>
+                                        } else if (header.key === "people") {
+                                            return <td key={header._id} className="border-l">
+                                                <div className="w-fit m-auto -space-x-4 relative">
+                                                    {singleTable?.subTasks?.length > 2 ? (
+                                                        <>
+                                                            <Avatar className="w-8 h-8 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[0]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                                            <Avatar className="w-8 h-8 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[1]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                                            <div className="absolute -right-3 top-2 text-xs text-black"> +{singleTable?.subTasks.length - 2}</div>
+                                                        </>
+                                                    ) : singleTable?.subTasks?.map((subTask) => (
+                                                        <Avatar key={subTask._id} className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                                    ))}
+                                                </div>
+                                            </td>
+                                        } else {
+                                            return <td key={header._id} className="border-l">
+                                                <div className="w-44 xl:w-52 2xl:w-96"></div>
+                                            </td>
+                                        }
+                                    })}
+
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 )}
+                
             </div>
 
             {openTaskTable ? <CardBody className="overflow-x-scroll px-2 py-2">
@@ -254,14 +294,16 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                                     </> : null}
                                 </div>
                             </th>
-                            {tableCol?.map((singleHeader, index) => (
-                                <th key={index} className={classes} colSpan={index === 0 ? 2 : 1} >{singleHeader}</th>
+
+                            {/* Table headers */}
+                            {singleTable?.headers?.map(({_id,name}) => (
+                                <SingleHeader key={_id} classes={classes} taskId={singleTable._id} id={_id} name={name} />
                             ))}
-                            
+
                             <th onClick={addHeaderOpenHandler} className={`${classes} group cursor-pointer`}>
                                 <BiPlus className="w-5 h-5 mx-auto group-hover:scale-150 transition delay-100" />
                             </th>
-                            
+
                         </tr>
                     </thead>
                     <tbody>
@@ -273,6 +315,7 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                                     subTask={subTask}
                                     taskId={singleTable._id}
                                     classes={classes}
+                                    headers={singleTable.headers}
                                     statusGroup={statusGroup}
                                     priorityGroup={priorityGroup}
                                     dueDateChanger={dueDateChanger}
@@ -283,6 +326,8 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                                     dueDatePermitted={dueDatePermitted}
                                     priorityPermitted={priorityPermitted}
                                     peoplePermitted={peoplePermitted}
+                                    updateDynamicField={updateDynamicField}
+                                    addOptionModalToggle={addOptionModalToggle}
                                 />
                             )
                         })}
@@ -290,45 +335,56 @@ export const TaskTable = ({ singleTable, addSubTask, dueDateChanger, classes, su
                             <td onClick={() => addSubTask(singleTable._id)} className={`${classes} group cursor-pointer`}>
                                 <BiPlus className="w-5 h-5 mx-auto group-hover:scale-150 transition delay-100 group-hover:rotate-90" />
                             </td>
-                            <td colSpan={2} className={`${classes}`}></td>
-                            <td className={`${classes} p-0`}>
-                                <div className="h-full text-white flex">.
-                                    {taskStatus?.map((eachOption, index) =>
-                                    (
-                                        <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={statusGroup} />
-                                        
-                                    )
-                                    )}
-                                .</div>
-                            </td>
-                            <td className={`${classes} px-1`}>
-                                {taskDue && <div className="flex p-0.5 cursor-default justify-center text-center rounded-full bg-blue-500 text-white">
-                                    {taskDue}
-                                </div>}
-                            </td>
-                            <td className={`${classes} p-0`}>
-                                <div className="h-full text-white flex">.
-                                    {taskPriority?.map((eachOption, index) =>
-                                    (
-                                        <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={priorityGroup} />
-                                    )
-                                    )}
-                                .</div>
-                            </td>
-                            <td className={`${classes}`}></td>
-                            <td className={`${classes}`}>
-                                <div className="w-fit m-auto -space-x-4 relative">
-                                    {singleTable?.subTasks?.length > 2 ? (
-                                        <>
-                                            <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[0]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                                            <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[1]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                                            <div className="absolute -right-3 top-1 text-xs text-black"> +{singleTable?.subTasks.length - 2}</div>
-                                        </>
-                                    ) : singleTable?.subTasks?.map((subTask, index) => (
-                                        <Avatar key={index} className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                                    ))}
-                                </div>
-                            </td>
+
+                            {singleTable?.headers?.map(header => {
+                                if (header.key === "task") {
+                                    return <td key={header._id} className={`${classes}`}></td>
+                                } else if (header.key === "status") {
+                                    return <td key={header._id} className={`${classes} p-0`}>
+                                    <div className="h-full text-white flex">.
+                                        {taskStatus?.map((eachOption, index) =>
+                                        (
+                                            <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={statusGroup} />
+                                        )
+                                        )}
+                                        .</div>
+                                </td>
+                                } else if (header.key === "dueDate") {
+                                    return  <td key={header._id} className={`${classes} px-1`}>
+                                    {taskDue && <div className="flex p-0.5 cursor-default justify-center text-center rounded-full bg-blue-500 text-white">
+                                        {taskDue}
+                                    </div>}
+                                </td>
+                                } else if (header.key === "priority") {
+                                    return <td key={header._id} className={`${classes} p-0`}>
+                                    <div className="h-full text-white flex">.
+                                        {taskPriority?.map((eachOption, index) =>
+                                        (
+                                            <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={priorityGroup} />
+                                        )
+                                        )}
+                                        .</div>
+                                </td>
+                                } else if (header.key === "people") {
+                                    return <td key={header._id} className={`${classes}`}>
+                                    <div className="w-fit m-auto -space-x-4 relative">
+                                        {singleTable?.subTasks?.length > 2 ? (
+                                            <>
+                                                <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[0]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                                <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[1]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                                <div className="absolute -right-3 top-1 text-xs text-black"> +{singleTable?.subTasks.length - 2}</div>
+                                            </>
+                                        ) : singleTable?.subTasks?.map((subTask, index) => (
+                                            <Avatar key={index} className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                        ))}
+                                    </div>
+                                </td>
+                                } else {
+                                    return <td key={header._id} className={`${classes}`}></td>
+                                }
+                            })}
+                            
+                            <td className="border-t border-blue-gray-200"></td>
                         </tr>
                     </tbody>
                 </table>

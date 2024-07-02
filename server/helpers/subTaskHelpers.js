@@ -1,4 +1,4 @@
-import SubTaskModel from "../models/subTasks.js";
+import {SubTaskModel} from "../models/subTasks.js";
 
 
 const subTaskHelpers = {
@@ -13,7 +13,7 @@ const subTaskHelpers = {
     },
     updateSubTaskName:async(value)=>{
         try {
-            return await SubTaskModel.updateOne({_id:value.subTaskId},{$set:{name:value.name}});
+            return await SubTaskModel.updateOne({_id:value.subTaskId},{$set:{task:value.name}});
         } catch (error) {
             console.error('Error updating name:', error);
             throw error;
@@ -46,6 +46,15 @@ const subTaskHelpers = {
     updateDueDate:async(value)=>{
         try {
             return await SubTaskModel.updateOne({_id:value.subTaskId},{$set:{dueDate:value.dueDate}});
+        } catch (error) {
+            console.error('Error updating due date:', error);
+            throw error;
+        }
+    },
+    updateDynamicField:async(value)=>{
+        console.log('value',value);
+        try {
+            return await SubTaskModel.updateOne({_id:value.subTaskId},{$set:{[value.field]:value.value}});
         } catch (error) {
             console.error('Error updating due date:', error);
             throw error;

@@ -169,8 +169,17 @@ const taskHelpers = {
   removeTask: async (taskId) => {
     return await TaskModel.updateOne({ _id: taskId }, { $set: { isActive: false } })
   },
-  addHeaderToTask: async (headerData)=>{
-    return await TaskModel.updateMany({isActive:true},{$push:{headers:headerData}})
+  addHeaderToTask: async (headerData) => {
+    return await TaskModel.updateMany({ isActive: true }, { $push: { headers: headerData } })
+  },
+  updateHeaderDnD: async (_id,headerid,order) => {
+    try {
+      const headerId = new mongoose.Types.ObjectId(headerid)
+      return await TaskModel.updateOne({ _id, "headers._id": headerId }, { $set: { "headers.$.order": order } })
+    } catch (error) {
+      console.error('Error updating header:', error);
+      throw error;
+    }
   }
 }
 

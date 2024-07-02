@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react"
+import { BiPlus } from "react-icons/bi"
 
 
-export const SelectComponent = ({ currentValue, valueGroup, updateSubTaskOption, headerType, classes,isAdmin,permission }) => {
+export const SelectComponent = ({ currentValue, valueGroup, updateSubTaskOption, headerType, classes,isAdmin,permission,addOptionModalToggle }) => {
     const [currentOption, setCurrentOption] = useState(currentValue)
     const [currentColor, setCurrentColor] = useState(valueGroup?.find((single) => single.value === currentValue).color)
     const [isOpen, setIsOpen] = useState(false);
@@ -36,12 +37,13 @@ export const SelectComponent = ({ currentValue, valueGroup, updateSubTaskOption,
 
 
     return (
-        <td onClick={toggleDropdown} className={`${classes} relative bg-${currentColor} capitalize cursor-pointer text-white text-nowrap text-center w-36`} ref={dropdownRef}>
+        <td onClick={toggleDropdown} ref={dropdownRef} className={`${classes} bg-${currentColor} relative cursor-pointer capitalize text-white text-nowrap text-center w-36`} >
             {currentOption}
-            {isOpen && <div className="absolute z-10 top-8 left-0 rounded bg-white shadow-lg border w-full text-center cursor-pointer text-sm ">
+            {isOpen && <div className="absolute p-1 rounded z-10 bg-white shadow-xl border w-36 md:w-72 text-center cursor-pointer text-sm flex justify-center items-center flex-col md:flex-row flex-wrap">
                 {valueGroup.map((options, index) => (
-                    <div onClick={() => changeOption(options)} className={`text-${options.color} bg-gray-200 hover:bg-gray-300 rounded m-1 px-2 py-1 z-50`} key={index}>{options.value}</div>
+                    <div onClick={() => changeOption(options)} className={`text-white bg-${options.color} hover:bg-opacity-80 rounded m-1 w-32 px-2 py-1.5`} key={index}>{options.value}</div>
                 ))}
+                <div onClick={()=>addOptionModalToggle(headerType)} className={`bg-gray-200 hover:bg-gray-300 text-blue-gray-700 rounded m-1 px-2 py-1.5`}><BiPlus className="w-4 h-4"/></div>
             </div>}
         </td>
     )

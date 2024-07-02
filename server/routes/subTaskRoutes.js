@@ -13,6 +13,7 @@ const subTaskRoutes = ()=>{
     router.patch('/updateStatus',controllers.updateSubTaskStatus)
     router.patch('/updatePriority',controllers.updateSubTaskPriority)
     router.patch('/updateDueDate',controllers.updateDueDate)
+    router.patch('/updateField',controllers.updateDynamicField)
     router.patch('/assignSubTask',controllers.assignSubTask)
     router.patch('/removeSubTask',controllers.removeSubTsk)
     

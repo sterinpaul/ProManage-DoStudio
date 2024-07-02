@@ -5,7 +5,7 @@ import { Avatar, Button, Dialog, DialogBody, DialogFooter, Popover, PopoverConte
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { addSingleSubTask, dueDateUpdate, getSingleProject, removeATask } from "../api/apiConnections/projectConnections";
+import { addSingleSubTask, dueDateUpdate, dynamicFieldUpdate, getSingleProject, headerDnd, removeATask } from "../api/apiConnections/projectConnections";
 import { currentProjectAtom } from "../recoil/atoms/projectAtoms";
 import { FormComponent } from "../components/Home/FormComponent";
 import { toast } from "react-toastify";
@@ -14,6 +14,10 @@ import { configKeys } from "../api/config";
 import { userDataAtom } from "../recoil/atoms/userAtoms";
 import { Input } from "antd";
 import { AddHeaderComponent } from "../components/Projects/elements/AddHeaderComponent";
+
+import { DndContext } from '@dnd-kit/core';
+import {restrictToHorizontalAxis} from '@dnd-kit/modifiers';
+import { AddDynamicOptionComponent } from "../components/Projects/elements/AddDynamicOptionComponent";
 
 
 const Projects = () => {
@@ -38,7 +42,7 @@ const Projects = () => {
   const [allSubTasks, setAllSubTasks] = useState([])
   const [filteredSubTasks, setFilteredSubTasks] = useState([])
   const searchInputRef = useRef(null)
-
+  
   const [openPersonDropdown, setOpenPersonDropdown] = useState(false)
   const [person, setPerson] = useState({})
   const [allUsers, setAllUsers] = useState([])
@@ -47,9 +51,11 @@ const Projects = () => {
   const [openSort, setOpenSort] = useState(false)
 
   const [currentProject, setCurrentProject] = useState([])
-
+  
   const [addHeaderOpen, setAddHeaderOpen] = useState(false)
   
+  const [dynamicSelectFieldType, setDynamicSelectFieldType] = useState("")
+  const [openDynamicSelectFieldModal, setOpenDynamicSelectFieldModal] = useState(false)
 
   const addHeaderOpenHandler = () => {
     setAddHeaderOpen(previous => !previous)
@@ -76,25 +82,25 @@ const Projects = () => {
     setIsFormOpen(!isFormOpen)
   }
 
-  const addSubTask = async (taskId) => {
-    const selectedTask = selectedProject?.find(task => task._id === taskId)
-    const lastSubTaskExists = selectedTask?.subTasks?.slice(-1)[0]?.name.length
+  const addSubTask = async (taskid) => {
+    const selectedTask = selectedProject?.find(task => task._id === taskid)
+    const lastSubTaskExists = selectedTask?.subTasks?.slice(-1)[0]?.task.length
     const subTasksExist = selectedTask.subTasks?.length
 
     if (lastSubTaskExists || !subTasksExist) {
-      const subTaskResponse = await addSingleSubTask(taskId)
+      const subTaskResponse = await addSingleSubTask(taskid)
       if (subTaskResponse?.status) {
         const newTask = { ...subTaskResponse.data, peopleName: "", peopleImg: "" }
-        setSelectedProject(previous => previous.map(singleTask => singleTask._id === taskId ? { ...singleTask, subTasks: [...singleTask.subTasks, newTask] } : singleTask))
+        setSelectedProject(previous => previous.map(singleTask => singleTask._id === taskid ? { ...singleTask, subTasks: [...singleTask.subTasks, newTask] } : singleTask))
       } else {
         toast.error(subTaskResponse.message)
       }
     }
   }
 
-  const dueDateChanger = async (taskId, subTaskId, date) => {
+  const dueDateChanger = async (taskid, subTaskId, date) => {
     const dateChangeResponse = await dueDateUpdate(subTaskId, date)
-    setSelectedProject(previous => previous.map(task => task._id === taskId ? { ...task, subTasks: task.subTasks.map(subTasks => subTasks._id === subTaskId ? { ...subTasks, dueDate: date } : subTasks) } : task))
+    setSelectedProject(previous => previous.map(task => task._id === taskid ? { ...task, subTasks: task.subTasks.map(subTasks => subTasks._id === subTaskId ? { ...subTasks, dueDate: date } : subTasks) } : task))
     if (!dateChangeResponse?.status) {
       toast.error(dateChangeResponse.message)
     }
@@ -121,7 +127,6 @@ const Projects = () => {
       toast.error(response.message)
     }
   }
-
 
 
   // Filter project according to selection
@@ -160,10 +165,10 @@ const Projects = () => {
     if (!openSearchInput) {
       const allTasks = selectedProject.flatMap(task =>
         task.subTasks
-          .filter(subTask => subTask.name)
+          .filter(subTask => subTask.task)
           .map(subTask => {
-            const { _id, name } = subTask
-            return { _id, name }
+            const { _id, task } = subTask
+            return { _id, task }
           }
           )
       );
@@ -186,7 +191,7 @@ const Projects = () => {
 
     if (trimmed.length) {
       const regex = new RegExp(trimmed, "i")
-      setAllSubTasks(filteredSubTasks.filter(each => regex.test(each.name)))
+      setAllSubTasks(filteredSubTasks.filter(each => regex.test(each.task)))
     } else {
       setAllSubTasks(filteredSubTasks)
     }
@@ -298,7 +303,7 @@ const Projects = () => {
           sortedTask.subTasks.length
             ? {
               ...sortedTask, subTasks: sortedTask.subTasks.sort((a, z) => {
-                return method === "A-Z" ? a.name.localeCompare(z.name) : z.name.localeCompare(a.name);
+                return method === "A-Z" ? a.task.localeCompare(z.task) : z.task.localeCompare(a.task);
               })
             }
             : sortedTask
@@ -307,6 +312,68 @@ const Projects = () => {
 
     handleSortToggle();
   }
+
+  const updateDynamicField = async (fieldTaskId, fieldSubTaskId, field, value) => {
+    const dynamicFieldUpdateResponse = await dynamicFieldUpdate(fieldSubTaskId, field, value)
+    if (dynamicFieldUpdateResponse?.status) {
+      setSelectedProject(previous => previous.map(task => task._id === fieldTaskId ?
+        {
+          ...task, subTasks: task.subTasks.map(subTask => subTask._id === fieldSubTaskId ?
+            { ...subTask, [field]: value } : subTask)
+        } : task)
+      )
+    } else {
+      toast.error(dynamicFieldUpdateResponse.message)
+    }
+  }
+
+
+  // Drag & Drop Handler
+  const handleDragEnd = async(event)=>{
+    const { active, over } = event;
+    
+    if (over && over.id && active.id != over.id) {
+      const activeHeaderId = active.id.slice(0,24)
+      const overHeaderId = over.id.slice(0,24)
+
+      const taskid = active.id.slice(25)
+      
+      const updatedHeader = selectedProject.find(task=>task._id === taskid)
+      const activeIndex = updatedHeader?.headers?.findIndex(header => header._id === activeHeaderId)
+      const overIndex = updatedHeader?.headers?.findIndex(header => header._id === overHeaderId)
+      
+      const activeIndexOrder = updatedHeader.headers.find(header=>header._id === activeHeaderId).order
+      const overIndexOrder = updatedHeader.headers.find(header=>header._id === overHeaderId).order
+
+      setSelectedProject(previous=>previous.map(task=>{
+        if(task._id === taskid){
+          const newArr = [...task.headers]
+          if (newArr[overIndex] != null) {
+            [newArr[activeIndex], newArr[overIndex]] = [newArr[overIndex], newArr[activeIndex]]
+            return {...task,headers:newArr}
+          }else{
+            return task
+          }
+        }else{
+          return task
+        }
+      }))
+
+
+      const dndResponse = await headerDnd(taskid,activeHeaderId,activeIndexOrder,overHeaderId,overIndexOrder)
+      if(!dndResponse?.status){
+        toast.error(dndResponse.message)
+      }
+    }
+}
+
+// Add status or priority dynamically
+const dynamicFieldModalHandler = ()=>setOpenDynamicSelectFieldModal(previous=>!previous)
+
+const addOptionModalToggle = (headerType)=>{
+  setDynamicSelectFieldType(headerType)
+  dynamicFieldModalHandler()
+}
 
 
   return (
@@ -331,7 +398,7 @@ const Projects = () => {
             {subTaskName && (
               <div className="absolute p-1 flex flex-col gap-1 shadow-lg w-full max-h-32 bg-white overflow-y-scroll border z-10">
                 {allSubTasks?.length ? allSubTasks.map(subtask => (
-                  <p key={subtask._id} className="cursor-pointer rounded hover:bg-gray-100 pl-1 text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis" onClick={() => selectSubtask(subtask)}>{subtask.name}</p>
+                  <p key={subtask._id} className="cursor-pointer rounded hover:bg-gray-100 pl-1 text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis" onClick={() => selectSubtask(subtask)}>{subtask.task}</p>
                 )) : <p className="text-gray-500 m-auto text-center">No tasks found</p>
                 }
               </div>
@@ -340,7 +407,7 @@ const Projects = () => {
         ) : (
           searchedSubTask?._id ? (
             <button className="max-w-28 flex items-center gap-1 transition duration-150 text-slate-500 bg-blue-200 shadow-md py-1 px-2 rounded outline-none">
-              <p className="text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis">{searchedSubTask.name}</p>
+              <p className="text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis">{searchedSubTask.task}</p>
               <IoMdCloseCircle onClick={removeSubTaskFilter} className="w-4 h-4" />
             </button>
           ) : (
@@ -407,11 +474,11 @@ const Projects = () => {
 
       </div>
 
-
+      <DndContext onDragEnd={handleDragEnd} modifiers={[restrictToHorizontalAxis]}>
       {/* Tasks Table */}
       <div className="mt-4 overflow-y-scroll h-[calc(100vh-13rem)]">
         <div className="flex flex-col gap-4 ">
-          {selectedProject.length ? selectedProject.map((singleTable) => (
+          {selectedProject.length ? selectedProject.map((singleTable,index) => (
             <TaskTable
               key={singleTable._id}
               singleTable={singleTable}
@@ -425,10 +492,13 @@ const Projects = () => {
               peoplePermitted={peoplePermitted}
               removeTaskModalOpen={removeTaskModalOpen}
               addHeaderOpenHandler={addHeaderOpenHandler}
+              updateDynamicField={updateDynamicField}
+              addOptionModalToggle={addOptionModalToggle}
             />
           )) : <p>No Projects found</p>}
         </div>
       </div>
+      </DndContext>
 
       <Dialog dismiss={{ escapeKey: false, outsidePress: false }} open={openChat} handler={subTaskChatModalHandler} size="md" className="outline-none">
         <SubTaskChat subTaskChatModalHandler={subTaskChatModalHandler} />
@@ -449,6 +519,11 @@ const Projects = () => {
 
       <Dialog dismiss={{ escapeKey: false, outsidePress: false }} open={addHeaderOpen} handler={addHeaderOpenHandler} size="xs" className="outline-none">
         <AddHeaderComponent addHeaderOpenHandler={addHeaderOpenHandler} />
+      </Dialog>
+
+      {/* Dynamic option field Modal */}
+      <Dialog dismiss={{ escapeKey: false, outsidePress: false }} open={openDynamicSelectFieldModal} handler={dynamicFieldModalHandler} size="xs" className="outline-none">
+        <AddDynamicOptionComponent dynamicSelectFieldType={dynamicSelectFieldType} dynamicFieldModalHandler={dynamicFieldModalHandler} />
       </Dialog>
 
     </div>

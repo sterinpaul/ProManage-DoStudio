@@ -1,6 +1,7 @@
 import Joi from "joi"
 import subTaskHelpers from "../helpers/subTaskHelpers.js"
 import chatHelpers from "../helpers/chatHelpers.js"
+import headerHelpers from "../helpers/headerHelpers.js"
 
 
 const subTaskControllers = () => {
@@ -15,12 +16,26 @@ const subTaskControllers = () => {
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
-            
-            const subTask = {taskId:value.taskId,name:"",status:"not started",dueDate:"",priority:"normal",notes:"",people:""}
+
+            const allHeaders = await headerHelpers.getAllHeaders()
+            const subTask = {taskId:value.taskId}
+            if(allHeaders.length){
+                allHeaders?.forEach(header=>{
+                    if(header.key === "status"){
+                        subTask[header.key] = "not started"
+                    }else if(header.key === "priority"){
+                        subTask[header.key] = "normal"
+                    }else{
+                        subTask[header.key] = ""
+                    }
+                })
+            }
             const subTaskResponse = await subTaskHelpers.addSubTask(subTask)
+            
             if(subTaskResponse){
                 return res.status(200).json({status:true,data:subTaskResponse})
             }
+
             return res.status(200).json({status:false,message:"Error adding Sub task"})
         } catch (error) {
             throw new Error(error.message);
@@ -137,6 +152,30 @@ const subTaskControllers = () => {
         }
     }
 
+    const updateDynamicField = async(req,res)=>{
+        try {
+            const dynamicFieldSchema = Joi.object({
+                subTaskId: Joi.string().required(),
+                field: Joi.string().max(25).required(),
+                value: Joi.string().max(25).required()
+            })
+            const { error, value } = dynamicFieldSchema.validate(req.body)
+    
+            if (error) {
+                return res.status(200).json({ status: false, message: error.details[0].message })
+            }
+            
+            const dynamicFieldUpdateResponse = await subTaskHelpers.updateDynamicField(value)
+            console.log('dynamicFieldUpdateResponse',dynamicFieldUpdateResponse);
+            if(dynamicFieldUpdateResponse.modifiedCount){
+                return res.status(200).json({status:true})
+            }
+            return res.status(200).json({status:false,message:"Error updating value"})
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
     const assignSubTask = async(req,res)=>{
         try {
             const subTaskAssignSchema = Joi.object({
@@ -193,6 +232,7 @@ const subTaskControllers = () => {
         updateSubTaskStatus,
         updateSubTaskPriority,
         updateDueDate,
+        updateDynamicField,
         assignSubTask,
         removeSubTsk
     }
