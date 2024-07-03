@@ -1,22 +1,12 @@
 import Joi from 'joi'
 import userHelpers from '../helpers/userHelpers.js'
-import adminHelpers from '../helpers/adminHelpers.js'
-import configKeys from '../config/configKeys.js'
 
 
 const userControllers = () => {
     const getUserData = async (req,res)=>{
         try {
-            const {id,role} = req.payload
-            let response;
-            if(role === configKeys.JWT_USER_ROLE){
-                response = await userHelpers.getUserData(id)
-            }
-
-            if(role === configKeys.JWT_ADMIN_ROLE){
-                response = await adminHelpers.getAdminData(id)
-            }
-
+            const {id} = req.payload
+            const response = await userHelpers.getUserData(id)
             if(response){
                 return res.status(200).json({status:true,data:response})
             }

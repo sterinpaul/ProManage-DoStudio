@@ -16,7 +16,7 @@ import { Input } from "antd";
 import { AddHeaderComponent } from "../components/Projects/elements/AddHeaderComponent";
 
 import { DndContext } from '@dnd-kit/core';
-import {restrictToHorizontalAxis} from '@dnd-kit/modifiers';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { AddDynamicOptionComponent } from "../components/Projects/elements/AddDynamicOptionComponent";
 
 
@@ -24,8 +24,8 @@ const Projects = () => {
   const { state } = useLocation()
   const userData = useRecoilValue(userDataAtom)
   const [selectedProject, setSelectedProject] = useRecoilState(currentProjectAtom)
-  const [statusGroup,setStatusGroup] = useRecoilState(statusOptionsAtom)
-  const [priorityGroup,setPriorityGroup] = useRecoilState(priorityOptionsAtom)
+  const [statusGroup, setStatusGroup] = useRecoilState(statusOptionsAtom)
+  const [priorityGroup, setPriorityGroup] = useRecoilState(priorityOptionsAtom)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [openChat, setOpenChat] = useState(false)
 
@@ -44,7 +44,7 @@ const Projects = () => {
   const [allSubTasks, setAllSubTasks] = useState([])
   const [filteredSubTasks, setFilteredSubTasks] = useState([])
   const searchInputRef = useRef(null)
-  
+
   const [openPersonDropdown, setOpenPersonDropdown] = useState(false)
   const [person, setPerson] = useState({})
   const [allUsers, setAllUsers] = useState([])
@@ -53,9 +53,9 @@ const Projects = () => {
   const [openSort, setOpenSort] = useState(false)
 
   const [currentProject, setCurrentProject] = useState([])
-  
+
   const [addHeaderOpen, setAddHeaderOpen] = useState(false)
-  
+
   const [dynamicSelectFieldType, setDynamicSelectFieldType] = useState("")
   const [openDynamicSelectFieldModal, setOpenDynamicSelectFieldModal] = useState(false)
 
@@ -68,12 +68,12 @@ const Projects = () => {
 
 
   const getSelectedProject = async () => {
-    const [project,status,priority] = await Promise.all([
+    const [project, status, priority] = await Promise.all([
       getSingleProject(state?.id),
       getAllStatusOptions(),
       getAllPriorityOptions()
     ])
-    
+
     if (project?.status) {
       setSelectedProject(project.data)
     }
@@ -342,51 +342,59 @@ const Projects = () => {
 
 
   // Drag & Drop Handler
-  const handleDragEnd = async(event)=>{
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
-    
+
     if (over && over.id && active.id != over.id) {
-      const activeHeaderId = active.id.slice(0,24)
-      const overHeaderId = over.id.slice(0,24)
+      const activeHeaderId = active.id.slice(0, 24)
+      const overHeaderId = over.id.slice(0, 24)
 
       const taskid = active.id.slice(25)
-      
-      const updatedHeader = selectedProject.find(task=>task._id === taskid)
+
+      const updatedHeader = selectedProject.find(task => task._id === taskid)
       const activeIndex = updatedHeader?.headers?.findIndex(header => header._id === activeHeaderId)
       const overIndex = updatedHeader?.headers?.findIndex(header => header._id === overHeaderId)
-      
-      const activeIndexOrder = updatedHeader.headers.find(header=>header._id === activeHeaderId).order
-      const overIndexOrder = updatedHeader.headers.find(header=>header._id === overHeaderId).order
 
-      setSelectedProject(previous=>previous.map(task=>{
-        if(task._id === taskid){
-          const newArr = [...task.headers]
+      const activeIndexOrder = updatedHeader.headers.find(header => header._id === activeHeaderId).order
+      const overIndexOrder = updatedHeader.headers.find(header => header._id === overHeaderId).order
+
+      setSelectedProject(previous => previous.map(task => {
+        if (task._id === taskid) {
+          const newArr = task.headers.map(header => {
+            if (header._id === activeHeaderId) {
+              return { ...header, order: overIndexOrder }
+            } else if (header._id === overHeaderId) {
+              return { ...header, order: activeIndexOrder }
+            } else {
+              return header
+            }
+          })
           if (newArr[overIndex] != null) {
             [newArr[activeIndex], newArr[overIndex]] = [newArr[overIndex], newArr[activeIndex]]
-            return {...task,headers:newArr}
-          }else{
+            return { ...task, headers: newArr }
+          } else {
             return task
           }
-        }else{
+        } else {
           return task
         }
       }))
 
 
-      const dndResponse = await headerDnd(taskid,activeHeaderId,activeIndexOrder,overHeaderId,overIndexOrder)
-      if(!dndResponse?.status){
+      const dndResponse = await headerDnd(taskid, activeHeaderId, activeIndexOrder, overHeaderId, overIndexOrder)
+      if (!dndResponse?.status) {
         toast.error(dndResponse.message)
       }
     }
-}
+  }
 
-// Add status or priority dynamically
-const dynamicFieldModalHandler = ()=>setOpenDynamicSelectFieldModal(previous=>!previous)
+  // Add status or priority dynamically
+  const dynamicFieldModalHandler = () => setOpenDynamicSelectFieldModal(previous => !previous)
 
-const addOptionModalToggle = (headerType)=>{
-  setDynamicSelectFieldType(headerType)
-  dynamicFieldModalHandler()
-}
+  const addOptionModalToggle = (headerType) => {
+    setDynamicSelectFieldType(headerType)
+    dynamicFieldModalHandler()
+  }
 
 
   return (
@@ -488,31 +496,31 @@ const addOptionModalToggle = (headerType)=>{
       </div>
 
       <DndContext onDragEnd={handleDragEnd} modifiers={[restrictToHorizontalAxis]}>
-      {/* Tasks Table */}
-      <div className="mt-4 overflow-y-scroll h-[calc(100vh-13rem)]">
-        <div className="flex flex-col gap-4 ">
-          {selectedProject.length ? selectedProject.map((singleTable,index) => (
-            <TaskTable
-              key={singleTable._id}
-              singleTable={singleTable}
-              addSubTask={addSubTask}
-              dueDateChanger={dueDateChanger}
-              classes={classes}
-              subTaskChatModalHandler={subTaskChatModalHandler}
-              isAdmin={isAdmin}
-              dueDatePermitted={dueDatePermitted}
-              priorityPermitted={priorityPermitted}
-              peoplePermitted={peoplePermitted}
-              removeTaskModalOpen={removeTaskModalOpen}
-              addHeaderOpenHandler={addHeaderOpenHandler}
-              updateDynamicField={updateDynamicField}
-              addOptionModalToggle={addOptionModalToggle}
-              statusGroup={statusGroup}
-              priorityGroup={priorityGroup}
-            />
-          )) : <p>No Projects found</p>}
+        {/* Tasks Table */}
+        <div className="mt-4 overflow-y-scroll h-[calc(100vh-13rem)]">
+          <div className="flex flex-col gap-4 ">
+            {selectedProject.length ? selectedProject.map((singleTable) => (
+              <TaskTable
+                key={singleTable._id}
+                singleTable={singleTable}
+                addSubTask={addSubTask}
+                dueDateChanger={dueDateChanger}
+                classes={classes}
+                subTaskChatModalHandler={subTaskChatModalHandler}
+                isAdmin={isAdmin}
+                dueDatePermitted={dueDatePermitted}
+                priorityPermitted={priorityPermitted}
+                peoplePermitted={peoplePermitted}
+                removeTaskModalOpen={removeTaskModalOpen}
+                addHeaderOpenHandler={addHeaderOpenHandler}
+                updateDynamicField={updateDynamicField}
+                addOptionModalToggle={addOptionModalToggle}
+                statusGroup={statusGroup}
+                priorityGroup={priorityGroup}
+              />
+            )) : <p>No Projects found</p>}
+          </div>
         </div>
-      </div>
       </DndContext>
 
       <Dialog dismiss={{ escapeKey: false, outsidePress: false }} open={openChat} handler={subTaskChatModalHandler} size="md" className="outline-none">

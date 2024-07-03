@@ -20,7 +20,6 @@ import { DynamicSubTask } from "./elements/DynamicSubTask";
 
 
 export const SubTask = ({
-    index,
     subTask,
     taskId,
     classes,
@@ -183,7 +182,7 @@ export const SubTask = ({
         <tr className="even:bg-blue-gray-50 odd:bg-gray-100 hover:bg-white">
 
             <td className={`${classes} text-center w-14`}>
-                {isAdmin ? <input checked={checkboxSelected} onChange={selectSubTask} type="checkbox" className="w-3 h-3 rounded cursor-pointer" /> : <p>{index + 1}</p>}
+                <input checked={checkboxSelected} onChange={selectSubTask} type="checkbox" className="w-3 h-3 rounded cursor-pointer" />
             </td>
 
             {headers?.map(header => {
@@ -193,22 +192,22 @@ export const SubTask = ({
                             <div className="flex justify-between h-8">
 
                                 <div className="relative group px-2.5 h-full">
-                                {editToggle ? <InputComponent subTaskName={subTaskName} setSubTaskName={setSubTaskName} updateName={updateName} /> :
-                                    <div className="w-44">
-                                        <p className="whitespace-nowrap overflow-hidden overflow-ellipsis capitalize">{subTaskName}</p>
-                                        <MdEdit onClick={openEditNameInput} className="absolute hidden right-0 top-2 group-hover:block w-4 h-4" />
-                                    </div>
-                                }
+                                    {editToggle ? <InputComponent subTaskName={subTaskName} setSubTaskName={setSubTaskName} updateName={updateName} /> :
+                                        <div className="w-44">
+                                            <p className="whitespace-nowrap overflow-hidden overflow-ellipsis capitalize">{subTaskName}</p>
+                                            <MdEdit onClick={openEditNameInput} className="absolute hidden right-0 top-2 group-hover:block w-4 h-4" />
+                                        </div>
+                                    }
 
                                 </div>
 
-                                    <div onClick={openChatBox} className="border-l border-blue-gray-200 relative flex justify-center items-center w-16">
-                                        <HiOutlineChatBubbleOvalLeft className="w-6 h-6" />
-                                        {subTask?.chatUnreadCount ? <div className="absolute top-2 right-1 rounded-full w-4 h-4 flex items-center justify-center text-white bg-green-500">
-                                            <p className="text-center p-[2px] whitespace-nowrap overflow-hidden overflow-ellipsis text-[9px]">{subTask.chatUnreadCount}</p>
-                                        </div> : null}
-                                    </div>
-                                
+                                <div onClick={openChatBox} className="border-l border-blue-gray-200 relative flex justify-center items-center w-16">
+                                    <HiOutlineChatBubbleOvalLeft className="w-6 h-6" />
+                                    {subTask?.chatUnreadCount ? <div className="absolute top-2 right-1 rounded-full w-4 h-4 flex items-center justify-center text-white bg-green-500">
+                                        <p className="text-center p-[2px] whitespace-nowrap overflow-hidden overflow-ellipsis text-[9px]">{subTask.chatUnreadCount}</p>
+                                    </div> : null}
+                                </div>
+
                             </div>
 
                         </td>
@@ -237,7 +236,7 @@ export const SubTask = ({
                         </div>
                     </td>
                 } else if (header.key === "priority") {
-                    return <SelectComponent key={header._id} currentValue={subTask.priority} valueGroup={priorityGroup} updateSubTaskOption={updateSubTaskOption} headerType={"priority"} classes={classes} isAdmin={isAdmin} permission={priorityPermitted} />
+                    return <SelectComponent key={header._id} currentValue={subTask.priority} valueGroup={priorityGroup} updateSubTaskOption={updateSubTaskOption} headerType={"priority"} classes={classes} isAdmin={isAdmin} permission={priorityPermitted} addOptionModalToggle={addOptionModalToggle} />
                 } else if (header.key === "people") {
                     return <td key={header._id} className={`${classes} text-center p-0.5`}>
 

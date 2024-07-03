@@ -1,7 +1,7 @@
 import { SubTask } from "./SubTask"
 import { BiPlus, BiChevronDownCircle, BiDotsVerticalRounded } from "react-icons/bi"
 import { MdDeleteOutline } from "react-icons/md"
-import { Button, Typography, Card, CardBody, Dialog, DialogBody, DialogFooter,Avatar } from "@material-tailwind/react"
+import { Button, Typography, Card, CardBody, Dialog, DialogBody, DialogFooter, Avatar } from "@material-tailwind/react"
 import { useEffect, useState, useCallback } from "react"
 import { toast } from "react-toastify"
 import { removeSubTasks } from "../../api/apiConnections/projectConnections"
@@ -10,51 +10,25 @@ import { useSetRecoilState } from "recoil"
 import moment from "moment"
 import { OptionsConsolidationComp } from "./elements/OptionsConsolidationComp"
 import { SingleHeader } from "./SingleHeader"
-// import { Avatar } from "antd"
 
 
-// const statusGroup = [
-//     {
-//         option: "not started",
-//         color: "gray-500"
-//     }, {
-//         option: "in progress",
-//         color: "blue-500"
-//     }, {
-//         option: "on hold",
-//         color: "pink-500"
-//     }, {
-//         option: "done",
-//         color: "green-500"
-//     }
-// ]
-// const priorityGroup = [
-//     {
-//         option: "normal",
-//         color: "blue-500"
-//     }, {
-//         option: "critical",
-//         color: "red-500"
-//     }
-// ]
-
-export const TaskTable = ({ 
-    singleTable, 
-    addSubTask, 
-    dueDateChanger, 
-    classes, 
-    subTaskChatModalHandler, 
-    isAdmin, 
-    dueDatePermitted, 
-    priorityPermitted, 
-    peoplePermitted, 
-    removeTaskModalOpen, 
-    addHeaderOpenHandler, 
+export const TaskTable = ({
+    singleTable,
+    addSubTask,
+    dueDateChanger,
+    classes,
+    subTaskChatModalHandler,
+    isAdmin,
+    dueDatePermitted,
+    priorityPermitted,
+    peoplePermitted,
+    removeTaskModalOpen,
+    addHeaderOpenHandler,
     updateDynamicField,
     addOptionModalToggle,
     statusGroup,
     priorityGroup
- }) => {
+}) => {
     const setSelectedProject = useSetRecoilState(currentProjectAtom)
     const [selectedSubTasks, setSelectedSubTasks] = useState([])
     const [openRemoveDialog, setOpenRemoveDialog] = useState(false)
@@ -187,12 +161,12 @@ export const TaskTable = ({
                         </p> : <p className="mb-2">{`${singleTable?.subTasks?.length && singleTable.subTasks.length === 1 ? "1 Task" : singleTable.subTasks.length + " Tasks"}`}</p>}
                     </div>
                 </div>
-                
+
                 {!openTaskTable && (
                     <div className="overflow-x-scroll w-full no-scrollbar mr-2 border-l">
                         <table className="w-full min-w-max h-full table-auto">
                             <thead>
-                                
+
                                 <tr className="align-middle">
                                     {singleTable?.headers?.map(header => {
                                         if (header.key === "task") {
@@ -211,7 +185,7 @@ export const TaskTable = ({
                                     })}
                                     <td></td>
                                 </tr>
-                                
+
                             </thead>
                             <tbody>
                                 <tr>
@@ -270,7 +244,7 @@ export const TaskTable = ({
                         </table>
                     </div>
                 )}
-                
+
             </div>
 
             {openTaskTable ? <CardBody className="overflow-x-scroll px-2 py-2">
@@ -279,7 +253,7 @@ export const TaskTable = ({
                         <tr className="h-8">
                             <th className={`${classes}`} >
                                 <div className="flex items-center justify-center gap-1">
-                                    {isAdmin ? singleTable?.subTasks?.length ? <input onChange={allSubTaskSelectionHandler} type="checkbox" className="w-3 h-3 rounded cursor-pointer" /> : null : "No."}
+                                    {singleTable?.subTasks?.length ? <input onChange={allSubTaskSelectionHandler} type="checkbox" className="w-3 h-3 rounded cursor-pointer" /> : null}
                                     {selectedSubTasks?.length ? <>
                                         <MdDeleteOutline onClick={removeSubTaskHandler} className="w-4 h-4 text-red-600 cursor-pointer" />
                                         <Dialog open={openRemoveDialog} handler={removeSubTaskHandler} size="xs" className="text-center outline-none" >
@@ -298,7 +272,7 @@ export const TaskTable = ({
                             </th>
 
                             {/* Table headers */}
-                            {singleTable?.headers?.map(({_id,name}) => (
+                            {singleTable?.headers?.map(({ _id, name }) => (
                                 <SingleHeader key={_id} classes={classes} taskId={singleTable._id} id={_id} name={name} />
                             ))}
 
@@ -309,11 +283,10 @@ export const TaskTable = ({
                         </tr>
                     </thead>
                     <tbody>
-                        {singleTable?.subTasks?.map((subTask, index) => {
+                        {singleTable?.subTasks?.map((subTask) => {
                             return (
                                 <SubTask
                                     key={subTask._id}
-                                    index={index}
                                     subTask={subTask}
                                     taskId={singleTable._id}
                                     classes={classes}
@@ -343,49 +316,49 @@ export const TaskTable = ({
                                     return <td key={header._id} className={`${classes}`}></td>
                                 } else if (header.key === "status") {
                                     return <td key={header._id} className={`${classes} p-0`}>
-                                    <div className="h-full text-white flex">.
-                                        {taskStatus?.map((eachOption, index) =>
-                                        (
-                                            <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={statusGroup} />
-                                        )
-                                        )}
-                                        .</div>
-                                </td>
+                                        <div className="h-full text-white flex">.
+                                            {taskStatus?.map((eachOption, index) =>
+                                            (
+                                                <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={statusGroup} />
+                                            )
+                                            )}
+                                            .</div>
+                                    </td>
                                 } else if (header.key === "dueDate") {
-                                    return  <td key={header._id} className={`${classes} px-1`}>
-                                    {taskDue && <div className="flex p-0.5 cursor-default justify-center text-center rounded-full bg-blue-500 text-white">
-                                        {taskDue}
-                                    </div>}
-                                </td>
+                                    return <td key={header._id} className={`${classes} px-1`}>
+                                        {taskDue && <div className="flex p-0.5 cursor-default justify-center text-center rounded-full bg-blue-500 text-white">
+                                            {taskDue}
+                                        </div>}
+                                    </td>
                                 } else if (header.key === "priority") {
                                     return <td key={header._id} className={`${classes} p-0`}>
-                                    <div className="h-full text-white flex">.
-                                        {taskPriority?.map((eachOption, index) =>
-                                        (
-                                            <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={priorityGroup} />
-                                        )
-                                        )}
-                                        .</div>
-                                </td>
+                                        <div className="h-full text-white flex">.
+                                            {taskPriority?.map((eachOption, index) =>
+                                            (
+                                                <OptionsConsolidationComp key={index} index={index} taskCount={singleTable?.subTasks?.length} eachOption={eachOption} optionGroup={priorityGroup} />
+                                            )
+                                            )}
+                                            .</div>
+                                    </td>
                                 } else if (header.key === "people") {
                                     return <td key={header._id} className={`${classes}`}>
-                                    <div className="w-fit m-auto -space-x-4 relative">
-                                        {singleTable?.subTasks?.length > 2 ? (
-                                            <>
-                                                <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[0]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                                                <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[1]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                                                <div className="absolute -right-3 top-1 text-xs text-black"> +{singleTable?.subTasks.length - 2}</div>
-                                            </>
-                                        ) : singleTable?.subTasks?.map((subTask, index) => (
-                                            <Avatar key={index} className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
-                                        ))}
-                                    </div>
-                                </td>
+                                        <div className="w-fit m-auto -space-x-4 relative">
+                                            {singleTable?.subTasks?.length > 2 ? (
+                                                <>
+                                                    <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[0]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                                    <Avatar className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={singleTable?.subTasks[1]?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                                    <div className="absolute -right-3 top-1 text-xs text-black"> +{singleTable?.subTasks.length - 2}</div>
+                                                </>
+                                            ) : singleTable?.subTasks?.map((subTask, index) => (
+                                                <Avatar key={index} className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10" src={subTask?.peopleImg ?? "/avatar-icon.jpg"} alt="ProfilePhoto" size="sm" />
+                                            ))}
+                                        </div>
+                                    </td>
                                 } else {
                                     return <td key={header._id} className={`${classes}`}></td>
                                 }
                             })}
-                            
+
                             <td className="border-t border-blue-gray-200"></td>
                         </tr>
                     </tbody>

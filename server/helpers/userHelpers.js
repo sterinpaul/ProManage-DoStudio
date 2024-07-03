@@ -1,3 +1,4 @@
+import configKeys from "../config/configKeys.js";
 import UserModel from "../models/user.js";
 
 
@@ -6,7 +7,7 @@ const userHelpers = {
         return await UserModel.findOne({_id},{email:1,permissions:1,role:1})
     },
     getAllUsers:async()=>{
-        return await UserModel.find({},{__v:0,password:0,role:0}).sort({isActive:1})
+        return await UserModel.find({role:configKeys.JWT_USER_ROLE},{__v:0,password:0,role:0}).sort({isActive:1})
     },
     getUsersForAssign:async()=>{
         return await UserModel.find({isActive:true},{email:1,profilePhotoURL:1})

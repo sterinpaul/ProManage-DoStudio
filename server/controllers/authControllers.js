@@ -20,9 +20,7 @@ const authControllers = () => {
 
             const { email, password } = value;
             const lowerCaseEmail = email.toLowerCase()
-            if(lowerCaseEmail === configKeys.ADMIN_EMAIL){
-                return res.status(200).json({ status: false, message: "Admin already registered" });
-            }
+            
             const userExists = await authHelpers.getUserByEmail(lowerCaseEmail)
             
             if(userExists){
@@ -90,21 +88,20 @@ const authControllers = () => {
 
             const userExists = await authHelpers.getUserByEmail(lowerCaseEmail)
             if (userExists) {
-                if(userExists.isActive){
-                    registration(userExists, configKeys.JWT_USER_ROLE)
-                }else{
-                    return res.status(200).json({ status: false, message: "Contact Admin for access" })
+                if(userExists.role === configKeys.JWT_ADMIN_ROLE){
+                    registration(userExists, configKeys.JWT_ADMIN_ROLE)
+                }else if(userExists.role === configKeys.JWT_USER_ROLE){
+                    if(userExists.isActive){
+                        registration(userExists, configKeys.JWT_USER_ROLE)
+                    }else{
+                        return res.status(200).json({ status: false, message: "Contact Admin for access" })
+                    }
                 }
             } else {
-                const AdminExists = await authHelpers.getAdminByEmail(lowerCaseEmail)
-                if (AdminExists) {
-                    registration(AdminExists, configKeys.JWT_ADMIN_ROLE)
-                } else {
-                    return res.status(200).json({ status: false, message: "Unauthorized access" })
-                }
+                return res.status(400).json({ status: false, message: "User does not exist" })
             }
         } catch (error) {
-            throw new Error(error.message)
+            return res.status(500).json({ status: false, message: "Error occured" })
         }
     }
 

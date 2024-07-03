@@ -13,8 +13,7 @@ const configKeys = {
     JWT_ACCESS_EXPIRY:process.env.JWT_ACCESS_EXPIRY,
     JWT_REFRESH_EXPIRY:process.env.JWT_REFRESH_EXPIRY,
     JWT_USER_ROLE:process.env.JWT_USER_ROLE,
-    JWT_ADMIN_ROLE:process.env.JWT_ADMIN_ROLE,
-    ADMIN_EMAIL:process.env.ADMIN_EMAIL
+    JWT_ADMIN_ROLE:process.env.JWT_ADMIN_ROLE
 }
 
 export default configKeys

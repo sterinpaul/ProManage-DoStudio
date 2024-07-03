@@ -1,6 +1,6 @@
 import express from 'express'
 import adminControllers from '../controllers/adminControllers.js';
-// import { uploadTicket } from '../middlewares/cloudinaryConfig.js';
+
 
 const adminRoutes = ()=>{
     const router = express.Router();

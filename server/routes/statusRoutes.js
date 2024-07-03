@@ -6,6 +6,7 @@ const statusRoutes = ()=>{
     const controllers = statusControllers()
     
     router.post('/addOption',controllers.addOption)
+    router.get('/getAllStatus',controllers.getOptions)
     
     return router
 }
