@@ -21,13 +21,7 @@ const subTaskControllers = () => {
             const subTask = {taskId:value.taskId}
             if(allHeaders.length){
                 allHeaders?.forEach(header=>{
-                    if(header.key === "status"){
-                        subTask[header.key] = "not started"
-                    }else if(header.key === "priority"){
-                        subTask[header.key] = "normal"
-                    }else{
-                        subTask[header.key] = ""
-                    }
+                    subTask[header.key] = ""
                 })
             }
             const subTaskResponse = await subTaskHelpers.addSubTask(subTask)

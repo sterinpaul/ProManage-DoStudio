@@ -1,6 +1,6 @@
 
 export const OptionsConsolidationComp = ({index,taskCount,eachOption,optionGroup})=>{
-    const color = optionGroup?.find(single => single?.value === eachOption?.label).color
+    const color = optionGroup?.length ? optionGroup?.find(single => single?.option === eachOption?.label).color : ""
     const width = eachOption?.count * 100 / taskCount
 
     return(

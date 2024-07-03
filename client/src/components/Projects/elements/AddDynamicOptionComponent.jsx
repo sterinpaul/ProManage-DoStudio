@@ -1,18 +1,18 @@
-import { FormikConsumer, useFormik } from 'formik';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { useSetRecoilState } from 'recoil';
+import { toast } from 'react-toastify';
 import { useState } from 'react';
-import { Input, Button, DialogBody, DialogFooter, Typography } from '@material-tailwind/react';
-import {LoadingSpinner} from '../../Home/LoadingSpinner';
-import { SketchPicker } from 'react-color';
+import { Input, Button, DialogFooter, Typography } from '@material-tailwind/react';
+import { LoadingSpinner } from '../../Home/LoadingSpinner';
+import { HexColorPicker } from 'react-colorful';
+import { addDynamicPriorityOption, addDynamicStatusOption } from '../../../api/apiConnections/projectConnections';
 
 
-export const AddDynamicOptionComponent = ({ dynamicSelectFieldType,dynamicFieldModalHandler }) => {
-    const setStatusOptions = useSetRecoilState(statusOptionsAtom)
-    const setPriorityOptions = useSetRecoilState(priorityOptionsAtom)
-    const [addHeaderError, setAddHeaderError] = useState("")
-    const [loading,setLoading] = useState(false)
+export const AddDynamicOptionComponent = ({ dynamicSelectFieldType, dynamicFieldModalHandler, setStatusGroup, setPriorityGroup }) => {
+    const [addOptionError, setAddOptionError] = useState("")
+    const [loading, setLoading] = useState(false)
 
+    const loadingToggle = () => setLoading(previous => !previous)
 
     const formik = useFormik({
         initialValues: {
@@ -22,26 +22,43 @@ export const AddDynamicOptionComponent = ({ dynamicSelectFieldType,dynamicFieldM
         validationSchema: Yup.object().shape({
             option: Yup.string()
                 .max(18, 'Maximum 18 characters allowed')
-                .matches(/^(?!.*  )[A-Za-z]+(?: [A-Za-z]+)*$/,'Only alphabets are allowed')
+                .matches(/^[a-zA-Z]+(?: [a-zA-Z]+)*$/, 'Only alphabets are allowed')
                 .required('Required'),
-            color: Yup.string().required('Required'),
+            color: Yup.string().required('Choose a color'),
         }),
         onSubmit: async (values) => {
-            setLoading(true)
-            const optionResponse = await addDynamicOption(values)
-            setLoading(false)
+            loadingToggle()
+            // try {
+                let response;
+                if (dynamicSelectFieldType === "status") {
+                    response = await addDynamicStatusOption(values)
+                } else if (dynamicSelectFieldType === "priority") {
+                    response = await addDynamicPriorityOption(values)
+                }
+                loadingToggle()
 
-            if (optionResponse?.status) {
-                setSelectedProject(previous => previous.map(task=>({...task,headers:[...task.headers,headerResponse.data]})))
-                dynamicFieldModalHandler()
-                toast.success(optionResponse.message)
-            } else {
-                setAddHeaderError(optionResponse.message)
+                if (response?.status) {
+                    dynamicFieldModalHandler()
+                    if (dynamicSelectFieldType === "status") {
+                        setStatusGroup(previous => [...previous, response.data])
+                    } else if (dynamicSelectFieldType === "priority") {
+                        setPriorityGroup(previous => [...previous, response.data])
+                    }
+                    toast.success(response.message)
+                } else {
+                    setAddOptionError(response.message)
 
-                setTimeout(() => {
-                    setAddHeaderError("")
-                }, 3000);
-            }
+                    setTimeout(() => {
+                        setAddOptionError("")
+                    }, 3000);
+                }
+            // } catch (error) {
+            //     loadingToggle();
+            //     setAddOptionError('An error occurred');
+            //     setTimeout(() => {
+            //         setAddOptionError("");
+            //     }, 3000);
+            // }
 
         }
     })
@@ -52,43 +69,44 @@ export const AddDynamicOptionComponent = ({ dynamicSelectFieldType,dynamicFieldM
     }
 
     return (
-        <form onSubmit={formik.handleSubmit} className="mx-auto flex flex-col items-center relative">
-            
-            <DialogBody>
-                <Typography variant="h4" className="py-4 px-8 capitalize text-center">
-                    `add ${dynamicSelectFieldType} option`
+        <form onSubmit={formik.handleSubmit}>
+
+            <div className='mt-4 flex flex-col justify-center items-center gap-3'>
+                <Typography variant="h4" className=" px-8 capitalize text-center">
+                    {`add ${dynamicSelectFieldType} option`}
                 </Typography>
 
-                    <div>
+                <div>
 
-                        <Input
-                            {...formik.getFieldProps('option')}
-                            type="text"
-                            label="Header Name"
-                            maxLength={19}
-                            className="capitalize"
-                            color='blue'
-                            
-                        />
-                        <p className="h-2 ml-2 text-xs text-red-500">{formik.touched.option && formik.errors.option ? formik.errors.option : null}</p>
-                    </div>
-                    <div>
+                    <Input
+                        {...formik.getFieldProps('option')}
+                        type="text"
+                        label="Option Name"
+                        maxLength={19}
+                        className="capitalize"
+                        color='blue'
 
-                        <SketchPicker color={formik.values.color} {...formik.getFieldProps('color')} />
-                        <p className="h-2 ml-2 text-xs text-red-500">{formik.touched.color && formik.errors.color ? formik.errors.color : null}</p>
-                    </div>
+                    />
+                    <p className="h-2 ml-2 text-xs text-red-500">{formik.touched.option && formik.errors.option ? formik.errors.option : null}</p>
+                </div>
 
-                    <p className='text-red-500 text-center h-2'>{addHeaderError}</p>
+                <div>
+                    <p className='text-center p-2'>Choose a background color</p>
+                    <HexColorPicker color={formik.values.color} onChange={(color) => formik.setFieldValue('color', color)} />
+                    <p className="h-2 ml-2 mt-2 text-xs text-red-500">{formik.touched.color && formik.errors.color ? formik.errors.color : null}</p>
+                </div>
 
-            </DialogBody>
+                <p className='text-red-500 text-center h-2'>{addOptionError}</p>
+
+            </div>
             <DialogFooter className="mx-auto text-center mb-4 flex justify-center items-center gap-4">
                 <Button type="submit" disabled={loading} color="blue" className="w-24 py-2">Submit</Button>
                 <Button type="button" onClick={closeAddOptionModal} color="black" className="w-24 py-2">Cancel</Button>
             </DialogFooter>
-            {loading && <div className=' bg-gray-500 bg-opacity-75 rounded-lg w-full h-full flex justify-center items-center absolute bottom-1/2 translate-y-1/2'>
+            {loading && <div className=' bg-gray-500 bg-opacity-75 rounded-lg w-full h-full flex justify-center items-center absolute z-10 bottom-1/2 translate-y-1/2'>
                 <LoadingSpinner />
             </div>}
-             
+
         </form>
     )
 }

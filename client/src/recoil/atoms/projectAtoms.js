@@ -14,3 +14,13 @@ export const taskSubTaskAtom = atom({
     key:"taskSubTaskAtom",
     default: {taskId:"",subTaskId:""}
 })
+
+export const statusOptionsAtom = atom({
+    key:"statusOptionsAtom",
+    default: []
+})
+
+export const priorityOptionsAtom = atom({
+    key:"priorityOptionsAtom",
+    default: []
+})

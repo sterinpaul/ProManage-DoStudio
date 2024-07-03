@@ -13,30 +13,30 @@ import { SingleHeader } from "./SingleHeader"
 // import { Avatar } from "antd"
 
 
-const statusGroup = [
-    {
-        value: "not started",
-        color: "gray-500"
-    }, {
-        value: "in progress",
-        color: "blue-500"
-    }, {
-        value: "on hold",
-        color: "pink-500"
-    }, {
-        value: "done",
-        color: "green-500"
-    }
-]
-const priorityGroup = [
-    {
-        value: "normal",
-        color: "blue-500"
-    }, {
-        value: "critical",
-        color: "red-500"
-    }
-]
+// const statusGroup = [
+//     {
+//         option: "not started",
+//         color: "gray-500"
+//     }, {
+//         option: "in progress",
+//         color: "blue-500"
+//     }, {
+//         option: "on hold",
+//         color: "pink-500"
+//     }, {
+//         option: "done",
+//         color: "green-500"
+//     }
+// ]
+// const priorityGroup = [
+//     {
+//         option: "normal",
+//         color: "blue-500"
+//     }, {
+//         option: "critical",
+//         color: "red-500"
+//     }
+// ]
 
 export const TaskTable = ({ 
     singleTable, 
@@ -51,7 +51,9 @@ export const TaskTable = ({
     removeTaskModalOpen, 
     addHeaderOpenHandler, 
     updateDynamicField,
-    addOptionModalToggle
+    addOptionModalToggle,
+    statusGroup,
+    priorityGroup
  }) => {
     const setSelectedProject = useSetRecoilState(currentProjectAtom)
     const [selectedSubTasks, setSelectedSubTasks] = useState([])

@@ -5,8 +5,8 @@ import { Avatar, Button, Dialog, DialogBody, DialogFooter, Popover, PopoverConte
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { addSingleSubTask, dueDateUpdate, dynamicFieldUpdate, getSingleProject, headerDnd, removeATask } from "../api/apiConnections/projectConnections";
-import { currentProjectAtom } from "../recoil/atoms/projectAtoms";
+import { addSingleSubTask, dueDateUpdate, dynamicFieldUpdate, getAllPriorityOptions, getAllStatusOptions, getSingleProject, headerDnd, removeATask } from "../api/apiConnections/projectConnections";
+import { currentProjectAtom, priorityOptionsAtom, statusOptionsAtom } from "../recoil/atoms/projectAtoms";
 import { FormComponent } from "../components/Home/FormComponent";
 import { toast } from "react-toastify";
 import { SubTaskChat } from "../components/Chat/SubTaskChat";
@@ -24,6 +24,8 @@ const Projects = () => {
   const { state } = useLocation()
   const userData = useRecoilValue(userDataAtom)
   const [selectedProject, setSelectedProject] = useRecoilState(currentProjectAtom)
+  const [statusGroup,setStatusGroup] = useRecoilState(statusOptionsAtom)
+  const [priorityGroup,setPriorityGroup] = useRecoilState(priorityOptionsAtom)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [openChat, setOpenChat] = useState(false)
 
@@ -66,9 +68,20 @@ const Projects = () => {
 
 
   const getSelectedProject = async () => {
-    const response = await getSingleProject(state?.id)
-    if (response?.status) {
-      setSelectedProject(response.data)
+    const [project,status,priority] = await Promise.all([
+      getSingleProject(state?.id),
+      getAllStatusOptions(),
+      getAllPriorityOptions()
+    ])
+    
+    if (project?.status) {
+      setSelectedProject(project.data)
+    }
+    if (status?.status) {
+      setStatusGroup(status.data)
+    }
+    if (priority?.status) {
+      setPriorityGroup(priority.data)
     }
   }
 
@@ -494,6 +507,8 @@ const addOptionModalToggle = (headerType)=>{
               addHeaderOpenHandler={addHeaderOpenHandler}
               updateDynamicField={updateDynamicField}
               addOptionModalToggle={addOptionModalToggle}
+              statusGroup={statusGroup}
+              priorityGroup={priorityGroup}
             />
           )) : <p>No Projects found</p>}
         </div>
@@ -523,7 +538,7 @@ const addOptionModalToggle = (headerType)=>{
 
       {/* Dynamic option field Modal */}
       <Dialog dismiss={{ escapeKey: false, outsidePress: false }} open={openDynamicSelectFieldModal} handler={dynamicFieldModalHandler} size="xs" className="outline-none">
-        <AddDynamicOptionComponent dynamicSelectFieldType={dynamicSelectFieldType} dynamicFieldModalHandler={dynamicFieldModalHandler} />
+        <AddDynamicOptionComponent dynamicSelectFieldType={dynamicSelectFieldType} dynamicFieldModalHandler={dynamicFieldModalHandler} setStatusGroup={setStatusGroup} setPriorityGroup={setPriorityGroup} />
       </Dialog>
 
     </div>

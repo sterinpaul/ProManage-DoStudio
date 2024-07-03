@@ -3,7 +3,7 @@ import { model, Schema } from "mongoose";
 
 const StatusSchema = new Schema(
     {
-        name: {
+        option: {
             type: String,
             unique: true,
             required: true

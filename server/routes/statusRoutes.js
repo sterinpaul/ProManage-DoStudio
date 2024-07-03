@@ -1,0 +1,13 @@
+import express from 'express'
+import statusControllers from '../controllers/statusControllers.js';
+
+const statusRoutes = ()=>{
+    const router = express.Router();
+    const controllers = statusControllers()
+    
+    router.post('/addOption',controllers.addOption)
+    
+    return router
+}
+
+export default statusRoutes
