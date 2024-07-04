@@ -1,17 +1,52 @@
 import Joi from 'joi'
 import userHelpers from '../helpers/userHelpers.js'
+import headerHelpers from '../helpers/headerHelpers.js'
+import permissionHelpers from '../helpers/permissionHelpers.js'
 
 
 const adminControllers = () => {
     const getAllUsers = async (req, res) => {
         try {
             const getUsersResponse = await userHelpers.getAllUsers()
-            if(getUsersResponse.length){
-                return res.status(200).json({status:true,data:getUsersResponse})
-            }
-            return res.status(200).json({status:false,message:"No users found"})
+            return res.status(200).json({status:true,data:getUsersResponse})
         } catch (error) {
-            throw new Error(error.message)
+            return res.status(500).json({status:false,message:"Internal error"})
+        }
+    }
+
+    const getHeaders = async (req, res) => {
+        try {
+            const response = await headerHelpers.getHeaders()
+            return res.status(200).json({status:true,data:response})
+        } catch (error) {
+            return res.status(500).json({status:false,message:"Internal error"})
+        }
+    }
+
+    const getPermissions = async (req, res) => {
+        try {
+            const response = await permissionHelpers.getPermissions()
+            return res.status(200).json({status:true,data:response})
+        } catch (error) {
+            return res.status(500).json({status:false,message:"Internal error"})
+        }
+    }
+
+    const addPermission = async (req, res) => {
+        try {
+            const permissionSchema = Joi.object({
+                key: Joi.string().required(),
+                name: Joi.string().required()
+            })
+            const { error, value } = permissionSchema.validate(req.body)
+            
+            if (error) {
+                return res.status(200).json({ status: false, message: error.details[0].message })
+            }
+            const response = await permissionHelpers.addPermission(value)
+            return res.status(200).json({status:true,data:response})
+        } catch (error) {
+            return res.status(500).json({status:false,message:"Internal error"})
         }
     }
 
@@ -64,6 +99,9 @@ const adminControllers = () => {
 
     return {
         getAllUsers,
+        getHeaders,
+        getPermissions,
+        addPermission,
         updateUserStatus,
         updatePermissions
     }

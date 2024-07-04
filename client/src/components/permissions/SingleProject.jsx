@@ -1,11 +1,8 @@
-import { Switch } from "@material-tailwind/react"
 import { useState } from "react"
+import { SinglePermission } from "./SinglePermission"
 
 
-export const SingleProject = ({singleProject,permissions,setPermissions}) => {
-    const [dueDatePermission,setDueDatePermission] = useState(permissions?.length ? permissions.find(permissions=>permissions.projectId === singleProject._id)?.allowedPermissions?.includes("dueDate") ? true : false : false)
-    const [priorityPermission,setPriorityPermission] = useState(permissions?.length ? permissions.find(permissions=>permissions.projectId === singleProject._id)?.allowedPermissions?.includes("priority") ? true : false : false)
-    const [peopleAssignPermission,setPeopleAssignPermission] = useState(permissions?.length ? permissions.find(permissions=>permissions.projectId === singleProject._id)?.allowedPermissions?.includes("people") ? true : false : false)
+export const SingleProject = ({singleProject,permissions,setPermissions,permissionHeaders,index,projectCount}) => {
     const [activeCheckBox,setActiveCheckBox] = useState(permissions?.length ? permissions.some(project=>project.projectId === singleProject._id) : false)
 
     const projectSelectionHandler = (event)=>{
@@ -20,23 +17,10 @@ export const SingleProject = ({singleProject,permissions,setPermissions}) => {
     }
 
     const permissionSwitchHandler = (status,permissionType)=>{
-        
         if(status){
             setPermissions(previous=>previous.map(eachProject=>eachProject.projectId === singleProject._id ? {...eachProject,allowedPermissions:[...eachProject.allowedPermissions,permissionType]} : eachProject))
         }else{
             setPermissions(previous=>previous.map(eachProject=>eachProject.projectId === singleProject._id ? {...eachProject,allowedPermissions:eachProject.allowedPermissions.filter(permission=>permission !== permissionType)} : eachProject))
-        }
-
-        switch (permissionType) {
-            case "dueDate":
-                setDueDatePermission(previous=>!previous)
-                break;
-            case "priority":
-                setPriorityPermission(previous=>!previous)
-                break;
-            case "people":
-                setPeopleAssignPermission(previous=>!previous)
-                break;
         }
     }
 
@@ -48,22 +32,12 @@ export const SingleProject = ({singleProject,permissions,setPermissions}) => {
             </td>
 
             <td className=" border border-blue-gray-200">{singleProject.name}</td>
-            
-            <td className="border border-blue-gray-200">
-                <div className="w-full flex justify-center items-center">
-                    <Switch onChange={(event)=>permissionSwitchHandler(event.target.checked,"dueDate")} disabled={!activeCheckBox} color="blue" size="sm" checked={dueDatePermission}></Switch>
-                </div>
-            </td>
-            <td className="border border-blue-gray-200">
-                <div className="w-full flex justify-center items-center">
-                    <Switch onChange={(event)=>permissionSwitchHandler(event.target.checked,"priority")} disabled={!activeCheckBox} color="blue" size="sm" checked={priorityPermission}></Switch>
-                </div>
-            </td>
-            <td className="border border-blue-gray-200">
-                <div className="w-full flex justify-center items-center">
-                    <Switch onChange={(event)=>permissionSwitchHandler(event.target.checked,"people")} disabled={!activeCheckBox} color="blue" size="sm" checked={peopleAssignPermission}></Switch>
-                </div>
-            </td>
+
+            {permissionHeaders?.map(header=>(
+                <SinglePermission key={header._id} header={header} activeCheckBox={activeCheckBox} projectId={singleProject._id} permissions={permissions} permissionSwitchHandler={permissionSwitchHandler} />
+            ))}
+
+            <td className={`${index === projectCount-1 && "border-b"} border-r border-blue-gray-200`}></td>
         </tr>
     )
 }

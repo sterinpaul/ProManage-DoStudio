@@ -7,6 +7,9 @@ const adminRoutes = ()=>{
     const controllers = adminControllers()
 
     router.get('/getAllUsers',controllers.getAllUsers)
+    router.get('/getHeaders',controllers.getHeaders)
+    router.get('/getPermissions',controllers.getPermissions)
+    router.post('/addPermission',controllers.addPermission)
     router.patch('/userStatus',controllers.updateUserStatus)
     router.put('/updatePermissions',controllers.updatePermissions)
     

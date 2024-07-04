@@ -15,7 +15,7 @@ import { useRecoilValue } from 'recoil';
 const Home = lazy(() => import("./pages/home"));
 const SignInSignUp = lazy(() => import('./pages/SignInSignUp'))
 const Projects = lazy(() => import("./pages/Projects"));
-const Permissions = lazy(() => import("./pages/Permissions"));
+const UserPermissions = lazy(() => import("./pages/UserPermissions"));
 const Error = lazy(() => import('./pages/ErrorPage'))
 
 const Layout = () => {
@@ -74,7 +74,7 @@ function App() {
                 <p className="h-screen grid place-items-center">Loading....</p>
               }
             >
-              {token ? <Permissions /> : <SignInSignUp />}
+              {token ? <UserPermissions /> : <SignInSignUp />}
             </Suspense>
           ),
         },

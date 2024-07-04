@@ -20,6 +20,9 @@ const headerHelpers = {
   },
   getAllHeaders: async()=>{
     return await HeaderModel.find({},{__v:0}).sort({order:1})
+  },
+  getHeaders: async()=>{
+    return await HeaderModel.find({},{__v:0}).sort({order:1})
   }
 }
 
