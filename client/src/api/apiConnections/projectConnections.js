@@ -47,6 +47,17 @@ export const getAllPriorityOptions = async () => {
     }
 }
 
+export const getPermittedHeaders = async () => {
+    try {
+        const response = await baseURL.get(`/user/getPermissions`);
+        if (response) {
+            return response.data;
+        }
+    } catch (error) {
+        console.error(`Error fetching permissions: ${error.message}`);
+    }
+}
+
 export const addProject = async (projectData) => {
     try {
         const response = await baseURL.post(`/projects/addProject`, projectData);

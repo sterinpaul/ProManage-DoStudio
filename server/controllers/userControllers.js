@@ -1,5 +1,6 @@
 import Joi from 'joi'
 import userHelpers from '../helpers/userHelpers.js'
+import permissionHelpers from '../helpers/permissionHelpers.js'
 
 
 const userControllers = () => {
@@ -26,7 +27,14 @@ const userControllers = () => {
         }
     }
 
-
+    const getPermissions = async (req, res) => {
+        try {
+            const response = await permissionHelpers.getPermissions()
+            return res.status(200).json({status:true,data:response})
+        } catch (error) {
+            return res.status(500).json({status:false,message:"Internal error"})
+        }
+    }
 
     const uploadProfileImg = async (req, res) => {
         try {
@@ -44,6 +52,7 @@ const userControllers = () => {
     return {
         getUserData,
         getUsersAssign,
+        getPermissions,
         uploadProfileImg
     }
 }

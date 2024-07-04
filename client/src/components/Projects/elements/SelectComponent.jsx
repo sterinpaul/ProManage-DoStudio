@@ -1,15 +1,26 @@
 import { useEffect, useRef, useState } from "react"
 import { BiPlus } from "react-icons/bi"
+import { permittedHeadersAtom } from "../../../recoil/atoms/projectAtoms"
+import { useRecoilValue } from "recoil"
 
 
-export const SelectComponent = ({ currentValue, valueGroup, updateSubTaskOption, headerType, classes,isAdmin,permission,addOptionModalToggle }) => {
+export const SelectComponent = ({ currentValue, valueGroup, updateSubTaskOption, headerType, classes,isAdmin,addOptionModalToggle,projectPermitted }) => {
     const [currentOption, setCurrentOption] = useState(currentValue)
     const [currentColor, setCurrentColor] = useState(valueGroup?.length ? valueGroup.find((single) => single.option === currentValue)?.color : "")
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 
+    const permittedHeaders = useRecoilValue(permittedHeadersAtom)
+
+    const isNotAllowed = permittedHeaders?.some(head=>head.key === headerType)
+    const isAccess = isAdmin
+    ? true
+    : isNotAllowed
+    ? projectPermitted?.allowedPermissions?.includes(headerType) ?? false
+    : true;
+
     const toggleDropdown = () => {
-        if(permission || isAdmin){
+        if(isAccess){
             setIsOpen(!isOpen)
         }
     }

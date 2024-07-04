@@ -8,6 +8,7 @@ const userRoutes = ()=>{
 
     router.get('/getUserData',controllers.getUserData)
     router.get('/getUsersAssign',controllers.getUsersAssign)
+    router.get('/getPermissions',controllers.getPermissions)
     
     return router
 }

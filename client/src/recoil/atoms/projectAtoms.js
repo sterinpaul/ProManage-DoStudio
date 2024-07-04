@@ -24,3 +24,8 @@ export const priorityOptionsAtom = atom({
     key:"priorityOptionsAtom",
     default: []
 })
+
+export const permittedHeadersAtom = atom({
+    key:"permittedHeadersAtom",
+    default: []
+})
