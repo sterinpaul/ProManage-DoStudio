@@ -55,8 +55,7 @@ const Sidebar = () => {
         navigate(path, {
           state: {
             id: data._id,
-            name: data.name,
-            description: data.description,
+            name: data.name
           },
         });
         break;

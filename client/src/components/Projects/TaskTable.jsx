@@ -32,7 +32,7 @@ export const TaskTable = ({
   subTaskChatModalHandler,
   isAdmin,
   projectPermitted,
-  removeTaskModalOpen,
+  removeOrExportTaskModalOpen,
   addHeaderOpenHandler,
   updateDynamicField,
   addOptionModalToggle,
@@ -47,22 +47,42 @@ export const TaskTable = ({
   const [taskPriority, setTaskPriority] = useState([]);
   const [taskDue, setTaskDue] = useState("");
 
+
+  const openModal = (type)=>{
+    if(type === "remove"){
+      removeOrExportTaskModalOpen(type,{_id:singleTable._id})
+    }else{
+      if(selectedSubTasks.length){
+        removeOrExportTaskModalOpen(type,{_id:singleTable._id,name:singleTable.name,subTasks:selectedSubTasks})
+      }else{
+        const exportData = singleTable?.subTasks?.map((eachTask) =>{
+          const {chatCount,createdAt,updatedAt,isActive,__v,taskId,...neededData} = eachTask
+          return neededData
+        })
+        removeOrExportTaskModalOpen(type,{_id:singleTable._id,name:singleTable.name,subTasks:exportData})
+      }
+    }
+  }
+
   const allSubTaskSelectionHandler = (event) => {
     if (event.target.checked) {
       setSelectedSubTasks(
-        singleTable?.subTasks?.map((eachTask) => eachTask._id)
+        singleTable?.subTasks?.map((eachTask) =>{
+          const {chatCount,createdAt,updatedAt,isActive,__v,taskId,...neededData} = eachTask
+          return neededData
+        })
       );
     } else {
       setSelectedSubTasks([]);
     }
   };
 
-  const singleSubTaskSelectionhandler = (checked, subTaskId) => {
+  const singleSubTaskSelectionhandler = (checked, subTaskData) => {
     if (checked) {
-      setSelectedSubTasks((previous) => [...previous, subTaskId]);
+      setSelectedSubTasks((previous) => [...previous, subTaskData]);
     } else {
       setSelectedSubTasks((previous) =>
-        previous.filter((singleTask) => singleTask !== subTaskId)
+        previous.filter((singleTask) => singleTask._id !== subTaskData._id)
       );
     }
   };
@@ -78,7 +98,7 @@ export const TaskTable = ({
         previous.map((task) => {
           if (task._id === singleTable._id) {
             const updated = task.subTasks.filter(
-              (subTask) => !selectedSubTasks.includes(subTask._id)
+              (subTask) => !selectedSubTasks.some(task=>task._id === subTask._id)
             );
             return { ...task, subTasks: updated };
           } else {
@@ -179,13 +199,13 @@ export const TaskTable = ({
                   <div className="w-full cursor-pointer">
                     {isAdmin && (
                       <p
-                        onClick={() => removeTaskModalOpen(singleTable._id)}
+                        onClick={() => openModal("remove")}
                         className="p-1 pl-2 text-sm hover:bg-gray-200 rounded"
                       >
                         Remove
                       </p>
                     )}
-                    <p className="p-1 pl-2 text-sm hover:bg-gray-200 rounded">
+                    <p onClick={() => openModal("export")} className="p-1 pl-2 text-sm hover:bg-gray-200 rounded">
                       Export
                     </p>
                   </div>
@@ -209,9 +229,9 @@ export const TaskTable = ({
                 }`}</p>
               )}
             </Typography>
-            {openTaskTable ? (
-              <p>{singleTable.description}</p>
-            ) : (
+            {!openTaskTable && (
+            //   <p>{singleTable.description}</p>
+            // ) : (
               <p className="mb-2">{`${
                 singleTable?.subTasks?.length &&
                 singleTable.subTasks.length === 1

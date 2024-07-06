@@ -59,7 +59,8 @@ export const SubTask = ({
   const [selectedDate, setSelectedDate] = useState(
     subTask.dueDate ? dayjs(subTask.dueDate) : null
   );
-  const checkboxSelected = selectedSubTasks?.includes(subTask?._id);
+  const checkboxSelected = selectedSubTasks?.some(task=>task?._id === subTask?._id);
+  
   const [editToggle, setEditToggle] = useState(false);
   const [editNotesToggle, setEditNotesToggle] = useState(false);
   const [nameError, setNameError] = useState(false);
@@ -163,7 +164,8 @@ export const SubTask = ({
   };
 
   const selectSubTask = (event) => {
-    singleSubTaskSelectionhandler(event.target.checked, subTask._id);
+    const {chatCount,createdAt,updatedAt,isActive,__v,taskId,...neededData} = subTask
+    singleSubTaskSelectionhandler(event.target.checked, neededData);
   };
 
   const openEditNameInput = () => {

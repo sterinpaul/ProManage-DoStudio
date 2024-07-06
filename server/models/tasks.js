@@ -13,10 +13,6 @@ const TaskSchema = new Schema (
             unique: true,
             required: true
         },
-        description:{
-            type: String,
-            required: true
-        },
         headers:{
             type:Array,
             default:[]

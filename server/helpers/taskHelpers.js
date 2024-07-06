@@ -171,7 +171,7 @@ const taskHelpers = {
             _id: "$_id",
             projectId: { $first: "$projectId" },
             name: { $first: "$name" },
-            description: { $first: "$description" },
+            // description: { $first: "$description" },
             createdAt: { $first: "$createdAt" },
             headers: { $first: "$headers" },
             subTasks: { $push: "$subTasks" }

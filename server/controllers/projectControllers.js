@@ -20,7 +20,7 @@ const projectControllers = () => {
         try {
             const projectSchema = Joi.object({
                 name: Joi.string().min(1).max(25).required(),
-                description: Joi.string().min(1).max(150).required()
+                // description: Joi.string().min(1).max(150).required()
             })
             const { error, value } = projectSchema.validate(req.body)
 

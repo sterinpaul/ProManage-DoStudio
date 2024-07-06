@@ -49,6 +49,7 @@ import { AddHeaderComponent } from "../components/Projects/elements/AddHeaderCom
 import { DndContext } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { AddDynamicOptionComponent } from "../components/Projects/elements/AddDynamicOptionComponent";
+import moment from "moment";
 
 const Projects = () => {
   const { state } = useLocation();
@@ -67,30 +68,32 @@ const Projects = () => {
     (project) => project?.projectId === state.id
   );
 
-  const [openRemoveTaskModal, setOpenRemoveTaskModal] = useState(false);
-  const [taskId, setTaskId] = useState("");
-
+  
   const [openSearchInput, setOpenSearchInput] = useState(false);
   const [searchedSubTask, setSearchedSubTask] = useState({});
   const [subTaskName, setSubTaskName] = useState("");
   const [allSubTasks, setAllSubTasks] = useState([]);
   const [filteredSubTasks, setFilteredSubTasks] = useState([]);
   const searchInputRef = useRef(null);
-
+  
   const [openPersonDropdown, setOpenPersonDropdown] = useState(false);
   const [person, setPerson] = useState({});
   const [allUsers, setAllUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-
+  
   const [openSort, setOpenSort] = useState(false);
-
+  
   const [currentProject, setCurrentProject] = useState([]);
-
+  
   const [addHeaderOpen, setAddHeaderOpen] = useState(false);
-
+  
   const [dynamicSelectFieldType, setDynamicSelectFieldType] = useState("");
   const [openDynamicSelectFieldModal, setOpenDynamicSelectFieldModal] =
-    useState(false);
+  useState(false);
+  
+  const [openRemoveOrExportTaskModal, setOpenRemoveOrExportTaskModal] = useState(false);
+  const [taskData, setTaskData] = useState({});
+  const [exportOrRemoveOption,setExportOrRemoveOption] = useState("")
 
   const addHeaderOpenHandler = () => {
     setAddHeaderOpen((previous) => !previous);
@@ -180,25 +183,71 @@ const Projects = () => {
     setOpenChat((previous) => !previous);
   };
 
-  const removeTaskModalHandler = () =>
-    setOpenRemoveTaskModal((previous) => !previous);
-
-  const removeTaskModalOpen = (id) => {
-    setTaskId(id);
-    removeTaskModalHandler();
+  const removeOrExportTaskModalHandler = () =>{
+    setOpenRemoveOrExportTaskModal((previous) => !previous);
+  }
+  
+  const removeOrExportTaskModalOpen = (option,task) => {
+    setExportOrRemoveOption(option)
+    removeOrExportTaskModalHandler();
+    setTaskData(task);
   };
 
-  const removeTask = async () => {
-    removeTaskModalHandler();
-    const response = await removeATask(taskId);
+
+
+  // Convert data into csv
+  const convertToCSV = (data) => {
+    const head = data?.subTasks[0]
+    delete head._id
+    
+    const keys = ["NO.",...Object.keys(head)]
+    const csvRows = [data?.name?.toUpperCase()]
+    csvRows.push(keys.join(',').toUpperCase())
+  
+    data?.subTasks?.forEach((row,index) => {
+      const values = keys.map((key) =>{
+        if(key === "NO."){
+          return index+1
+        }else if(key === "dueDate"){
+          return row[key].length ? moment(row[key]).format("DD-MMM-YYYY") : ""
+        }else{
+          return row[key]
+        }
+      })
+      csvRows.push(values.join(',').toUpperCase());
+    });
+  
+    return csvRows.join('\n');
+  };
+
+  // Download tasks as csv
+  const downloadCSV = (csvContent) => {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'data.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const removeOrExportTask = async () => {
+    removeOrExportTaskModalHandler();
+    if(exportOrRemoveOption === "remove"){
+    const response = await removeATask(taskData._id);
     if (response?.status) {
       setSelectedProject((previous) =>
-        previous.filter((task) => task._id !== taskId)
+        previous.filter((task) => task._id !== taskData._id)
       );
       toast.success(response.message);
     } else {
       toast.error(response.message);
     }
+  }else{
+    const csvContent = convertToCSV(taskData);
+    downloadCSV(csvContent);
+  }
   };
 
   // Filter project according to selection
@@ -509,7 +558,7 @@ const Projects = () => {
       <h1 className="text-2xl font-bold capitalize">
         {state?.name ?? "Project"}
       </h1>
-      <p className="capitalize">{state?.description}</p>
+      {/* <p className="capitalize">{state?.description}</p> */}
       <div className="mt-2 flex gap-2 h-8">
         <Button
           onClick={formHandler}
@@ -696,7 +745,7 @@ const Projects = () => {
                   subTaskChatModalHandler={subTaskChatModalHandler}
                   isAdmin={isAdmin}
                   projectPermitted={projectPermitted}
-                  removeTaskModalOpen={removeTaskModalOpen}
+                  removeOrExportTaskModalOpen={removeOrExportTaskModalOpen}
                   addHeaderOpenHandler={addHeaderOpenHandler}
                   updateDynamicField={updateDynamicField}
                   addOptionModalToggle={addOptionModalToggle}
@@ -722,22 +771,22 @@ const Projects = () => {
       </Dialog>
 
       <Dialog
-        open={openRemoveTaskModal}
-        handler={removeTaskModalHandler}
+        open={openRemoveOrExportTaskModal}
+        handler={removeOrExportTaskModalHandler}
         size="sm"
         className="outline-none text-center"
       >
         <DialogBody>
           <Typography variant="h4" className="pt-4 px-8">
-            Are you sure want to remove the Task ?
+            {`Do you want to ${exportOrRemoveOption} the Task ?`}
           </Typography>
         </DialogBody>
         <DialogFooter className="mx-auto text-center flex justify-center items-center gap-4">
-          <Button onClick={removeTask} color="red" className="w-24 py-2">
+          <Button onClick={removeOrExportTask} color="red" className="w-24 py-2">
             Yes
           </Button>
           <Button
-            onClick={removeTaskModalHandler}
+            onClick={removeOrExportTaskModalHandler}
             color="black"
             className="w-24 py-2"
           >

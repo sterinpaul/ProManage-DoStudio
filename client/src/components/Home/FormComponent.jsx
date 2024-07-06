@@ -15,15 +15,15 @@ export const FormComponent = ({ formHandler, projectId = "" }) => {
   const formik = useFormik({
     initialValues: {
       name: '',
-      description: ''
+      // description: ''
     },
     validationSchema: Yup.object().shape({
       name: Yup.string()
         .max(25, 'Maximum 25 characters allowed')
         .required('Required'),
-      description: Yup.string()
-        .max(150, 'Maximum 150 characters allowed')
-        .required('Required')
+      // description: Yup.string()
+      //   .max(150, 'Maximum 150 characters allowed')
+      //   .required('Required')
     }),
     onSubmit: async (values) => {
       if (projectId) {
@@ -70,8 +70,12 @@ export const FormComponent = ({ formHandler, projectId = "" }) => {
             className='capitalize'
           />
           <p className="h-2 ml-2 text-xs text-red-500">{formik.touched.name && formik.errors.name ? formik.errors.name : null}</p>
+          
+          <div className='text-center'>
+            <p className="h-2 text-sm text-red-500">{error}</p>
+          </div>
         </div>
-        <div>
+        {/* <div>
           <Input
             {...formik.getFieldProps('description')}
             type="text"
@@ -79,10 +83,8 @@ export const FormComponent = ({ formHandler, projectId = "" }) => {
             className='h-10 p-2 outline-none border border-gray-300 rounded-md'
           />
           <p className="h-2 ml-2 text-xs text-red-500">{formik.touched.description && formik.errors.description ? formik.errors.description : null}</p>
-          <div className='text-center'>
-            <p className="h-2 text-sm text-red-500">{error}</p>
-          </div>
-        </div>
+        </div> */}
+        
 
       </DialogBody>
       <DialogFooter className='flex gap-2 items-center justify-center'>

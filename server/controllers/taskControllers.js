@@ -11,7 +11,7 @@ const taskControllers = () => {
         try {
             const taskSchema = Joi.object({
                 name: Joi.string().min(1).max(25).required(),
-                description: Joi.string().min(1).max(150).required(),
+                // description: Joi.string().min(1).max(150).required(),
                 projectId: Joi.string().required()
             })
             const { error, value } = taskSchema.validate(req.body)

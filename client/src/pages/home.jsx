@@ -30,7 +30,7 @@ const Home = () => {
   }
 
   const navigation = (path,project={})=>{
-    navigate(path,{state:{id:project._id,name:project.name,description:project.description}})
+    navigate(path,{state:{id:project._id,name:project.name}})
     setProjectName(project.name)
   }
 
