@@ -118,7 +118,7 @@ useEffect(() => {
                 />
 
                 {openAddDropDown && (
-                  <div ref={dropdownRef} className="z-10 absolute bg-white shadow-xl rounded p-1 top-6 right-1 grid gap-1 grid-cols-2 w-max grid-flow-dense">
+                  <div ref={dropdownRef} className={`z-10 absolute bg-white shadow-xl rounded p-1 top-6 right-1 grid gap-1 ${headers.length === 1 ? "grid-cols-1" : "grid-cols-2" } w-max grid-flow-dense`}>
                     {headers?.map((header) => (
                       <div
                         key={header._id}

@@ -36,15 +36,19 @@ const userControllers = () => {
         }
     }
 
-    const uploadProfileImg = async (req, res) => {
+    const uploadProfilePic = async (req, res) => {
         try {
-            const ticketUrl = req.file.path
-            const { orderId } = req.params
+            const profilePhotoURL = req.file.path
+            const { id } = req.payload
 
-            return res.status(200).json({ status: false, message: "Ticket could not be uploaded" })
+            const response = await userHelpers.uploadProfilePic(id,profilePhotoURL)
+            if(response){
+                return res.status(200).json({ status: true,data:profilePhotoURL, message: "Profile picture uploaded" })    
+            }
+            return res.status(400).json({ status: false, message: "Profile picture could not be uploaded" })
         } catch (error) {
-            console.error("Error uploading invoice", error);
-            throw new Error(error.message);
+            console.error("Error uploading image", error);
+            return res.status(500).json({ status: false, message: "Internal error" })
         }
     }
 
@@ -53,7 +57,7 @@ const userControllers = () => {
         getUserData,
         getUsersAssign,
         getPermissions,
-        uploadProfileImg
+        uploadProfilePic
     }
 }
 

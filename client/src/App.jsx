@@ -8,11 +8,13 @@ import {
   Outlet
 } from "react-router-dom";
 import { Sidebar, Topbar } from "./components";
-import { tokenAtom } from "./recoil/atoms/userAtoms";
+import { tokenAtom, userDataAtom } from "./recoil/atoms/userAtoms";
 import { useRecoilValue } from 'recoil';
+import { configKeys } from "./api/config";
 
 
 const Home = lazy(() => import("./pages/home"));
+const Profile = lazy(() => import("./pages/Profile"));
 const SignInSignUp = lazy(() => import('./pages/SignInSignUp'))
 const Projects = lazy(() => import("./pages/Projects"));
 const UserPermissions = lazy(() => import("./pages/UserPermissions"));
@@ -36,6 +38,7 @@ const Layout = () => {
 
 function App() {
   const token = useRecoilValue(tokenAtom)
+  const user = useRecoilValue(userDataAtom);
 
   const router = createBrowserRouter([
     {
@@ -67,6 +70,18 @@ function App() {
           ),
         },
         {
+          path: "/profile",
+          element: (
+            <Suspense
+              fallback={
+                <p className="h-screen grid place-items-center">Loading....</p>
+              }
+            >
+              {token ? <Profile /> : <SignInSignUp />}
+            </Suspense>
+          )
+        },
+        {
           path: "/permissions",
           element: (
             <Suspense
@@ -74,9 +89,9 @@ function App() {
                 <p className="h-screen grid place-items-center">Loading....</p>
               }
             >
-              {token ? <UserPermissions /> : <SignInSignUp />}
+              {token ? user.role === configKeys.ADMIN_ROLE ? <UserPermissions /> : <p className="grid place-content-center w-full h-screen">Unauthorized access</p> : <SignInSignUp />}
             </Suspense>
-          ),
+          )
         },
         {
           path: "*",
@@ -88,10 +103,10 @@ function App() {
             >
               {token ? <Error /> : <SignInSignUp />}
             </Suspense>
-          ),
-        },
-      ],
-    },
+          )
+        }
+      ]
+    }
   ]);
 
   return (

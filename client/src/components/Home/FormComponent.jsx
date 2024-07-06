@@ -67,7 +67,7 @@ export const FormComponent = ({ formHandler, projectId = "" }) => {
             type="text"
 
             label={`${projectId ? "Task" : "Project"} Name`}
-            className=''
+            className='capitalize'
           />
           <p className="h-2 ml-2 text-xs text-red-500">{formik.touched.name && formik.errors.name ? formik.errors.name : null}</p>
         </div>

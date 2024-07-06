@@ -126,16 +126,17 @@ export const TaskTable = ({
     });
     setTaskPriority(updatePrioritydArr);
 
-    const dueDateArray = singleTable?.subTasks
+    const dueDates = singleTable?.subTasks
       ?.map((subTask) => subTask.dueDate)
-      .filter((each) => each !== "")
-      .sort((date1, date2) => {
+      .filter((each) => each !== "" && each !== undefined)
+
+    if (dueDates.length) {
+      const dueDateArray = dueDates.sort((date1, date2) => {
         let d1 = new Date(date1);
         let d2 = new Date(date2);
         return d1 - d2;
       });
 
-    if (dueDateArray.length) {
       const startD = new Date(dueDateArray[0]);
       const endD = new Date(dueDateArray[dueDateArray.length - 1]);
       if (moment(startD).format("DD MMM") == moment(endD).format("DD MMM")) {
@@ -381,7 +382,7 @@ export const TaskTable = ({
                         className="w-3 h-3 rounded cursor-pointer"
                       />
                     ) : null}
-                    {selectedSubTasks?.length ? (
+                    {selectedSubTasks?.length && isAdmin ? (
                       <>
                         <MdDeleteOutline
                           onClick={removeSubTaskHandler}

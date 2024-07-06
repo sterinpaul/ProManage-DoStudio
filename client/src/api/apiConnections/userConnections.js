@@ -25,3 +25,20 @@ export const getUsersForAssignSubTask = async() => {
         toast.error("Internal error")
     }
 }
+
+export const uploadProfilePic = async (imageFile) => {
+    try {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        const response = await baseURL.post(`/user/uploadProfilePic`, formData, {
+            headers: {
+                'Content-Type' : 'multipart/form-data'
+            }
+        })
+        
+        if(response) return response.data
+        
+    } catch (error) {
+        console.error('Error updating profile pic:', error);
+    }
+}

@@ -1,8 +1,8 @@
 import { BiPlus,BiSearchAlt2,BiFilterAlt,BiSort } from "react-icons/bi"
 import { Button, Dialog } from "@material-tailwind/react";
 import { useEffect, useState } from "react";
-import { allProjectsAtom } from "../recoil/atoms/projectAtoms";
-import { useRecoilState } from "recoil";
+import { allProjectsAtom, currentProjectNameAtom } from "../recoil/atoms/projectAtoms";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { getAllProjects } from "../api/apiConnections/projectConnections";
 import { FormComponent } from "../components/Home/FormComponent";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const [projects,setProjects] = useRecoilState(allProjectsAtom)
+  const setProjectName = useSetRecoilState(currentProjectNameAtom);
   const [isFormOpen,setIsFormOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -28,6 +29,10 @@ const Home = () => {
     setIsFormOpen(!isFormOpen)
   }
 
+  const navigation = (path,project={})=>{
+    navigate(path,{state:{id:project._id,name:project.name,description:project.description}})
+    setProjectName(project.name)
+  }
 
   return (
     <div className="mt-14 mr-1 mb-1 p-5 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
@@ -66,7 +71,7 @@ const Home = () => {
           {projects?.map((singleProject)=>(
             <div 
               key={singleProject._id} 
-              onClick={()=>navigate("/projects",{state:{id:singleProject._id,name:singleProject.name,description:singleProject.description}})} 
+              onClick={()=>navigation("/projects",singleProject)} 
               className="capitalize flex justify-center items-center  text-center text-white bg-blue-600 py-4 rounded cursor-pointer group"
             >
               <p className="group-hover:scale-125 transition delay-100">{singleProject.name}</p>

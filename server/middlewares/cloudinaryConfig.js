@@ -26,6 +26,23 @@ const chatFileUploadStorage = new CloudinaryStorage(chatFileOptions)
 export const uploadChatFile = multer({storage:chatFileUploadStorage }).single('file')
 
 
+const profilePicOptions = {
+    cloudinary,
+    params:(req,file)=>{
+        return {
+            folder: `ProfilePics`,
+            resource_type: 'image',
+            allowed_formats : ["jpg","jpeg","png","bmp","tiff","tif","svg","webp","heic"],
+            transformation: [{ quality: '60' }],
+            public_id: `image-${Date.now()}-${file.originalname.split(".")[0]}`
+        }
+    }
+}
+
+const profilePicStorage = new CloudinaryStorage(profilePicOptions)
+export const uploadProfilePic = multer({storage:profilePicStorage }).single('image')
+
+
 // allowed_formats : ["jpg","jpeg","png","gif","bmp","tiff","tif","svg","webp","heic","txt"],
 // resource_type: file.mimetype.startsWith('image/') ? 'image' : file.mimetype.startsWith('video/') ? 'video' : 'raw',
 // transformation: [{ width: 500, height: 500, crop: 'limit' },{ quality: '60' }],

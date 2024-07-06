@@ -174,7 +174,6 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
                         </div>
                     </div>
 
-
                 </div>
             </Dialog>
         </div>

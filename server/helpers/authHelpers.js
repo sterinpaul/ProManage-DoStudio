@@ -1,4 +1,3 @@
-import AdminModel from "../models/admin.js";
 import UserModel from "../models/user.js";
 import Token from "../models/token.js";
 

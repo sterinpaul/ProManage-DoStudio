@@ -5,6 +5,11 @@ export const allProjectsAtom = atom({
     default: []
 })
 
+export const currentProjectNameAtom = atom({
+    key:"currentProjectNameAtom",
+    default: ""
+})
+
 export const currentProjectAtom = atom({
     key:"currentProjectAtom",
     default: []

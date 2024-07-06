@@ -67,22 +67,3 @@ export const handleChangePassword = async (oldPassword, newPassword) => {
     }
 }
 
-export const uploadProfileImage = async (imageFile) => {
-    try {
-        const formData = new FormData();
-        formData.append('image', imageFile);
-        const response = await baseURL.post(`/auth/upload-profile-image`, formData, {
-            headers: {
-                'Content-Type' : 'multipart/form-data'
-            },
-        });
-
-        const imageUrl = response.data.data;
-        localStorage.setItem('profileImageUrl', imageUrl);
-        const profileImageElement = document.getElementById('profile-image');
-        profileImageElement.src = imageUrl;
-        
-    } catch (error) {
-        console.error('Error updating profile image:', error);
-    }
-}

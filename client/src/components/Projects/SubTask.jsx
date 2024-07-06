@@ -306,7 +306,7 @@ export const SubTask = ({
               } ${classes} cursor-pointer w-60 p-0`}
             >
               <div className="flex justify-between h-8">
-                <div className="relative group px-2.5 h-full">
+                <div className="relative group px-2.5 h-full py-1">
                   {editToggle ? (
                     <InputComponent
                       subTaskName={subTaskName}
@@ -351,7 +351,7 @@ export const SubTask = ({
               updateSubTaskOption={updateSubTaskOption}
               headerType={"status"}
               classes={classes}
-              isAdmin={true}
+              isAdmin={isAdmin}
               addOptionModalToggle={addOptionModalToggle}
               projectPermitted={projectPermitted}
             />
@@ -414,23 +414,23 @@ export const SubTask = ({
           );
         } else if (header.key === "people") {
           return (
-            <td key={header._id} className={`${classes} text-center p-0.5`}>
-              <div onClick={peopleModalhandler} className="relative">
+            <td key={header._id} className={`${classes} text-center`}>
+              <div onClick={peopleModalhandler} className="relative w-fit mx-auto">
                 {subTask?.peopleName ? (
-                  <div className="relative group w-full h-full">
+                  <div className="relative group w-fit h-full">
                     <Avatar
-                      className="w-6 h-6 cursor-pointer border border-blue-500"
+                      className="w-7 h-7 cursor-pointer border border-blue-500"
                       src={subTask?.peopleImg ?? "/avatar-icon.jpg"}
                       alt="ProfilePhoto"
                       size="sm"
                     />
-                    <p className="absolute hidden group-hover:block -top-7 right-0 px-2 shadow-xl border bg-white rounded-full ">
+                    <p className="absolute hidden group-hover:block -top-7 right-1/2 translate-x-1/2 px-2 shadow-xl border bg-white rounded-full ">
                       {subTask?.peopleName?.split("@")[0]}
                     </p>
                   </div>
                 ) : (
                   <Avatar
-                    className="w-6 h-6"
+                    className="w-7 h-7 border border-blue-500"
                     src="/avatar-icon.jpg"
                     alt="ProfilePhoto"
                     size="sm"
@@ -440,7 +440,7 @@ export const SubTask = ({
                 {openPeopleModal && (
                   <div
                     ref={dropdownRef}
-                    className="absolute bottom-6 border right-0 flex flex-wrap pb-1 px-5 pt-6 rounded shadow-md gap-1 max-w-lg h-14 w-36 bg-white overflow-y-scroll"
+                    className="absolute bottom-6 border right-1/2 translate-x-1/2 flex flex-wrap pb-1 px-5 pt-6 rounded shadow-md gap-1 max-w-lg h-14 w-36 bg-white overflow-y-scroll"
                   >
                     {usersForAssign?.length ? (
                       usersForAssign.map((user, index) => {

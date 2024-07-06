@@ -27,9 +27,11 @@ const taskControllers = () => {
             }
 
             const allHeaders = await headerHelpers.getAllHeaders()
-
+            if(allHeaders.length){
+                value.headers = allHeaders
+            }
             const taskResponse = await taskHelpers.addTask(value)
-            taskResponse.headers = allHeaders
+            
             if (taskResponse) {
                 return res.status(200).json({ status: true, data: taskResponse })
             }

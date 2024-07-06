@@ -24,14 +24,20 @@ const taskHelpers = {
         {
           $lookup: {
             from: "subtasks",
-            let: { taskId: "$_id" },
+            let: {
+              taskId: "$_id"
+            },
             pipeline: [
               {
                 $match: {
                   $expr: {
                     $and: [
-                      { $eq: ["$taskId", "$$taskId"] },
-                      { $eq: ["$isActive", true] }
+                      {
+                        $eq: ["$taskId", "$$taskId"]
+                      },
+                      {
+                        $eq: ["$isActive", true]
+                      }
                     ]
                   }
                 }
@@ -44,12 +50,33 @@ const taskHelpers = {
                       $cond: {
                         if: {
                           $and: [
-                            { $ne: ["$people", null] },
-                            { $ne: ["$people", ""] },
-                            { $eq: [{ $strLenCP: "$people" }, 24] }
+                            {
+                              $ne: ["$people", null]
+                            },
+                            {
+                              $ne: ["$people", ""]
+                            },
+                            {
+                              $eq: [
+                                {
+                                  $type: "$people"
+                                },
+                                "string"
+                              ]
+                            },
+                            {
+                              $eq: [
+                                {
+                                  $strLenCP: "$people"
+                                },
+                                24
+                              ]
+                            }
                           ]
                         },
-                        then: { $toObjectId: "$people" },
+                        then: {
+                          $toObjectId: "$people"
+                        },
                         else: null
                       }
                     }
@@ -59,8 +86,12 @@ const taskHelpers = {
                       $match: {
                         $expr: {
                           $and: [
-                            { $ne: ["$$peopleId", null] },
-                            { $eq: ["$_id", "$$peopleId"] }
+                            {
+                              $ne: ["$$peopleId", null]
+                            },
+                            {
+                              $eq: ["$_id", "$$peopleId"]
+                            }
                           ]
                         }
                       }
@@ -94,7 +125,7 @@ const taskHelpers = {
                       }
                     }
                   ],
-                  as: "chatUnreadCount"
+                  as: "chatCount"
                 }
               },
               {
@@ -107,9 +138,14 @@ const taskHelpers = {
                 $addFields: {
                   peopleName: "$userDetails.email",
                   peopleImg: "$userDetails.profilePhotoURL",
-                  chatUnreadCount: {
+                  chatCount: {
                     $ifNull: [
-                      { $arrayElemAt: ["$chatUnreadCount.unreadCount", 0] },
+                      {
+                        $arrayElemAt: [
+                          "$chatCount.unreadCount",
+                          0
+                        ]
+                      },
                       0
                     ]
                   }
@@ -122,7 +158,7 @@ const taskHelpers = {
               }
             ],
             as: "subTasks"
-          }
+          }          
         },
         {
           $unwind: {
