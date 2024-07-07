@@ -18,8 +18,11 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import { removeSubTasks } from "../../api/apiConnections/projectConnections";
-import { currentProjectAtom } from "../../recoil/atoms/projectAtoms";
-import { useSetRecoilState } from "recoil";
+import {
+  currentProjectAtom,
+  currentProjectCopyAtom,
+} from "../../recoil/atoms/projectAtoms";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import moment from "moment";
 import { OptionsConsolidationComp } from "./elements/OptionsConsolidationComp";
 import { SingleHeader } from "./SingleHeader";
@@ -40,6 +43,9 @@ export const TaskTable = ({
   priorityGroup,
 }) => {
   const setSelectedProject = useSetRecoilState(currentProjectAtom);
+  const [currentProject, setCurrentProject] = useRecoilState(
+    currentProjectCopyAtom
+  );
   const [selectedSubTasks, setSelectedSubTasks] = useState([]);
   const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
   const [openTaskTable, setOpenTaskTable] = useState(true);
@@ -47,29 +53,52 @@ export const TaskTable = ({
   const [taskPriority, setTaskPriority] = useState([]);
   const [taskDue, setTaskDue] = useState("");
 
-
-  const openModal = (type)=>{
-    if(type === "remove"){
-      removeOrExportTaskModalOpen(type,{_id:singleTable._id})
-    }else{
-      if(selectedSubTasks.length){
-        removeOrExportTaskModalOpen(type,{_id:singleTable._id,name:singleTable.name,subTasks:selectedSubTasks})
-      }else{
-        const exportData = singleTable?.subTasks?.map((eachTask) =>{
-          const {chatCount,createdAt,updatedAt,isActive,__v,taskId,...neededData} = eachTask
-          return neededData
-        })
-        removeOrExportTaskModalOpen(type,{_id:singleTable._id,name:singleTable.name,subTasks:exportData})
+  const openModal = (type) => {
+    if (type === "remove") {
+      removeOrExportTaskModalOpen(type, { _id: singleTable._id });
+    } else {
+      if (selectedSubTasks.length) {
+        removeOrExportTaskModalOpen(type, {
+          _id: singleTable._id,
+          name: singleTable.name,
+          subTasks: selectedSubTasks,
+        });
+      } else {
+        const exportData = singleTable?.subTasks?.map((eachTask) => {
+          const {
+            chatCount,
+            createdAt,
+            updatedAt,
+            isActive,
+            __v,
+            taskId,
+            ...neededData
+          } = eachTask;
+          return neededData;
+        });
+        removeOrExportTaskModalOpen(type, {
+          _id: singleTable._id,
+          name: singleTable.name,
+          subTasks: exportData,
+        });
       }
     }
-  }
+  };
 
   const allSubTaskSelectionHandler = (event) => {
     if (event.target.checked) {
       setSelectedSubTasks(
-        singleTable?.subTasks?.map((eachTask) =>{
-          const {chatCount,createdAt,updatedAt,isActive,__v,taskId,...neededData} = eachTask
-          return neededData
+        singleTable?.subTasks?.map((eachTask) => {
+          const {
+            chatCount,
+            createdAt,
+            updatedAt,
+            isActive,
+            __v,
+            taskId,
+            ...neededData
+          } = eachTask;
+          return neededData;
         })
       );
     } else {
@@ -94,18 +123,24 @@ export const TaskTable = ({
   const removeSubTask = async () => {
     const removeResponse = await removeSubTasks(selectedSubTasks);
     if (removeResponse?.status) {
-      setSelectedProject((previous) =>
-        previous.map((task) => {
+      const updateProject = (selected) =>
+        selected.map((task) => {
           if (task._id === singleTable._id) {
             const updated = task.subTasks.filter(
-              (subTask) => !selectedSubTasks.some(task=>task._id === subTask._id)
+              (subTask) =>
+                !selectedSubTasks.some((task) => task._id === subTask._id)
             );
             return { ...task, subTasks: updated };
           } else {
             return task;
           }
-        })
-      );
+        });
+
+      setSelectedProject((previous) => updateProject(previous));
+
+      if (currentProject.length) {
+        setCurrentProject((previous) => updateProject(previous));
+      }
 
       setSelectedSubTasks([]);
       removeSubTaskHandler();
@@ -148,7 +183,7 @@ export const TaskTable = ({
 
     const dueDates = singleTable?.subTasks
       ?.map((subTask) => subTask.dueDate)
-      .filter((each) => each !== "" && each !== undefined)
+      .filter((each) => each !== "" && each !== undefined);
 
     if (dueDates.length) {
       const dueDateArray = dueDates.sort((date1, date2) => {
@@ -205,7 +240,10 @@ export const TaskTable = ({
                         Remove
                       </p>
                     )}
-                    <p onClick={() => openModal("export")} className="p-1 pl-2 text-sm hover:bg-gray-200 rounded">
+                    <p
+                      onClick={() => openModal("export")}
+                      className="p-1 pl-2 text-sm hover:bg-gray-200 rounded"
+                    >
                       Export
                     </p>
                   </div>
@@ -230,8 +268,8 @@ export const TaskTable = ({
               )}
             </Typography>
             {!openTaskTable && (
-            //   <p>{singleTable.description}</p>
-            // ) : (
+              //   <p>{singleTable.description}</p>
+              // ) : (
               <p className="mb-2">{`${
                 singleTable?.subTasks?.length &&
                 singleTable.subTasks.length === 1
@@ -339,8 +377,8 @@ export const TaskTable = ({
                                 <Avatar
                                   className="w-8 h-8 border border-blue-500 hover:z-10 focus:z-10"
                                   src={
-                                    singleTable?.subTasks[0]?.peopleImg ??
-                                    "/avatar-icon.jpg"
+                                    singleTable?.subTasks[0]?.people[0]
+                                      ?.profilePhotoURL ?? "/avatar-icon.jpg"
                                   }
                                   alt="ProfilePhoto"
                                   size="sm"
@@ -348,8 +386,8 @@ export const TaskTable = ({
                                 <Avatar
                                   className="w-8 h-8 border border-blue-500 hover:z-10 focus:z-10"
                                   src={
-                                    singleTable?.subTasks[1]?.peopleImg ??
-                                    "/avatar-icon.jpg"
+                                    singleTable?.subTasks[1]?.people[0]
+                                      ?.profilePhotoURL ?? "/avatar-icon.jpg"
                                   }
                                   alt="ProfilePhoto"
                                   size="sm"
@@ -364,7 +402,10 @@ export const TaskTable = ({
                                 <Avatar
                                   key={subTask._id}
                                   className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10"
-                                  src={subTask?.peopleImg ?? "/avatar-icon.jpg"}
+                                  src={
+                                    subTask?.people[0]?.profilePhotoURL ??
+                                    "/avatar-icon.jpg"
+                                  }
                                   alt="ProfilePhoto"
                                   size="sm"
                                 />
@@ -522,8 +563,8 @@ export const TaskTable = ({
                               <Avatar
                                 className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10"
                                 src={
-                                  singleTable?.subTasks[0]?.peopleImg ??
-                                  "/avatar-icon.jpg"
+                                  singleTable?.subTasks[0]?.people[0]
+                                    ?.profilePhotoURL ?? "/avatar-icon.jpg"
                                 }
                                 alt="ProfilePhoto"
                                 size="sm"
@@ -531,8 +572,8 @@ export const TaskTable = ({
                               <Avatar
                                 className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10"
                                 src={
-                                  singleTable?.subTasks[1]?.peopleImg ??
-                                  "/avatar-icon.jpg"
+                                  singleTable?.subTasks[1]?.people[0]
+                                    ?.profilePhotoURL ?? "/avatar-icon.jpg"
                                 }
                                 alt="ProfilePhoto"
                                 size="sm"
@@ -547,7 +588,10 @@ export const TaskTable = ({
                               <Avatar
                                 key={index}
                                 className="w-6 h-6 border border-blue-500 hover:z-10 focus:z-10"
-                                src={subTask?.peopleImg ?? "/avatar-icon.jpg"}
+                                src={
+                                  subTask?.people[0]?.profilePhotoURL ??
+                                  "/avatar-icon.jpg"
+                                }
                                 alt="ProfilePhoto"
                                 size="sm"
                               />

@@ -33,7 +33,7 @@ const profilePicOptions = {
             folder: `ProfilePics`,
             resource_type: 'image',
             allowed_formats : ["jpg","jpeg","png","bmp","tiff","tif","svg","webp","heic"],
-            transformation: [{ quality: '60' }],
+            transformation: [{ quality: '50' }],
             public_id: `image-${Date.now()}-${file.originalname.split(".")[0]}`
         }
     }

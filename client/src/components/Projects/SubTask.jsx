@@ -20,9 +20,10 @@ import {
   updateSubTaskName,
   updateSubTaskNote,
 } from "../../api/apiConnections/projectConnections";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   currentProjectAtom,
+  currentProjectCopyAtom,
   permittedHeadersAtom,
   taskSubTaskAtom,
 } from "../../recoil/atoms/projectAtoms";
@@ -54,13 +55,18 @@ export const SubTask = ({
 }) => {
   const user = useRecoilValue(userDataAtom);
   const setSelectedProject = useSetRecoilState(currentProjectAtom);
+  const [currentProject, setCurrentProject] = useRecoilState(
+    currentProjectCopyAtom
+  );
   const setPeopleAssignNotification = useSetRecoilState(assignNotifyAtom);
   const setTaskSubTaskId = useSetRecoilState(taskSubTaskAtom);
   const [selectedDate, setSelectedDate] = useState(
     subTask.dueDate ? dayjs(subTask.dueDate) : null
   );
-  const checkboxSelected = selectedSubTasks?.some(task=>task?._id === subTask?._id);
-  
+  const checkboxSelected = selectedSubTasks?.some(
+    (task) => task?._id === subTask?._id
+  );
+
   const [editToggle, setEditToggle] = useState(false);
   const [editNotesToggle, setEditNotesToggle] = useState(false);
   const [nameError, setNameError] = useState(false);
@@ -122,8 +128,8 @@ export const SubTask = ({
   const assignPerson = async (userData) => {
     const response = await subTaskToPerson(subTask._id, userData._id);
     if (response?.status) {
-      setSelectedProject((previous) =>
-        previous.map((task) =>
+      const updateProject = (selected) =>
+        selected.map((task) =>
           task._id === taskId
             ? {
                 ...task,
@@ -131,15 +137,19 @@ export const SubTask = ({
                   subTask._id === subTasks._id
                     ? {
                         ...subTasks,
-                        peopleName: userData.email,
-                        peopleImg: userData.profilePhotoURL,
+                        people: [...subTasks.people, userData],
                       }
                     : subTasks
                 ),
               }
             : task
-        )
-      );
+        );
+
+      setSelectedProject((previous) => updateProject(previous));
+
+      if (currentProject.length) {
+        setCurrentProject((previous) => updateProject(previous));
+      }
 
       const assigner = user.email.split("@")[0];
       const assignee = userData.email.split("@")[0];
@@ -164,7 +174,15 @@ export const SubTask = ({
   };
 
   const selectSubTask = (event) => {
-    const {chatCount,createdAt,updatedAt,isActive,__v,taskId,...neededData} = subTask
+    const {
+      chatCount,
+      createdAt,
+      updatedAt,
+      isActive,
+      __v,
+      taskId,
+      ...neededData
+    } = subTask;
     singleSubTaskSelectionhandler(event.target.checked, neededData);
   };
 
@@ -186,8 +204,8 @@ export const SubTask = ({
       if (subTask.task !== subTaskName) {
         const response = await updateSubTaskName(subTask._id, subTaskName);
         if (response?.status) {
-          setSelectedProject((previous) =>
-            previous.map((task) =>
+          const updateProject = (selected) =>
+            selected.map((task) =>
               task._id === taskId
                 ? {
                     ...task,
@@ -198,8 +216,14 @@ export const SubTask = ({
                     ),
                   }
                 : task
-            )
-          );
+            );
+
+          setSelectedProject((previous) => updateProject(previous));
+
+          if (currentProject.length) {
+            setCurrentProject((previous) => updateProject(previous));
+          }
+
           setEditToggle(false);
         } else {
           toast.error(response.message);
@@ -217,8 +241,8 @@ export const SubTask = ({
       if (subTask.notes !== subTaskNotes) {
         const response = await updateSubTaskNote(subTask._id, subTaskNotes);
         if (response?.status) {
-          setSelectedProject((previous) =>
-            previous.map((task) =>
+          const updateProject = (selected) =>
+            selected.map((task) =>
               task._id === taskId
                 ? {
                     ...task,
@@ -229,8 +253,14 @@ export const SubTask = ({
                     ),
                   }
                 : task
-            )
-          );
+            );
+
+          setSelectedProject((previous) => updateProject(previous));
+
+          if (currentProject.length) {
+            setCurrentProject((previous) => updateProject(previous));
+          }
+
           setEditNotesToggle(false);
         } else {
           toast.error(response.message);
@@ -242,8 +272,8 @@ export const SubTask = ({
   };
 
   const updateSubTaskOption = async (headerType, option) => {
-    setSelectedProject((previous) =>
-      previous.map((task) =>
+    const updateProject = (selected) =>
+      selected.map((task) =>
         task._id === taskId
           ? {
               ...task,
@@ -254,8 +284,14 @@ export const SubTask = ({
               ),
             }
           : task
-      )
-    );
+      );
+
+    setSelectedProject((previous) => updateProject(previous));
+
+    if (currentProject.length) {
+      setCurrentProject((previous) => updateProject(previous));
+    }
+
     if (headerType === "status") {
       const response = await updateStatus(subTask._id, option);
       if (!response?.status) {
@@ -417,19 +453,29 @@ export const SubTask = ({
         } else if (header.key === "people") {
           return (
             <td key={header._id} className={`${classes} text-center`}>
-              <div onClick={peopleModalhandler} className="relative w-fit mx-auto">
-                {subTask?.peopleName ? (
-                  <div className="relative group w-fit h-full">
-                    <Avatar
-                      className="w-7 h-7 cursor-pointer border border-blue-500"
-                      src={subTask?.peopleImg ?? "/avatar-icon.jpg"}
-                      alt="ProfilePhoto"
-                      size="sm"
-                    />
-                    <p className="absolute hidden group-hover:block -top-7 right-1/2 translate-x-1/2 px-2 shadow-xl border bg-white rounded-full ">
-                      {subTask?.peopleName?.split("@")[0]}
-                    </p>
-                  </div>
+              <div
+                onClick={peopleModalhandler}
+                className="relative -space-x-4 w-fit m-auto flex justify-center items-center"
+              >
+                {subTask?.people?.length ? (
+                  subTask.people.map((person) => {
+                    return (
+                      <div
+                        key={person._id}
+                        className="absolute hover:z-10 group"
+                      >
+                        <Avatar
+                          className="min-w-7 w-7 h-7 cursor-pointer border border-blue-500"
+                          src={person?.profilePhotoURL ?? "/avatar-icon.jpg"}
+                          alt="ProfilePhoto"
+                          size="sm"
+                        />
+                        <p className="absolute hidden group-hover:block -top-7 right-1/2 translate-x-1/2 px-2 shadow-xl border bg-white rounded-full ">
+                          {person?.email?.split("@")[0]}
+                        </p>
+                      </div>
+                    );
+                  })
                 ) : (
                   <Avatar
                     className="w-7 h-7 border border-blue-500"
@@ -442,7 +488,7 @@ export const SubTask = ({
                 {openPeopleModal && (
                   <div
                     ref={dropdownRef}
-                    className="absolute bottom-6 border right-1/2 translate-x-1/2 flex flex-wrap pb-1 px-5 pt-6 rounded shadow-md gap-1 max-w-lg h-14 w-36 bg-white overflow-y-scroll"
+                    className="absolute z-30 bottom-6 border right-1/2 translate-x-1/2 flex flex-wrap pb-1 px-5 pt-6 rounded shadow-md gap-1 max-w-lg h-14 w-36 bg-white overflow-y-scroll"
                   >
                     {usersForAssign?.length ? (
                       usersForAssign.map((user, index) => {

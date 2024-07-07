@@ -30,8 +30,9 @@ const SubTaskSchema = new Schema (
             type: String
         },
         people:{
-            type: Schema.Types.Mixed,
-            ref: 'users'
+            type: [Schema.Types.ObjectId],
+            ref: 'users',
+            default:[]
         }
     },
     {

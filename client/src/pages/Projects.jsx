@@ -34,6 +34,7 @@ import {
 } from "../api/apiConnections/projectConnections";
 import {
   currentProjectAtom,
+  currentProjectCopyAtom,
   permittedHeadersAtom,
   priorityOptionsAtom,
   statusOptionsAtom,
@@ -56,6 +57,9 @@ const Projects = () => {
   const userData = useRecoilValue(userDataAtom);
   const [selectedProject, setSelectedProject] =
     useRecoilState(currentProjectAtom);
+  const [currentProject, setCurrentProject] = useRecoilState(
+    currentProjectCopyAtom
+  );
   const [statusGroup, setStatusGroup] = useRecoilState(statusOptionsAtom);
   const [priorityGroup, setPriorityGroup] = useRecoilState(priorityOptionsAtom);
   const setPermittedHeaders = useSetRecoilState(permittedHeadersAtom);
@@ -68,32 +72,30 @@ const Projects = () => {
     (project) => project?.projectId === state.id
   );
 
-  
   const [openSearchInput, setOpenSearchInput] = useState(false);
   const [searchedSubTask, setSearchedSubTask] = useState({});
   const [subTaskName, setSubTaskName] = useState("");
   const [allSubTasks, setAllSubTasks] = useState([]);
   const [filteredSubTasks, setFilteredSubTasks] = useState([]);
   const searchInputRef = useRef(null);
-  
+
   const [openPersonDropdown, setOpenPersonDropdown] = useState(false);
   const [person, setPerson] = useState({});
   const [allUsers, setAllUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  
+
   const [openSort, setOpenSort] = useState(false);
-  
-  const [currentProject, setCurrentProject] = useState([]);
-  
+
   const [addHeaderOpen, setAddHeaderOpen] = useState(false);
-  
+
   const [dynamicSelectFieldType, setDynamicSelectFieldType] = useState("");
   const [openDynamicSelectFieldModal, setOpenDynamicSelectFieldModal] =
-  useState(false);
-  
-  const [openRemoveOrExportTaskModal, setOpenRemoveOrExportTaskModal] = useState(false);
+    useState(false);
+
+  const [openRemoveOrExportTaskModal, setOpenRemoveOrExportTaskModal] =
+    useState(false);
   const [taskData, setTaskData] = useState({});
-  const [exportOrRemoveOption,setExportOrRemoveOption] = useState("")
+  const [exportOrRemoveOption, setExportOrRemoveOption] = useState("");
 
   const addHeaderOpenHandler = () => {
     setAddHeaderOpen((previous) => !previous);
@@ -143,15 +145,19 @@ const Projects = () => {
         const newTask = {
           ...subTaskResponse.data,
           peopleName: "",
-          peopleImg: "",
+          profilePhotoURL: "",
         };
-        setSelectedProject((previous) =>
-          previous.map((singleTask) =>
+        const updateProject = (selected) =>
+          selected.map((singleTask) =>
             singleTask._id === taskid
               ? { ...singleTask, subTasks: [...singleTask.subTasks, newTask] }
               : singleTask
-          )
-        );
+          );
+        setSelectedProject((previous) => updateProject(previous));
+
+        if (currentProject.length) {
+          setCurrentProject((previous) => updateProject(previous));
+        }
       } else {
         toast.error(subTaskResponse.message);
       }
@@ -160,8 +166,8 @@ const Projects = () => {
 
   const dueDateChanger = async (taskid, subTaskId, date) => {
     const dateChangeResponse = await dueDateUpdate(subTaskId, date);
-    setSelectedProject((previous) =>
-      previous.map((task) =>
+    const updateProject = (selected) =>
+      selected.map((task) =>
         task._id === taskid
           ? {
               ...task,
@@ -172,8 +178,13 @@ const Projects = () => {
               ),
             }
           : task
-      )
-    );
+      );
+    setSelectedProject((previous) => updateProject(previous));
+
+    if (currentProject.length) {
+      setCurrentProject((previous) => updateProject(previous));
+    }
+
     if (!dateChangeResponse?.status) {
       toast.error(dateChangeResponse.message);
     }
@@ -183,50 +194,48 @@ const Projects = () => {
     setOpenChat((previous) => !previous);
   };
 
-  const removeOrExportTaskModalHandler = () =>{
+  const removeOrExportTaskModalHandler = () => {
     setOpenRemoveOrExportTaskModal((previous) => !previous);
-  }
-  
-  const removeOrExportTaskModalOpen = (option,task) => {
-    setExportOrRemoveOption(option)
+  };
+
+  const removeOrExportTaskModalOpen = (option, task) => {
+    setExportOrRemoveOption(option);
     removeOrExportTaskModalHandler();
     setTaskData(task);
   };
 
-
-
   // Convert data into csv
   const convertToCSV = (data) => {
-    const head = data?.subTasks[0]
-    delete head._id
-    
-    const keys = ["NO.",...Object.keys(head)]
-    const csvRows = [data?.name?.toUpperCase()]
-    csvRows.push(keys.join(',').toUpperCase())
-  
-    data?.subTasks?.forEach((row,index) => {
-      const values = keys.map((key) =>{
-        if(key === "NO."){
-          return index+1
-        }else if(key === "dueDate"){
-          return row[key].length ? moment(row[key]).format("DD-MMM-YYYY") : ""
-        }else{
-          return row[key]
+    const head = data?.subTasks[0];
+    delete head._id;
+
+    const keys = ["NO.", ...Object.keys(head)];
+    const csvRows = [data?.name?.toUpperCase()];
+    csvRows.push(keys.join(",").toUpperCase());
+
+    data?.subTasks?.forEach((row, index) => {
+      const values = keys.map((key) => {
+        if (key === "NO.") {
+          return index + 1;
+        } else if (key === "dueDate") {
+          return row[key].length ? moment(row[key]).format("DD-MMM-YYYY") : "";
+        } else {
+          return row[key];
         }
-      })
-      csvRows.push(values.join(',').toUpperCase());
+      });
+      csvRows.push(values.join(",").toUpperCase());
     });
-  
-    return csvRows.join('\n');
+
+    return csvRows.join("\n");
   };
 
   // Download tasks as csv
   const downloadCSV = (csvContent) => {
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'data.csv');
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "data.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -234,20 +243,26 @@ const Projects = () => {
 
   const removeOrExportTask = async () => {
     removeOrExportTaskModalHandler();
-    if(exportOrRemoveOption === "remove"){
-    const response = await removeATask(taskData._id);
-    if (response?.status) {
-      setSelectedProject((previous) =>
-        previous.filter((task) => task._id !== taskData._id)
-      );
-      toast.success(response.message);
+    if (exportOrRemoveOption === "remove") {
+      const response = await removeATask(taskData._id);
+      if (response?.status) {
+        const updateProject = (selected) =>
+          selected.filter((task) => task._id !== taskData._id);
+
+        setSelectedProject((previous) => updateProject(previous));
+
+        if (currentProject.length) {
+          setCurrentProject((previous) => updateProject(previous));
+        }
+
+        toast.success(response.message);
+      } else {
+        toast.error(response.message);
+      }
     } else {
-      toast.error(response.message);
+      const csvContent = convertToCSV(taskData);
+      downloadCSV(csvContent);
     }
-  }else{
-    const csvContent = convertToCSV(taskData);
-    downloadCSV(csvContent);
-  }
   };
 
   // Filter project according to selection
@@ -255,9 +270,15 @@ const Projects = () => {
     setSelectedProject((previous) =>
       previous
         .map((task) => {
-          const filteredSubTasks = task.subTasks?.filter(
-            (subTask) => subTask[type] === selection._id
-          );
+          const filteredSubTasks = task.subTasks?.filter((subTask) => {
+            if (type === "subTask") {
+              return subTask._id === selection._id;
+            } else {
+              return subTask.people.some(
+                (eachPerson) => eachPerson._id === selection._id
+              );
+            }
+          });
           if (filteredSubTasks.length) {
             return {
               ...task,
@@ -275,9 +296,15 @@ const Projects = () => {
     setSelectedProject(
       currentProject
         .map((task) => {
-          const filteredSubTasks = task.subTasks?.filter(
-            (subTask) => subTask[type] === selection._id
-          );
+          const filteredSubTasks = task.subTasks?.filter((subTask) => {
+            if (type === "subTask") {
+              return subTask._id === selection._id;
+            } else {
+              return subTask.people.some(
+                (eachPerson) => eachPerson._id === selection._id
+              );
+            }
+          });
           if (filteredSubTasks.length) {
             return {
               ...task,
@@ -328,7 +355,7 @@ const Projects = () => {
 
   const selectSubtask = (selectedSubTask) => {
     setSearchedSubTask(selectedSubTask);
-    filterProject("_id", selectedSubTask);
+    filterProject("subTask", selectedSubTask);
     searchInputToggle();
   };
 
@@ -336,7 +363,7 @@ const Projects = () => {
     setSearchedSubTask({});
     setSubTaskName("");
     if (person?._id) {
-      removedSelectionFilterProject("people", person);
+      removedSelectionFilterProject("person", person);
     } else {
       setSelectedProject(currentProject);
     }
@@ -367,17 +394,19 @@ const Projects = () => {
   const personDropdownHandler = async () => {
     if (!openPersonDropdown) {
       const unique = {};
-      selectedProject.forEach((task) =>
+      const combinedArr = selectedProject?.flatMap((task) =>
         task.subTasks
-          .filter((subTask) => subTask.people)
-          .forEach((subTask) => {
-            const { people, peopleName, peopleImg } = subTask;
-            const name = peopleName.split("@")[0];
-            if (!unique[people]) {
-              unique[people] = { _id: people, peopleName: name, peopleImg };
-            }
-          })
+          .filter((subTask) => subTask?.people.length)
+          .flatMap((tasks) => tasks.people)
       );
+      combinedArr.forEach((people) => {
+        const { _id, email, profilePhotoURL } = people;
+        const peopleName = email.split("@")[0];
+        if (!unique[_id]) {
+          unique[_id] = { _id, peopleName, profilePhotoURL };
+        }
+      });
+
       const uniqueUsers = Object.values(unique);
       setAllUsers(uniqueUsers);
       setFilteredUsers(uniqueUsers);
@@ -404,14 +433,14 @@ const Projects = () => {
 
   const setSinglePersonFilter = (selectedPerson) => {
     setPerson(selectedPerson);
-    filterProject("people", selectedPerson);
+    filterProject("person", selectedPerson);
     personDropdownHandler();
   };
 
   const removePersonFilter = () => {
     setPerson({});
     if (searchedSubTask?._id) {
-      removedSelectionFilterProject("_id", searchedSubTask);
+      removedSelectionFilterProject("subTask", searchedSubTask);
     } else {
       setSelectedProject(currentProject);
     }
@@ -460,8 +489,8 @@ const Projects = () => {
       value
     );
     if (dynamicFieldUpdateResponse?.status) {
-      setSelectedProject((previous) =>
-        previous.map((task) =>
+      const updateProject = (selected) =>
+        selected.map((task) =>
           task._id === fieldTaskId
             ? {
                 ...task,
@@ -472,8 +501,13 @@ const Projects = () => {
                 ),
               }
             : task
-        )
-      );
+        );
+
+      setSelectedProject((previous) => updateProject(previous));
+
+      if (currentProject.length) {
+        setCurrentProject((previous) => updateProject(previous));
+      }
     } else {
       toast.error(dynamicFieldUpdateResponse.message);
     }
@@ -504,8 +538,8 @@ const Projects = () => {
         (header) => header._id === overHeaderId
       ).order;
 
-      setSelectedProject((previous) =>
-        previous.map((task) => {
+      const updateProject = (selected) =>
+        selected.map((task) => {
           if (task._id === taskid) {
             const newArr = task.headers.map((header) => {
               if (header._id === activeHeaderId) {
@@ -528,8 +562,13 @@ const Projects = () => {
           } else {
             return task;
           }
-        })
-      );
+        });
+
+      setSelectedProject((previous) => updateProject(previous));
+
+      if (currentProject.length) {
+        setCurrentProject((previous) => updateProject(previous));
+      }
 
       const dndResponse = await headerDnd(
         taskid,
@@ -589,7 +628,7 @@ const Projects = () => {
                   allSubTasks.map((subtask) => (
                     <p
                       key={subtask._id}
-                      className="cursor-pointer rounded hover:bg-gray-100 pl-1 text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis"
+                      className="cursor-pointer capitalize rounded hover:bg-gray-100 pl-1 text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis"
                       onClick={() => selectSubtask(subtask)}
                     >
                       {subtask.task}
@@ -629,7 +668,7 @@ const Projects = () => {
           >
             <img
               className="w-5 h-5 rounded-full"
-              src={person.peopleImg ?? "/avatar-icon.jpg"}
+              src={person.profilePhotoURL ?? "/avatar-icon.jpg"}
               alt="Person Photo"
             />
             <p className="hidden md:block">Person</p>
@@ -670,7 +709,7 @@ const Projects = () => {
                         <Avatar
                           onClick={() => setSinglePersonFilter(user)}
                           className="min-w-7 w-7 h-7 cursor-pointer border"
-                          src={user?.peopleImg ?? "/avatar-icon.jpg"}
+                          src={user?.profilePhotoURL ?? "/avatar-icon.jpg"}
                           alt="ProfilePhoto"
                           size="sm"
                         />
@@ -782,7 +821,11 @@ const Projects = () => {
           </Typography>
         </DialogBody>
         <DialogFooter className="mx-auto text-center flex justify-center items-center gap-4">
-          <Button onClick={removeOrExportTask} color="red" className="w-24 py-2">
+          <Button
+            onClick={removeOrExportTask}
+            color="red"
+            className="w-24 py-2"
+          >
             Yes
           </Button>
           <Button

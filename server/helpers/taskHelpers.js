@@ -22,6 +22,13 @@ const taskHelpers = {
           }
         },
         {
+          $project: {
+            isActive: 0,
+            updatedAt: 0,
+            __v: 0
+          }
+        },
+        {
           $lookup: {
             from: "subtasks",
             let: {
@@ -46,65 +53,24 @@ const taskHelpers = {
                 $lookup: {
                   from: "users",
                   let: {
-                    peopleId: {
-                      $cond: {
-                        if: {
-                          $and: [
-                            {
-                              $ne: ["$people", null]
-                            },
-                            {
-                              $ne: ["$people", ""]
-                            },
-                            {
-                              $eq: [
-                                {
-                                  $type: "$people"
-                                },
-                                "string"
-                              ]
-                            },
-                            {
-                              $eq: [
-                                {
-                                  $strLenCP: "$people"
-                                },
-                                24
-                              ]
-                            }
-                          ]
-                        },
-                        then: {
-                          $toObjectId: "$people"
-                        },
-                        else: null
-                      }
-                    }
+                    peopleIds: "$people"
                   },
                   pipeline: [
                     {
                       $match: {
                         $expr: {
-                          $and: [
-                            {
-                              $ne: ["$$peopleId", null]
-                            },
-                            {
-                              $eq: ["$_id", "$$peopleId"]
-                            }
-                          ]
+                          $in: ["$_id", "$$peopleIds"]
                         }
                       }
                     },
                     {
                       $project: {
-                        _id: 0,
                         email: 1,
                         profilePhotoURL: 1
                       }
                     }
                   ],
-                  as: "userDetails"
+                  as: "people"
                 }
               },
               {
@@ -129,15 +95,7 @@ const taskHelpers = {
                 }
               },
               {
-                $unwind: {
-                  path: "$userDetails",
-                  preserveNullAndEmptyArrays: true
-                }
-              },
-              {
                 $addFields: {
-                  peopleName: "$userDetails.email",
-                  peopleImg: "$userDetails.profilePhotoURL",
                   chatCount: {
                     $ifNull: [
                       {
@@ -150,31 +108,9 @@ const taskHelpers = {
                     ]
                   }
                 }
-              },
-              {
-                $project: {
-                  userDetails: 0
-                }
               }
             ],
             as: "subTasks"
-          }          
-        },
-        {
-          $unwind: {
-            path: "$subTasks",
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        {
-          $group: {
-            _id: "$_id",
-            projectId: { $first: "$projectId" },
-            name: { $first: "$name" },
-            // description: { $first: "$description" },
-            createdAt: { $first: "$createdAt" },
-            headers: { $first: "$headers" },
-            subTasks: { $push: "$subTasks" }
           }
         },
         {
@@ -183,13 +119,17 @@ const taskHelpers = {
               $filter: {
                 input: "$subTasks",
                 as: "subTask",
-                cond: { $ne: ["$$subTask._id", null] }
+                cond: {
+                  $ne: ["$$subTask._id", null]
+                }
               }
             },
             headers: {
               $sortArray: {
                 input: "$headers",
-                sortBy: { order: 1 }
+                sortBy: {
+                  order: 1
+                }
               }
             }
           }
@@ -200,6 +140,191 @@ const taskHelpers = {
           }
         }
       ]
+      // [
+      //   {
+      //     $match: {
+      //       isActive: true,
+      //       projectId
+      //     }
+      //   },
+      //   {
+      //     $lookup: {
+      //       from: "subtasks",
+      //       let: {
+      //         taskId: "$_id"
+      //       },
+      //       pipeline: [
+      //         {
+      //           $match: {
+      //             $expr: {
+      //               $and: [
+      //                 {
+      //                   $eq: ["$taskId", "$$taskId"]
+      //                 },
+      //                 {
+      //                   $eq: ["$isActive", true]
+      //                 }
+      //               ]
+      //             }
+      //           }
+      //         },
+      //         {
+      //           $lookup: {
+      //             from: "users",
+      //             let: {
+      //               peopleId: {
+      //                 $cond: {
+      //                   if: {
+      //                     $and: [
+      //                       {
+      //                         $ne: ["$people", null]
+      //                       },
+      //                       {
+      //                         $ne: ["$people", ""]
+      //                       },
+      //                       {
+      //                         $eq: [
+      //                           {
+      //                             $type: "$people"
+      //                           },
+      //                           "string"
+      //                         ]
+      //                       },
+      //                       {
+      //                         $eq: [
+      //                           {
+      //                             $strLenCP: "$people"
+      //                           },
+      //                           24
+      //                         ]
+      //                       }
+      //                     ]
+      //                   },
+      //                   then: {
+      //                     $toObjectId: "$people"
+      //                   },
+      //                   else: null
+      //                 }
+      //               }
+      //             },
+      //             pipeline: [
+      //               {
+      //                 $match: {
+      //                   $expr: {
+      //                     $and: [
+      //                       {
+      //                         $ne: ["$$peopleId", null]
+      //                       },
+      //                       {
+      //                         $eq: ["$_id", "$$peopleId"]
+      //                       }
+      //                     ]
+      //                   }
+      //                 }
+      //               },
+      //               {
+      //                 $project: {
+      //                   _id: 0,
+      //                   email: 1,
+      //                   profilePhotoURL: 1
+      //                 }
+      //               }
+      //             ],
+      //             as: "userDetails"
+      //           }
+      //         },
+      //         {
+      //           $lookup: {
+      //             from: "unreadchats",
+      //             localField: "_id",
+      //             foreignField: "roomId",
+      //             pipeline: [
+      //               {
+      //                 $match: {
+      //                   userId
+      //                 }
+      //               },
+      //               {
+      //                 $project: {
+      //                   _id: 0,
+      //                   unreadCount: 1
+      //                 }
+      //               }
+      //             ],
+      //             as: "chatCount"
+      //           }
+      //         },
+      //         {
+      //           $unwind: {
+      //             path: "$userDetails",
+      //             preserveNullAndEmptyArrays: true
+      //           }
+      //         },
+      //         {
+      //           $addFields: {
+      //             peopleName: "$userDetails.email",
+      //             peopleImg: "$userDetails.profilePhotoURL",
+      //             chatCount: {
+      //               $ifNull: [
+      //                 {
+      //                   $arrayElemAt: [
+      //                     "$chatCount.unreadCount",
+      //                     0
+      //                   ]
+      //                 },
+      //                 0
+      //               ]
+      //             }
+      //           }
+      //         },
+      //         {
+      //           $project: {
+      //             userDetails: 0
+      //           }
+      //         }
+      //       ],
+      //       as: "subTasks"
+      //     }          
+      //   },
+      //   {
+      //     $unwind: {
+      //       path: "$subTasks",
+      //       preserveNullAndEmptyArrays: true
+      //     }
+      //   },
+      //   {
+      //     $group: {
+      //       _id: "$_id",
+      //       projectId: { $first: "$projectId" },
+      //       name: { $first: "$name" },
+      //       createdAt: { $first: "$createdAt" },
+      //       headers: { $first: "$headers" },
+      //       subTasks: { $push: "$subTasks" }
+      //     }
+      //   },
+      //   {
+      //     $addFields: {
+      //       subTasks: {
+      //         $filter: {
+      //           input: "$subTasks",
+      //           as: "subTask",
+      //           cond: { $ne: ["$$subTask._id", null] }
+      //         }
+      //       },
+      //       headers: {
+      //         $sortArray: {
+      //           input: "$headers",
+      //           sortBy: { order: 1 }
+      //         }
+      //       }
+      //     }
+      //   },
+      //   {
+      //     $sort: {
+      //       createdAt: -1
+      //     }
+      //   }
+      // ]
     )
   },
   removeTask: async (taskId) => {
