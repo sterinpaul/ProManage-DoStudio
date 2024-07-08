@@ -41,6 +41,7 @@ export const TaskTable = ({
   addOptionModalToggle,
   statusGroup,
   priorityGroup,
+  currentSubTaskPeopleModalHandler
 }) => {
   const setSelectedProject = useSetRecoilState(currentProjectAtom);
   const [currentProject, setCurrentProject] = useRecoilState(
@@ -308,7 +309,7 @@ export const TaskTable = ({
                       );
                     } else if (header.key === "people") {
                       return (
-                        <th key={header._id} className="border-l pt-2">
+                        <th key={header._id} className="border-l pt-2 max-w-32">
                           People
                         </th>
                       );
@@ -318,7 +319,7 @@ export const TaskTable = ({
                       );
                     }
                   })}
-                  {/* <td></td> */}
+                  <td className="border-l"></td>
                 </tr>
               </thead>
               <tbody>
@@ -370,7 +371,7 @@ export const TaskTable = ({
                       );
                     } else if (header.key === "people") {
                       return (
-                        <td key={header._id} className="border-l">
+                        <td key={header._id} className="border-l w-32">
                           <div className="w-fit m-auto -space-x-4 relative">
                             {singleTable?.subTasks?.length > 2 ? (
                               <>
@@ -422,6 +423,7 @@ export const TaskTable = ({
                       );
                     }
                   })}
+                  <td className="border-l"></td>
                 </tr>
               </tbody>
             </table>
@@ -494,6 +496,7 @@ export const TaskTable = ({
                     projectPermitted={projectPermitted}
                     updateDynamicField={updateDynamicField}
                     addOptionModalToggle={addOptionModalToggle}
+                    currentSubTaskPeopleModalHandler={currentSubTaskPeopleModalHandler}
                   />
                 );
               })}
@@ -556,7 +559,7 @@ export const TaskTable = ({
                     );
                   } else if (header.key === "people") {
                     return (
-                      <td key={header._id} className={`${classes}`}>
+                      <td key={header._id} className={`${classes} w-32`}>
                         <div className="w-fit m-auto -space-x-4 relative">
                           {singleTable?.subTasks?.length > 2 ? (
                             <>

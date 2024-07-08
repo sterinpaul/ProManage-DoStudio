@@ -166,9 +166,9 @@ export const removeSubTasks = async (subTaskIds) => {
     }
 }
 
-export const subTaskToPerson = async (subTaskId, userId) => {
+export const subTaskToPerson = async (subTaskId, people) => {
     try {
-        const response = await baseURL.patch(`/subTasks/assignSubTask`, { subTaskId, userId });
+        const response = await baseURL.patch(`/subTasks/assignSubTask`, { subTaskId, people });
         if (response) {
             return response.data;
         }

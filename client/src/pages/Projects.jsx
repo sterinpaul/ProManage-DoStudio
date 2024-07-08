@@ -51,6 +51,7 @@ import { DndContext } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { AddDynamicOptionComponent } from "../components/Projects/elements/AddDynamicOptionComponent";
 import moment from "moment";
+import { PeopleSelectComponent } from "../components/Projects/elements/PeopleSelectComponent";
 
 const Projects = () => {
   const { state } = useLocation();
@@ -96,6 +97,10 @@ const Projects = () => {
     useState(false);
   const [taskData, setTaskData] = useState({});
   const [exportOrRemoveOption, setExportOrRemoveOption] = useState("");
+
+  const [openPeopleModal,setOpenPeopleModal] = useState(false)
+  const [currentSubTaskPeople, setCurrentSubTaskPeople] = useState([])
+  const [taskSubTaskIds, setTaskSubTaskIds] = useState({})
 
   const addHeaderOpenHandler = () => {
     setAddHeaderOpen((previous) => !previous);
@@ -219,6 +224,8 @@ const Projects = () => {
           return index + 1;
         } else if (key === "dueDate") {
           return row[key].length ? moment(row[key]).format("DD-MMM-YYYY") : "";
+        } else if (key === "people") {
+          return row[key].length ? row[key].map(person=>person.email.split("@")[0]).join(" ").toUpperCase() : "";
         } else {
           return row[key];
         }
@@ -592,6 +599,16 @@ const Projects = () => {
     dynamicFieldModalHandler();
   };
 
+
+  // People selection Modal Handler
+  const peopleModalHandler = ()=>setOpenPeopleModal(previous=>!previous)
+
+  const currentSubTaskPeopleModalHandler = (ids,peopleArray)=>{
+    setCurrentSubTaskPeople(peopleArray)
+    setTaskSubTaskIds(ids)
+    peopleModalHandler()
+  }
+
   return (
     <div className="mt-14 mr-1 mb-1 p-5 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
       <h1 className="text-2xl font-bold capitalize">
@@ -790,6 +807,7 @@ const Projects = () => {
                   addOptionModalToggle={addOptionModalToggle}
                   statusGroup={statusGroup}
                   priorityGroup={priorityGroup}
+                  currentSubTaskPeopleModalHandler={currentSubTaskPeopleModalHandler}
                 />
               ))
             ) : (
@@ -850,10 +868,10 @@ const Projects = () => {
 
       {/* Dynamic option field Modal */}
       <Dialog
+        size="xs"
         dismiss={{ escapeKey: false, outsidePress: false }}
         open={openDynamicSelectFieldModal}
         handler={dynamicFieldModalHandler}
-        size="xs"
         className="outline-none"
       >
         <AddDynamicOptionComponent
@@ -862,6 +880,16 @@ const Projects = () => {
           setStatusGroup={setStatusGroup}
           setPriorityGroup={setPriorityGroup}
         />
+      </Dialog>
+
+      <Dialog
+        open={openPeopleModal}
+        handler={peopleModalHandler}
+        size="xs"
+        className="outline-none"
+        dismiss={{ escapeKey: false, outsidePress: false }}
+      >
+        <PeopleSelectComponent taskSubTaskIds={taskSubTaskIds} currentSubTaskPeople={currentSubTaskPeople} setCurrentSubTaskPeople={setCurrentSubTaskPeople} peopleModalHandler={peopleModalHandler} />
       </Dialog>
     </div>
   );

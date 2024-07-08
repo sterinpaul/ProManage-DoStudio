@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import {SubTaskModel} from "../models/subTasks.js";
 
 
@@ -52,7 +53,6 @@ const subTaskHelpers = {
         }
     },
     updateDynamicField:async(value)=>{
-        console.log('value',value);
         try {
             return await SubTaskModel.updateOne({_id:value.subTaskId},{$set:{[value.field]:value.value}});
         } catch (error) {
@@ -60,8 +60,9 @@ const subTaskHelpers = {
             throw error;
         }
     },
-    updatePeople:async(_id,people)=>{
+    updatePeople:async(_id,peopleArray)=>{
         try {
+            const people = peopleArray.map(id=>new mongoose.Types.ObjectId(id))
             return await SubTaskModel.updateOne({_id},{$set:{people}});
         } catch (error) {
             console.error('Error assigning person:', error);

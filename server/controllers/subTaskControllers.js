@@ -180,15 +180,15 @@ const subTaskControllers = () => {
         try {
             const subTaskAssignSchema = Joi.object({
                 subTaskId: Joi.string().required(),
-                userId: Joi.string().required()
+                people: Joi.array().required()
             })
             const { error, value } = subTaskAssignSchema.validate(req.body)
     
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
-            const {subTaskId,userId} = value
-            const assignResponse = await subTaskHelpers.updatePeople(subTaskId,userId)
+            const {subTaskId,people} = value
+            const assignResponse = await subTaskHelpers.updatePeople(subTaskId,people)
             if(assignResponse.modifiedCount){
                 return res.status(200).json({status:true})
             }

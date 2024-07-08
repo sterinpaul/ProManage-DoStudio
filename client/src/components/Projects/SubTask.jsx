@@ -8,13 +8,12 @@ import {
   PopoverContent,
 } from "@material-tailwind/react";
 import moment from "moment";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { SelectComponent } from "./elements/SelectComponent";
 import { MdEdit } from "react-icons/md";
 import { InputComponent } from "../Home/InputComponent";
 import { toast } from "react-toastify";
 import {
-  subTaskToPerson,
   updatePriority,
   updateStatus,
   updateSubTaskName,
@@ -28,14 +27,12 @@ import {
   taskSubTaskAtom,
 } from "../../recoil/atoms/projectAtoms";
 import { TextAreaComponent } from "../Home/TextAreaComponent";
-import { getUsersForAssignSubTask } from "../../api/apiConnections/userConnections";
-import { userDataAtom } from "../../recoil/atoms/userAtoms";
-import { assignNotifyAtom } from "../../recoil/atoms/chatAtoms";
 import {
   TbAlertSquareRoundedFilled,
   TbSquareRoundedCheckFilled,
 } from "react-icons/tb";
 import { DynamicSubTask } from "./elements/DynamicSubTask";
+
 
 export const SubTask = ({
   subTask,
@@ -52,13 +49,13 @@ export const SubTask = ({
   projectPermitted,
   updateDynamicField,
   addOptionModalToggle,
+  currentSubTaskPeopleModalHandler
 }) => {
-  const user = useRecoilValue(userDataAtom);
   const setSelectedProject = useSetRecoilState(currentProjectAtom);
   const [currentProject, setCurrentProject] = useRecoilState(
     currentProjectCopyAtom
   );
-  const setPeopleAssignNotification = useSetRecoilState(assignNotifyAtom);
+  
   const setTaskSubTaskId = useSetRecoilState(taskSubTaskAtom);
   const [selectedDate, setSelectedDate] = useState(
     subTask.dueDate ? dayjs(subTask.dueDate) : null
@@ -73,9 +70,7 @@ export const SubTask = ({
   const [notesError, setNotesError] = useState(false);
   const [subTaskName, setSubTaskName] = useState(subTask?.task);
   const [subTaskNotes, setSubTaskNotes] = useState(subTask?.notes);
-  const [usersForAssign, setUsersForAssign] = useState([]);
   const [openPopoverHover, setOpenPopoverHover] = useState(false);
-  const [openPeopleModal, setOpenPeopleModal] = useState(false);
 
   const permittedHeaders = useRecoilValue(permittedHeadersAtom);
 
@@ -106,58 +101,18 @@ export const SubTask = ({
     ? projectPermitted?.allowedPermissions?.includes("people") ?? false
     : true;
 
-  const dropdownRef = useRef(null);
 
   const openChatBox = () => {
     setTaskSubTaskId({ taskId, subTaskId: subTask._id });
     subTaskChatModalHandler();
   };
 
-  const peopleModalhandler = async () => {
+  const peopleModalHandler = (peopleArray) => {
     if (isPeopleAccess) {
-      if (!openPeopleModal) {
-        const response = await getUsersForAssignSubTask();
-        if (response?.status) {
-          setUsersForAssign(response.data);
-        }
-      }
-      setOpenPeopleModal((previous) => !previous);
+      currentSubTaskPeopleModalHandler({taskId,subTaskId:subTask._id},peopleArray)
     }
   };
 
-  const assignPerson = async (userData) => {
-    const response = await subTaskToPerson(subTask._id, userData._id);
-    if (response?.status) {
-      const updateProject = (selected) =>
-        selected.map((task) =>
-          task._id === taskId
-            ? {
-                ...task,
-                subTasks: task.subTasks.map((subTasks) =>
-                  subTask._id === subTasks._id
-                    ? {
-                        ...subTasks,
-                        people: [...subTasks.people, userData],
-                      }
-                    : subTasks
-                ),
-              }
-            : task
-        );
-
-      setSelectedProject((previous) => updateProject(previous));
-
-      if (currentProject.length) {
-        setCurrentProject((previous) => updateProject(previous));
-      }
-
-      const assigner = user.email.split("@")[0];
-      const assignee = userData.email.split("@")[0];
-
-      setPeopleAssignNotification({ assigner, assignee });
-      setOpenPeopleModal((previous) => !previous);
-    }
-  };
 
   const triggers = {
     onMouseEnter: () => setOpenPopoverHover(true),
@@ -307,21 +262,7 @@ export const SubTask = ({
     }
   };
 
-  const handleClickOutside = useCallback(
-    (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        peopleModalhandler();
-      }
-    },
-    [peopleModalhandler]
-  );
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [handleClickOutside]);
+  
 
   return (
     <tr className="even:bg-blue-gray-50 odd:bg-gray-100 hover:bg-white">
@@ -452,9 +393,9 @@ export const SubTask = ({
           );
         } else if (header.key === "people") {
           return (
-            <td key={header._id} className={`${classes} text-center`}>
+            <td key={header._id} className={`${classes} text-center w-32`}>
               <div
-                onClick={peopleModalhandler}
+                onClick={()=>peopleModalHandler(subTask?.people)}
                 className="relative -space-x-4 w-fit m-auto flex justify-center items-center"
               >
                 {subTask?.people?.length ? (
@@ -462,7 +403,7 @@ export const SubTask = ({
                     return (
                       <div
                         key={person._id}
-                        className="absolute hover:z-10 group"
+                        className="hover:z-10 group"
                       >
                         <Avatar
                           className="min-w-7 w-7 h-7 cursor-pointer border border-blue-500"
@@ -485,40 +426,6 @@ export const SubTask = ({
                   />
                 )}
 
-                {openPeopleModal && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute z-30 bottom-6 border right-1/2 translate-x-1/2 flex flex-wrap pb-1 px-5 pt-6 rounded shadow-md gap-1 max-w-lg h-14 w-36 bg-white overflow-y-scroll"
-                  >
-                    {usersForAssign?.length ? (
-                      usersForAssign.map((user, index) => {
-                        const userId = user.email.split("@")[0];
-                        return (
-                          <div key={user._id} className="relative group">
-                            <Avatar
-                              onClick={() => assignPerson(user)}
-                              className="w-7 h-7 cursor-pointer border"
-                              src={user?.profilePhotoURL ?? "/avatar-icon.jpg"}
-                              alt="ProfilePhoto"
-                              size="sm"
-                            />
-                            <p
-                              className={`absolute hidden group-hover:block z-10 -top-5 ${
-                                index % 3 === 0 ? "left-0" : "right-0"
-                              } px-1 py-0 shadow border bg-white rounded-full text-sm`}
-                            >
-                              {userId}
-                            </p>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-gray-500 m-auto text-center">
-                        No users
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
             </td>
           );

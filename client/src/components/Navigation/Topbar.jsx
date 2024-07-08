@@ -43,7 +43,7 @@ const Topbar = () => {
   useEffect(()=>{
     if(socket.current){
       socket.current.on("task-assigned",(data)=>{
-        toast.success(`Task assigned by ${data.assigner} to ${data.assignee}`)
+        toast.success(`Task assigned by ${data.assigner} to ${data.assignees}`)
       })
     }
   },[])
