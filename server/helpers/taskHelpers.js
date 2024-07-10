@@ -140,191 +140,6 @@ const taskHelpers = {
           }
         }
       ]
-      // [
-      //   {
-      //     $match: {
-      //       isActive: true,
-      //       projectId
-      //     }
-      //   },
-      //   {
-      //     $lookup: {
-      //       from: "subtasks",
-      //       let: {
-      //         taskId: "$_id"
-      //       },
-      //       pipeline: [
-      //         {
-      //           $match: {
-      //             $expr: {
-      //               $and: [
-      //                 {
-      //                   $eq: ["$taskId", "$$taskId"]
-      //                 },
-      //                 {
-      //                   $eq: ["$isActive", true]
-      //                 }
-      //               ]
-      //             }
-      //           }
-      //         },
-      //         {
-      //           $lookup: {
-      //             from: "users",
-      //             let: {
-      //               peopleId: {
-      //                 $cond: {
-      //                   if: {
-      //                     $and: [
-      //                       {
-      //                         $ne: ["$people", null]
-      //                       },
-      //                       {
-      //                         $ne: ["$people", ""]
-      //                       },
-      //                       {
-      //                         $eq: [
-      //                           {
-      //                             $type: "$people"
-      //                           },
-      //                           "string"
-      //                         ]
-      //                       },
-      //                       {
-      //                         $eq: [
-      //                           {
-      //                             $strLenCP: "$people"
-      //                           },
-      //                           24
-      //                         ]
-      //                       }
-      //                     ]
-      //                   },
-      //                   then: {
-      //                     $toObjectId: "$people"
-      //                   },
-      //                   else: null
-      //                 }
-      //               }
-      //             },
-      //             pipeline: [
-      //               {
-      //                 $match: {
-      //                   $expr: {
-      //                     $and: [
-      //                       {
-      //                         $ne: ["$$peopleId", null]
-      //                       },
-      //                       {
-      //                         $eq: ["$_id", "$$peopleId"]
-      //                       }
-      //                     ]
-      //                   }
-      //                 }
-      //               },
-      //               {
-      //                 $project: {
-      //                   _id: 0,
-      //                   email: 1,
-      //                   profilePhotoURL: 1
-      //                 }
-      //               }
-      //             ],
-      //             as: "userDetails"
-      //           }
-      //         },
-      //         {
-      //           $lookup: {
-      //             from: "unreadchats",
-      //             localField: "_id",
-      //             foreignField: "roomId",
-      //             pipeline: [
-      //               {
-      //                 $match: {
-      //                   userId
-      //                 }
-      //               },
-      //               {
-      //                 $project: {
-      //                   _id: 0,
-      //                   unreadCount: 1
-      //                 }
-      //               }
-      //             ],
-      //             as: "chatCount"
-      //           }
-      //         },
-      //         {
-      //           $unwind: {
-      //             path: "$userDetails",
-      //             preserveNullAndEmptyArrays: true
-      //           }
-      //         },
-      //         {
-      //           $addFields: {
-      //             peopleName: "$userDetails.email",
-      //             peopleImg: "$userDetails.profilePhotoURL",
-      //             chatCount: {
-      //               $ifNull: [
-      //                 {
-      //                   $arrayElemAt: [
-      //                     "$chatCount.unreadCount",
-      //                     0
-      //                   ]
-      //                 },
-      //                 0
-      //               ]
-      //             }
-      //           }
-      //         },
-      //         {
-      //           $project: {
-      //             userDetails: 0
-      //           }
-      //         }
-      //       ],
-      //       as: "subTasks"
-      //     }          
-      //   },
-      //   {
-      //     $unwind: {
-      //       path: "$subTasks",
-      //       preserveNullAndEmptyArrays: true
-      //     }
-      //   },
-      //   {
-      //     $group: {
-      //       _id: "$_id",
-      //       projectId: { $first: "$projectId" },
-      //       name: { $first: "$name" },
-      //       createdAt: { $first: "$createdAt" },
-      //       headers: { $first: "$headers" },
-      //       subTasks: { $push: "$subTasks" }
-      //     }
-      //   },
-      //   {
-      //     $addFields: {
-      //       subTasks: {
-      //         $filter: {
-      //           input: "$subTasks",
-      //           as: "subTask",
-      //           cond: { $ne: ["$$subTask._id", null] }
-      //         }
-      //       },
-      //       headers: {
-      //         $sortArray: {
-      //           input: "$headers",
-      //           sortBy: { order: 1 }
-      //         }
-      //       }
-      //     }
-      //   },
-      //   {
-      //     $sort: {
-      //       createdAt: -1
-      //     }
-      //   }
-      // ]
     )
   },
   removeTask: async (taskId) => {
@@ -341,6 +156,13 @@ const taskHelpers = {
       console.error('Error updating header:', error);
       throw error;
     }
+  },
+  findTasksForRemoval:async(projectId)=>{
+    const tasks = await TaskModel.find({projectId},{_id:1}).lean()
+    return tasks.map(task=>task._id.toString())
+  },
+  removeTasks:async(projectId)=>{
+    return await TaskModel.updateMany({projectId},{$set:{isActive:false}})
   }
 }
 

@@ -8,10 +8,6 @@ const ProjectSchema = new Schema (
             unique: true,
             required: true
         },
-        // description:{
-        //     type: String,
-        //     required: true
-        // },
         isActive:{
             type: Boolean,
             default: true

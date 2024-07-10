@@ -76,3 +76,15 @@ export const getBlobFileDownload = async(fileUrl) => {
         toast.error("Internal error")
     }
 }
+
+export const removeChatMessage = async(chatId)=>{
+    try {
+        const response = await baseURL.delete(`/chat/removeChat/${chatId}`);
+        if (response) {
+            return response.data;
+        }
+    } catch (error) {
+        console.error(`Error removing file ${error.message}`);
+        toast.error("Internal error")
+    }
+}

@@ -98,9 +98,9 @@ const Projects = () => {
   const [taskData, setTaskData] = useState({});
   const [exportOrRemoveOption, setExportOrRemoveOption] = useState("");
 
-  const [openPeopleModal,setOpenPeopleModal] = useState(false)
-  const [currentSubTaskPeople, setCurrentSubTaskPeople] = useState([])
-  const [taskSubTaskIds, setTaskSubTaskIds] = useState({})
+  const [openPeopleModal, setOpenPeopleModal] = useState(false);
+  const [currentSubTaskPeople, setCurrentSubTaskPeople] = useState([]);
+  const [taskSubTaskIds, setTaskSubTaskIds] = useState({});
 
   const addHeaderOpenHandler = () => {
     setAddHeaderOpen((previous) => !previous);
@@ -147,15 +147,13 @@ const Projects = () => {
     if (lastSubTaskExists || !subTasksExist) {
       const subTaskResponse = await addSingleSubTask(taskid);
       if (subTaskResponse?.status) {
-        const newTask = {
-          ...subTaskResponse.data,
-          peopleName: "",
-          profilePhotoURL: "",
-        };
         const updateProject = (selected) =>
           selected.map((singleTask) =>
             singleTask._id === taskid
-              ? { ...singleTask, subTasks: [...singleTask.subTasks, newTask] }
+              ? {
+                  ...singleTask,
+                  subTasks: [...singleTask.subTasks, subTaskResponse.data],
+                }
               : singleTask
           );
         setSelectedProject((previous) => updateProject(previous));
@@ -225,7 +223,12 @@ const Projects = () => {
         } else if (key === "dueDate") {
           return row[key].length ? moment(row[key]).format("DD-MMM-YYYY") : "";
         } else if (key === "people") {
-          return row[key].length ? row[key].map(person=>person.email.split("@")[0]).join(" ").toUpperCase() : "";
+          return row[key].length
+            ? row[key]
+                .map((person) => person.email.split("@")[0])
+                .join(" ")
+                .toUpperCase()
+            : "";
         } else {
           return row[key];
         }
@@ -599,15 +602,14 @@ const Projects = () => {
     dynamicFieldModalHandler();
   };
 
-
   // People selection Modal Handler
-  const peopleModalHandler = ()=>setOpenPeopleModal(previous=>!previous)
+  const peopleModalHandler = () => setOpenPeopleModal((previous) => !previous);
 
-  const currentSubTaskPeopleModalHandler = (ids,peopleArray)=>{
-    setCurrentSubTaskPeople(peopleArray)
-    setTaskSubTaskIds(ids)
-    peopleModalHandler()
-  }
+  const currentSubTaskPeopleModalHandler = (ids, peopleArray) => {
+    setCurrentSubTaskPeople(peopleArray);
+    setTaskSubTaskIds(ids);
+    peopleModalHandler();
+  };
 
   return (
     <div className="mt-14 mr-1 mb-1 p-5 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
@@ -623,11 +625,6 @@ const Projects = () => {
           <p className="hidden md:block">Add Task</p>
           <BiPlus className="w-4 h-4" />
         </Button>
-
-        {/* Add Task */}
-        <Dialog size="xs" open={isFormOpen} handler={formHandler}>
-          <FormComponent formHandler={formHandler} projectId={state?.id ?? 1} />
-        </Dialog>
 
         {openSearchInput ? (
           <div ref={searchInputRef} className="relative">
@@ -788,7 +785,7 @@ const Projects = () => {
         modifiers={[restrictToHorizontalAxis]}
       >
         {/* Tasks Table */}
-        <div className="mt-4 overflow-y-scroll h-[calc(100vh-13rem)]">
+        <div className="mt-4 overflow-y-scroll h-[calc(100vh-13rem)] no-scrollbar">
           <div className="flex flex-col gap-4 ">
             {selectedProject.length ? (
               selectedProject.map((singleTable) => (
@@ -807,7 +804,9 @@ const Projects = () => {
                   addOptionModalToggle={addOptionModalToggle}
                   statusGroup={statusGroup}
                   priorityGroup={priorityGroup}
-                  currentSubTaskPeopleModalHandler={currentSubTaskPeopleModalHandler}
+                  currentSubTaskPeopleModalHandler={
+                    currentSubTaskPeopleModalHandler
+                  }
                 />
               ))
             ) : (
@@ -816,6 +815,11 @@ const Projects = () => {
           </div>
         </div>
       </DndContext>
+
+      {/* Add Task */}
+      <Dialog size="xs" open={isFormOpen} handler={formHandler}>
+        <FormComponent formHandler={formHandler} projectId={state?.id ?? 1} />
+      </Dialog>
 
       <Dialog
         dismiss={{ escapeKey: false, outsidePress: false }}
@@ -830,7 +834,7 @@ const Projects = () => {
       <Dialog
         open={openRemoveOrExportTaskModal}
         handler={removeOrExportTaskModalHandler}
-        size="sm"
+        size="xs"
         className="outline-none text-center"
       >
         <DialogBody>
@@ -889,7 +893,12 @@ const Projects = () => {
         className="outline-none"
         dismiss={{ escapeKey: false, outsidePress: false }}
       >
-        <PeopleSelectComponent taskSubTaskIds={taskSubTaskIds} currentSubTaskPeople={currentSubTaskPeople} setCurrentSubTaskPeople={setCurrentSubTaskPeople} peopleModalHandler={peopleModalHandler} />
+        <PeopleSelectComponent
+          taskSubTaskIds={taskSubTaskIds}
+          currentSubTaskPeople={currentSubTaskPeople}
+          setCurrentSubTaskPeople={setCurrentSubTaskPeople}
+          peopleModalHandler={peopleModalHandler}
+        />
       </Dialog>
     </div>
   );

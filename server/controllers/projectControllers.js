@@ -19,8 +19,7 @@ const projectControllers = () => {
     const addProject = async(req,res)=>{  
         try {
             const projectSchema = Joi.object({
-                name: Joi.string().min(1).max(25).required(),
-                // description: Joi.string().min(1).max(150).required()
+                name: Joi.string().min(1).max(25).required()
             })
             const { error, value } = projectSchema.validate(req.body)
 

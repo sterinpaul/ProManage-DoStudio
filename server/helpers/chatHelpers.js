@@ -61,6 +61,9 @@ const chatHelpers = {
     const newMessage = new ChatModel(messageData)
     return await newMessage.save()
   },
+  removeSingleChat: async (_id) => {
+    return await ChatModel.updateOne({ _id }, { $set: { isActive: false } })
+  },
   removeChats: async (roomId) => {
     return await ChatModel.updateMany({ roomId }, { $set: { isActive: false } })
   }

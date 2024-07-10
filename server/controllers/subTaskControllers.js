@@ -22,9 +22,11 @@ const subTaskControllers = () => {
             if(allHeaders.length){
                 allHeaders?.forEach(header=>{
                     if(header.key === "status"){
-                        subTask[header.key] = "not started"
+                        subTask.status = "not started"
                     }else if(header.key === "priority"){
-                        subTask[header.key] = "normal"
+                        subTask.priority = "normal"
+                    }else if(header.key === "people"){
+                        subTask.people = []
                     }else{
                         subTask[header.key] = ""
                     }

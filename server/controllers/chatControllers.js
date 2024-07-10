@@ -95,12 +95,34 @@ const chatControllers = () => {
         }
     }
 
+    const removeChat = async(req,res)=>{
+        try {
+            const removeChatSchema = Joi.object({
+                chatId: Joi.string().required()
+            })
+            const { error, value } = removeChatSchema.validate(req.params)
+    
+            if (error) {
+                return res.status(200).json({ status: false, message: error.details[0].message })
+            }
+            
+            const response = await chatHelpers.removeSingleChat(value.chatId)
+            if(response.modifiedCount){
+                return res.status(200).json({ status: true, message: "Chat removed" })
+            }
+            return res.status(400).json({ status: false, message: "Chat could not remove" })
+        } catch (error) {
+            return res.status(500).json({ status: false, message: error.message });
+        }
+    }
+
 
     return {
         getChatMessages,
         sendMessage,
         sendFile,
-        updateUnreadChat
+        updateUnreadChat,
+        removeChat
     }
 }
 

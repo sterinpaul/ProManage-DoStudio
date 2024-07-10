@@ -1,8 +1,8 @@
-import { Button, Dialog, DialogBody } from "@material-tailwind/react"
+import { Button, Dialog, DialogBody, Typography,DialogFooter } from "@material-tailwind/react"
 import { useEffect, useRef, useState } from "react"
 import { MdImage, MdClose, MdAttachFile } from "react-icons/md"
 import { CiCircleRemove } from "react-icons/ci"
-import { getSubTaskChatMessages, readChatUpdation, sendSingleMessage, sendSingleFile, getBlobFileDownload } from "../../api/apiConnections/chatConnections"
+import { getSubTaskChatMessages, readChatUpdation, sendSingleMessage, sendSingleFile, getBlobFileDownload, removeChatMessage } from "../../api/apiConnections/chatConnections"
 import InputEmoji from "react-input-emoji"
 import { useRecoilValue, useRecoilState, useSetRecoilState } from "recoil"
 import { userDataAtom } from "../../recoil/atoms/userAtoms"
@@ -29,6 +29,23 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
     const chatRef = useRef(null)
     const textAreaRef = useRef(null)
 
+    const [openRemoveConfirmModal,setOpenRemoveConfirmModal] = useState(false)
+    const [currentMessage,setCurrentMessage] = useState({})
+
+    const removeChatHandler = ()=>setOpenRemoveConfirmModal(previous=>!previous)
+
+    const removeChatConfirmation = (message)=>{
+        setCurrentMessage(message)
+        removeChatHandler()
+    }
+
+    const removeChat = async()=>{
+        const response = await removeChatMessage(currentMessage._id)
+        removeChatHandler()
+        if(response?.status){
+            setMessages(previous=>previous.filter(single=>single._id !== currentMessage._id))
+        }
+    }
 
     const readChats = async () => {
         setSelectedProject(previous => previous.map(task => task._id === taskSubTaskId.taskId ? { ...task, subTasks: task.subTasks.map(subTask => subTask._id === taskSubTaskId.subTaskId ? { ...subTask, chatUnreadCount: 0 } : subTask) } : task))
@@ -112,7 +129,7 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
     }
 
     return (
-        <div className="relative w-full max-h-sreen flex flex-col justify-between">
+        <div className="relative w-full max-h-screen flex flex-col justify-between">
             <div onClick={subTaskChatModalHandler} className="absolute z-10 group cursor-pointer right-2 top-2 rounded-full p-1 transition hover:bg-black bg-blue-gray-100 ">
                 <MdClose className="w-4 h-4 transition text-black group-hover:text-white" />
             </div>
@@ -120,7 +137,7 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
                 <div className="flex w-full h-[calc(100vh-10rem)] overflow-y-scroll mt-6 flex-col items-center gap-2 rounded border border-gray-900/10 bg-gray-900/5 p-2">
                     {messages?.length ? messages.map((singleMessage, index) => {
                         return (
-                            <SingleChat key={singleMessage._id} index={index} chatCount={messages.length - 1} singleMessage={singleMessage} userId={userData._id} chatRef={chatRef} downloadFile={downloadFile} />
+                            <SingleChat key={singleMessage._id} index={index} chatCount={messages.length - 1} singleMessage={singleMessage} userId={userData._id} chatRef={chatRef} downloadFile={downloadFile} removeChatConfirmation={removeChatConfirmation} />
                         )
                     }) : <div className="flex items-center justify-center w-full h-96"><p>No Messages</p></div>}
                 </div>
@@ -130,9 +147,9 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
                 <div onClick={() => uploadModalHandler("image")} className="cursor-pointer p-1 border rounded-full hover:shadow-lg bg-gray-100 group">
                     <MdImage className="w-5 h-5 group-hover:text-blue-500" />
                 </div>
-
-                <InputEmoji ref={textAreaRef} onChange={setSingleMessage} value={singleMessage} cleanOnEnter onEnter={send} maxLength={2000} shouldReturn placeholder="Type something" />
-
+                <div className="input-emoji-container">
+                    <InputEmoji ref={textAreaRef} onChange={setSingleMessage} value={singleMessage} cleanOnEnter onEnter={send} maxLength={2000} shouldReturn placeholder="Type something" />
+                </div>
                 <div onClick={() => uploadModalHandler("file")} className="cursor-pointer p-1 border rounded-full hover:shadow-lg bg-gray-100 group">
                     <MdAttachFile className="w-5 h-5 rotate-45 group-hover:text-blue-500" />
                 </div>
@@ -159,7 +176,7 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
                                         <p className="text-center text-wrap whitespace-nowrap overflow-hidden overflow-ellipsis">{fileUpload.name}</p>
                                     </div>
                                 )}
-                                {loading && <div className="absolute top-0 flex justify-center items-center w-full h-full bg-white"><LoadingSpinner /></div>}
+                                {loading && <div className="absolute top-0 flex justify-center items-center w-full h-full bg-gray-400 bg-opacity-70"><LoadingSpinner /></div>}
                             </div>
                         ) : <><label className=" bg-blue-500 hover:bg-blue-600 text-white text-center py-1 px-2 rounded cursor-pointer text-nowrap">Choose {uploadType}
                             <input className="hidden" onChange={(e) => setFileUpload(e.target?.files?.[0])} name='file' type="file" accept={uploadType === "image" ? ".jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.svg,.webp,.heic" : "application/*,audio/*,video/*,text/*"} />
@@ -176,6 +193,35 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
 
                 </div>
             </Dialog>
+
+            <Dialog
+        open={openRemoveConfirmModal}
+        handler={removeChatHandler}
+        size="xs"
+        className="outline-none text-center"
+      >
+        <DialogBody>
+          <Typography variant="h4" className="pt-4 px-8">
+            {`Are you sure want to remove the chat ?`}
+          </Typography>
+        </DialogBody>
+        <DialogFooter className="mx-auto text-center flex justify-center items-center gap-4">
+          <Button
+            onClick={removeChat}
+            color="red"
+            className="w-24 py-2"
+          >
+            Yes
+          </Button>
+          <Button
+            onClick={removeChatHandler}
+            color="black"
+            className="w-24 py-2"
+          >
+            Cancel
+          </Button>
+        </DialogFooter>
+      </Dialog>
         </div>
     )
 }

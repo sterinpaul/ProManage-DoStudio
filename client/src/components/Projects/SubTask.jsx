@@ -410,6 +410,7 @@ export const SubTask = ({
                           src={person?.profilePhotoURL ?? "/avatar-icon.jpg"}
                           alt="ProfilePhoto"
                           size="sm"
+                          loading="lazy"
                         />
                         <p className="absolute hidden group-hover:block -top-7 right-1/2 translate-x-1/2 px-2 shadow-xl border bg-white rounded-full ">
                           {person?.email?.split("@")[0]}
@@ -423,6 +424,7 @@ export const SubTask = ({
                     src="/avatar-icon.jpg"
                     alt="ProfilePhoto"
                     size="sm"
+                    loading="lazy"
                   />
                 )}
 

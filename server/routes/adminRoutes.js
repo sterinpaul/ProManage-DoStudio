@@ -12,6 +12,8 @@ const adminRoutes = ()=>{
     router.post('/addPermission',controllers.addPermission)
     router.patch('/userStatus',controllers.updateUserStatus)
     router.put('/updatePermissions',controllers.updatePermissions)
+    router.patch('/updateProjectName',controllers.updateProjectName)
+    router.patch('/removeProject/:projectId',controllers.removeProject)
     
     return router
 }

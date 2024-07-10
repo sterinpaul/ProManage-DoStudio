@@ -13,7 +13,12 @@ const projectHelpers = {
         const newProject = new ProjectModel(projectData)
         return await newProject.save()
     },
-    
+    updateProjectName:async({_id,name})=>{
+        return await ProjectModel.updateOne({_id},{$set:{name}})
+    },
+    removeProject:async(_id)=>{
+        return await ProjectModel.updateOne({_id},{$set:{isActive:false}})
+    }
 }
 
 export default projectHelpers;

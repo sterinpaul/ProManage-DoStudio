@@ -10,6 +10,7 @@ const chatRoutes = ()=>{
     router.post('/sendMessage',controllers.sendMessage)
     router.post('/sendFile',uploadChatFile,controllers.sendFile)
     router.patch('/updateUnreadChat',controllers.updateUnreadChat)
+    router.delete('/removeChat/:chatId',controllers.removeChat)
     
     return router
 }

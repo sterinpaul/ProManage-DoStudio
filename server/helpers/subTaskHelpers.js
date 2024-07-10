@@ -84,6 +84,10 @@ const subTaskHelpers = {
             console.error('Error removing sub tasks:', error);
             throw error;
         }
+    },
+    findSubTasksForRemoval:async(taskId)=>{
+        const subTasks = await SubTaskModel.find({taskId},{_id:1}).lean()
+        return subTasks.map(subTask=>subTask._id.toString())
     }
 }
 

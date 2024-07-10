@@ -28,7 +28,7 @@ export const AddDynamicOptionComponent = ({ dynamicSelectFieldType, dynamicField
         }),
         onSubmit: async (values) => {
             loadingToggle()
-            // try {
+            
                 let response;
                 if (dynamicSelectFieldType === "status") {
                     response = await addDynamicStatusOption(values)
@@ -52,14 +52,6 @@ export const AddDynamicOptionComponent = ({ dynamicSelectFieldType, dynamicField
                         setAddOptionError("")
                     }, 3000);
                 }
-            // } catch (error) {
-            //     loadingToggle();
-            //     setAddOptionError('An error occurred');
-            //     setTimeout(() => {
-            //         setAddOptionError("");
-            //     }, 3000);
-            // }
-
         }
     })
 
