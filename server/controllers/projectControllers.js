@@ -42,6 +42,7 @@ const projectControllers = () => {
             throw new Error(error.message);
         }
     }
+
     
     return {
         getAllProjects,

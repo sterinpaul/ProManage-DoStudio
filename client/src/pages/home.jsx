@@ -69,7 +69,7 @@ const Home = () => {
           <BiPlus className="w-4 h-4" />
         </Button>
 
-        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
+        {/* <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
           <BiSearchAlt2 />
           <p className="hidden md:block">Search</p>
         </button>
@@ -80,7 +80,7 @@ const Home = () => {
         <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded">
           <BiSort />
           <p className="hidden md:block">Sort</p>
-        </button>
+        </button> */}
       </div>
 
       {/* Projects Table */}

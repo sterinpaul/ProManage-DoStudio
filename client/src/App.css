@@ -70,12 +70,10 @@ td,th{
   scrollbar-width: none;
 }
 
-.input-emoji-container {
-  height: 48px;
-  overflow-y: scroll;
-  display: flex;
-  width: 85%;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
+/* Target the textarea inside the InputEmoji component */
+.react-input-emoji--container {
+  max-height: 2.8rem;
+  height: 2.8rem;
+  min-height: 2.8rem;
+  overflow-y: auto;
 }

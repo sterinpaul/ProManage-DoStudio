@@ -24,6 +24,7 @@ const taskHelpers = {
         {
           $project: {
             isActive: 0,
+            createdAt: 0,
             updatedAt: 0,
             __v: 0
           }
@@ -136,7 +137,7 @@ const taskHelpers = {
         },
         {
           $sort: {
-            createdAt: -1
+            order: -1
           }
         }
       ]
@@ -147,6 +148,14 @@ const taskHelpers = {
   },
   addHeaderToTask: async (headerData) => {
     return await TaskModel.updateMany({ isActive: true }, { $push: { headers: headerData } })
+  },
+  dndTaskUpdate: async (_id,order) => {
+    try {
+      return await TaskModel.updateOne({ _id }, { $set: { order } })
+    } catch (error) {
+      console.error('Error updating task order:', error);
+      throw error;
+    }
   },
   updateHeaderDnD: async (_id,headerid,order) => {
     try {

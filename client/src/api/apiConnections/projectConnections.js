@@ -216,7 +216,19 @@ export const dynamicFieldUpdate = async (subTaskId, field, value) => {
 
 export const headerDnd = async (taskId, activeHeaderId, activeIndexOrder, overHeaderId, overIndexOrder) => {
     try {
-        const response = await baseURL.patch(`/tasks/dnd`, { taskId, activeHeaderId, activeIndexOrder, overHeaderId, overIndexOrder });
+        const response = await baseURL.patch(`/tasks/dndHeaders`, { taskId, activeHeaderId, activeIndexOrder, overHeaderId, overIndexOrder });
+        if (response) {
+            return response.data;
+        }
+    } catch (error) {
+        console.error(`Error updating dnd: ${error.message}`);
+        toast.error(error.message)
+    }
+}
+
+export const projectDnD = async (projectDnd) => {
+    try {
+        const response = await baseURL.patch(`/tasks/dndTasks`, projectDnd);
         if (response) {
             return response.data;
         }

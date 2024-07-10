@@ -13,7 +13,7 @@ import { useRecoilValue } from 'recoil';
 import { configKeys } from "./api/config";
 
 
-const Home = lazy(() => import("./pages/home"));
+const Home = lazy(() => import("./pages/Home"));
 const Profile = lazy(() => import("./pages/Profile"));
 const SignInSignUp = lazy(() => import('./pages/SignInSignUp'))
 const Projects = lazy(() => import("./pages/Projects"));

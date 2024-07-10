@@ -142,14 +142,14 @@ export const SubTaskChat = ({ subTaskChatModalHandler }) => {
                     }) : <div className="flex items-center justify-center w-full h-96"><p>No Messages</p></div>}
                 </div>
             </DialogBody>
-            <div className="flex flex-nowrap justify-center items-center px-4 mb-4">
+            <div className="h-12 flex flex-nowrap justify-center items-center px-4 mb-4">
 
                 <div onClick={() => uploadModalHandler("image")} className="cursor-pointer p-1 border rounded-full hover:shadow-lg bg-gray-100 group">
                     <MdImage className="w-5 h-5 group-hover:text-blue-500" />
                 </div>
-                <div className="input-emoji-container">
-                    <InputEmoji ref={textAreaRef} onChange={setSingleMessage} value={singleMessage} cleanOnEnter onEnter={send} maxLength={2000} shouldReturn placeholder="Type something" />
-                </div>
+                
+                <InputEmoji ref={textAreaRef} onChange={setSingleMessage} value={singleMessage} cleanOnEnter onEnter={send} maxLength={2000} shouldReturn placeholder="Type something" />
+                
                 <div onClick={() => uploadModalHandler("file")} className="cursor-pointer p-1 border rounded-full hover:shadow-lg bg-gray-100 group">
                     <MdAttachFile className="w-5 h-5 rotate-45 group-hover:text-blue-500" />
                 </div>

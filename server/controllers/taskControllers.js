@@ -74,6 +74,37 @@ const taskControllers = () => {
             return res.status(500).json({ status: false, message: "Internal error" })
         }
     }
+    const dndTaskUpdate = async (req, res) => {
+        try {
+            const dndTaskSchema = Joi.object({
+                dragId: Joi.string().required(),
+                dragOrder: Joi.number().required(),
+                dropId: Joi.string().required(),
+                dropOrder: Joi.number().required()
+            })
+            
+            const { error, value } = dndTaskSchema.validate(req.body)
+
+            if (error) {
+                return res.status(200).json({ status: false, message: error.details[0].message })
+            }
+            const { dragId, dragOrder, dropId, dropOrder } = value
+
+            const dndTaskResponse = await Promise.all([
+                taskHelpers.dndTaskUpdate(dragId, dragOrder),
+                taskHelpers.dndTaskUpdate(dropId, dropOrder)
+            ])
+
+            const updateStatus = dndTaskResponse.every(response => response.modifiedCount === 1)
+            if (updateStatus) {
+                return res.status(200).json({ status: true })
+            }
+            return res.status(400).json({ status: false, message: `Error updating header DnD` })
+        } catch (error) {
+            console.error('Error in dndHeaderUpdate:', error);
+            return res.status(500).json({ status: false, message: error.message });
+        }
+    }
 
     const dndHeaderUpdate = async (req, res) => {
         try {
@@ -112,6 +143,7 @@ const taskControllers = () => {
         addTask,
         getSingleProject,
         removeTask,
+        dndTaskUpdate,
         dndHeaderUpdate
     }
 }

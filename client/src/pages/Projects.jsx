@@ -30,6 +30,7 @@ import {
   getPermittedHeaders,
   getSingleProject,
   headerDnd,
+  projectDnD,
   removeATask,
 } from "../api/apiConnections/projectConnections";
 import {
@@ -101,6 +102,58 @@ const Projects = () => {
   const [openPeopleModal, setOpenPeopleModal] = useState(false);
   const [currentSubTaskPeople, setCurrentSubTaskPeople] = useState([]);
   const [taskSubTaskIds, setTaskSubTaskIds] = useState({});
+
+  const [dragId, setDragId] = useState(null)
+
+  const onDragStart = (e, id) => {
+    setDragId(id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const onDrop = async(e, dropId) => {
+    e.preventDefault();
+    if(dragId !== undefined && dropId !== undefined && dragId !== dropId){
+      const dragTask = {...selectedProject.find(tasks=>tasks._id === dragId)}
+      const dropTask = {...selectedProject.find(tasks=>tasks._id === dropId)}
+      
+      let temp = dragTask.order
+      dragTask.order = dropTask.order
+      dropTask.order = temp
+      
+      const updateProject = (selected)=>selected.map(task=>{
+        if(task._id === dragId){
+          return dropTask
+        }else if(task._id === dropId){
+          return dragTask
+        }else{
+          return task
+        }
+      })
+
+      setSelectedProject(previous=>updateProject(previous))
+
+      const response = await projectDnD({dragId,dragOrder:dragTask.order,dropId,dropOrder:dropTask.order})
+      if(!response?.status){
+        toast.error("Internal error")
+      }
+
+      if(currentProject.length){
+        setCurrentProject(previous=>updateProject(previous))
+      }
+    }
+  };
+
+  // const onDragEnd = () => {
+  //   // setDragId(null);
+  // };
+
+
+
 
   const addHeaderOpenHandler = () => {
     setAddHeaderOpen((previous) => !previous);
@@ -210,7 +263,7 @@ const Projects = () => {
   // Convert data into csv
   const convertToCSV = (data) => {
     const head = data?.subTasks[0];
-    delete head._id;
+    delete head?._id;
 
     const keys = ["NO.", ...Object.keys(head)];
     const csvRows = [data?.name?.toUpperCase()];
@@ -527,7 +580,7 @@ const Projects = () => {
   const handleDragEnd = async (event) => {
     const { active, over } = event;
 
-    if (over && over.id && active.id != over.id) {
+    if (over && over.id && active.id !== over.id) {
       const activeHeaderId = active.id.slice(0, 24);
       const overHeaderId = over.id.slice(0, 24);
 
@@ -616,7 +669,7 @@ const Projects = () => {
       <h1 className="text-2xl font-bold capitalize">
         {state?.name ?? "Project"}
       </h1>
-      {/* <p className="capitalize">{state?.description}</p> */}
+      
       <div className="mt-2 flex gap-2 h-8">
         <Button
           onClick={formHandler}
@@ -627,7 +680,7 @@ const Projects = () => {
         </Button>
 
         {openSearchInput ? (
-          <div ref={searchInputRef} className="relative">
+          <div ref={searchInputRef} className="relative z-20">
             <Input
               onChange={searchSubTask}
               defaultValue={subTaskName}
@@ -637,12 +690,12 @@ const Projects = () => {
             />
             <BiSearchAlt2 className="absolute bottom-1/2 translate-y-1/2 right-1 w-3 h-3" />
             {subTaskName && (
-              <div className="absolute p-1 flex flex-col gap-1 shadow-lg w-full max-h-32 bg-white overflow-y-scroll border z-10">
+              <div className="absolute p-1 flex flex-col gap-1 shadow-lg w-full max-h-32 bg-white overflow-y-scroll border z-10 rounded">
                 {allSubTasks?.length ? (
                   allSubTasks.map((subtask) => (
                     <p
                       key={subtask._id}
-                      className="cursor-pointer capitalize rounded hover:bg-gray-100 pl-1 text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis"
+                      className="cursor-pointer capitalize rounded hover:bg-gray-100 pl-1 text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis min-h-6 h-6"
                       onClick={() => selectSubtask(subtask)}
                     >
                       {subtask.task}
@@ -704,7 +757,7 @@ const Projects = () => {
                 <p className="hidden md:block">Person</p>
               </button>
             </PopoverHandler>
-            <PopoverContent className="p-3 w-52 flex flex-col justify-between gap-2 shadow-xl">
+            <PopoverContent className="p-3 w-52 flex flex-col justify-between gap-2 shadow-xl z-10">
               <h2>Filter this board by person</h2>
               <div className="relative">
                 <Input
@@ -782,7 +835,7 @@ const Projects = () => {
 
       <DndContext
         onDragEnd={handleDragEnd}
-        modifiers={[restrictToHorizontalAxis]}
+        // modifiers={[restrictToHorizontalAxis]}
       >
         {/* Tasks Table */}
         <div className="mt-4 overflow-y-scroll h-[calc(100vh-13rem)] no-scrollbar">
@@ -807,6 +860,9 @@ const Projects = () => {
                   currentSubTaskPeopleModalHandler={
                     currentSubTaskPeopleModalHandler
                   }
+                  onDragStart={onDragStart}
+                  onDragOver={onDragOver}
+                  onDrop={onDrop}
                 />
               ))
             ) : (
@@ -845,7 +901,7 @@ const Projects = () => {
         <DialogFooter className="mx-auto text-center flex justify-center items-center gap-4">
           <Button
             onClick={removeOrExportTask}
-            color="red"
+            color={`${exportOrRemoveOption === "export" ? "blue" : "red"}`}
             className="w-24 py-2"
           >
             Yes

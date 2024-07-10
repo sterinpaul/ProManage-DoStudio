@@ -1,4 +1,5 @@
 import mongoose,{ model, Schema } from "mongoose";
+import { getNextSequence } from "../utils/getNextSequence.js";
 
 
 const TaskSchema = new Schema (
@@ -20,12 +21,21 @@ const TaskSchema = new Schema (
         isActive:{
             type: Boolean,
             default: true
+        },
+        order:{
+            type: Number,
+            default: 0
         }
     },
     {
         timestamps: true
     }
 )
+
+TaskSchema.pre('save', async function (next) {
+    this.order = await getNextSequence()
+    next();
+})
 
 const TaskModel = model('tasks', TaskSchema);
 export default TaskModel;

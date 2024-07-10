@@ -8,7 +8,8 @@ const taskRoutes = ()=>{
     router.post('/addTask',controllers.addTask)
     router.get('/getSingleProject/:projectId',controllers.getSingleProject)
     router.delete('/removeTask/:taskId',controllers.removeTask)
-    router.patch('/dnd',controllers.dndHeaderUpdate)
+    router.patch('/dndTasks',controllers.dndTaskUpdate)
+    router.patch('/dndHeaders',controllers.dndHeaderUpdate)
     
     return router
 }
