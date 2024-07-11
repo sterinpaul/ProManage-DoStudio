@@ -126,14 +126,16 @@ export const TaskTable = ({
   };
 
   const removeSubTask = async () => {
-    const removeResponse = await removeSubTasks(selectedSubTasks);
+    removeSubTaskHandler();
+    const subTaskIdsArr = selectedSubTasks.map(subTask=>subTask._id)
+    const removeResponse = await removeSubTasks(subTaskIdsArr);
     if (removeResponse?.status) {
       const updateProject = (selected) =>
         selected.map((task) => {
           if (task._id === singleTable._id) {
             const updated = task.subTasks.filter(
               (subTask) =>
-                !selectedSubTasks.some((task) => task._id === subTask._id)
+                !subTaskIdsArr.includes(subTask._id)
             );
             return { ...task, subTasks: updated };
           } else {
@@ -148,7 +150,6 @@ export const TaskTable = ({
       }
 
       setSelectedSubTasks([]);
-      removeSubTaskHandler();
       toast.success(removeResponse.message);
     }
   };
