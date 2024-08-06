@@ -12,6 +12,9 @@ const subTaskHelpers = {
             throw error;
         }
     },
+    findSubTaskByName:async(task)=>{
+        return await SubTaskModel.findOne({isActive:true,task},{_id:1});
+    },
     updateSubTaskName:async(value)=>{
         try {
             return await SubTaskModel.updateOne({_id:value.subTaskId},{$set:{task:value.name}});
@@ -52,20 +55,24 @@ const subTaskHelpers = {
             throw error;
         }
     },
-    updateDynamicField:async(value)=>{
+    updateDynamicField:async({subTaskId,field,value})=>{
         try {
-            return await SubTaskModel.updateOne({_id:value.subTaskId},{$set:{[value.field]:value.value}});
+            return await SubTaskModel.updateOne({_id:subTaskId},{$set:{[field]:value}});
         } catch (error) {
             console.error('Error updating due date:', error);
             throw error;
         }
     },
-    updatePeople:async(_id,peopleArray)=>{
+    updatePeople:async(_id,peopleId,isAdded)=>{
         try {
-            const people = peopleArray.map(id=>new mongoose.Types.ObjectId(id))
-            return await SubTaskModel.updateOne({_id},{$set:{people}});
+            if(isAdded === true){
+                const people = new mongoose.Types.ObjectId(peopleId)
+                return await SubTaskModel.updateOne({_id},{$addToSet:{people}});
+            }else{
+                return await SubTaskModel.updateOne({_id},{$pull:{people:peopleId}});
+            }
         } catch (error) {
-            console.error('Error assigning person:', error);
+            console.error('Error assigning/removing person:', error);
             throw error;
         }
     },
@@ -88,6 +95,14 @@ const subTaskHelpers = {
     findSubTasksForRemoval:async(taskId)=>{
         const subTasks = await SubTaskModel.find({taskId},{_id:1}).lean()
         return subTasks.map(subTask=>subTask._id.toString())
+    },
+    dndSubTaskUpdate: async (_id,order) => {
+        try {
+          return await SubTaskModel.updateOne({ _id }, { $set: { order } })
+        } catch (error) {
+          console.error('Error updating sub task order:', error);
+          throw error;
+        }
     }
 }
 

@@ -5,6 +5,7 @@ import {
   BiFilterAlt,
   BiSort,
 } from "react-icons/bi";
+import { FaArrowsTurnToDots } from "react-icons/fa6";
 import { IoMdCloseCircle } from "react-icons/io";
 import { TaskTable } from "../components/Projects/TaskTable";
 import {
@@ -22,15 +23,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
-  addSingleSubTask,
   dueDateUpdate,
   dynamicFieldUpdate,
+  getAllHeaders,
   getAllPriorityOptions,
   getAllStatusOptions,
   getPermittedHeaders,
   getSingleProject,
   headerDnd,
   projectDnD,
+  projectSubTaskDnD,
   removeATask,
 } from "../api/apiConnections/projectConnections";
 import {
@@ -39,6 +41,8 @@ import {
   permittedHeadersAtom,
   priorityOptionsAtom,
   statusOptionsAtom,
+  filterStatusAtom,
+  projectHeadersAtom,
 } from "../recoil/atoms/projectAtoms";
 import { FormComponent } from "../components/Home/FormComponent";
 import { toast } from "react-toastify";
@@ -53,6 +57,11 @@ import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { AddDynamicOptionComponent } from "../components/Projects/elements/AddDynamicOptionComponent";
 import moment from "moment";
 import { PeopleSelectComponent } from "../components/Projects/elements/PeopleSelectComponent";
+import {
+  liveUpdationDateAtom,
+  liveUpdationDynamicFieldAtom,
+  liveUpdationRemoveTaskAtom,
+} from "../recoil/atoms/liveUpdationAtoms";
 
 const Projects = () => {
   const { state } = useLocation();
@@ -62,24 +71,29 @@ const Projects = () => {
   const [currentProject, setCurrentProject] = useRecoilState(
     currentProjectCopyAtom
   );
+  const setHeaders = useSetRecoilState(projectHeadersAtom);
+  const setIsFiltered = useSetRecoilState(filterStatusAtom);
   const [statusGroup, setStatusGroup] = useRecoilState(statusOptionsAtom);
   const [priorityGroup, setPriorityGroup] = useRecoilState(priorityOptionsAtom);
   const setPermittedHeaders = useSetRecoilState(permittedHeadersAtom);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [openChat, setOpenChat] = useState(false);
+  const [chatExists, setChatExists] = useState(false);
+  const [openTaskArrangePopup, setOpenTaskArrangePopup] = useState(false);
 
-  const isAdmin = userData?.role === configKeys.ADMIN_ROLE ? true : false;
-
-  const projectPermitted = userData?.permissions?.find(
-    (project) => project?.projectId === state.id
+  // Live Updations
+  const setLiveUpdationDate = useSetRecoilState(liveUpdationDateAtom);
+  const setLiveUpdationDynamicField = useSetRecoilState(
+    liveUpdationDynamicFieldAtom
+  );
+  const setLiveUpdationRemoveTask = useSetRecoilState(
+    liveUpdationRemoveTaskAtom
   );
 
   const [openSearchInput, setOpenSearchInput] = useState(false);
-  const [searchedSubTask, setSearchedSubTask] = useState({});
   const [subTaskName, setSubTaskName] = useState("");
-  const [allSubTasks, setAllSubTasks] = useState([]);
-  const [filteredSubTasks, setFilteredSubTasks] = useState([]);
   const searchInputRef = useRef(null);
+  const searchTaskRef = useRef(null);
 
   const [openPersonDropdown, setOpenPersonDropdown] = useState(false);
   const [person, setPerson] = useState({});
@@ -103,10 +117,21 @@ const Projects = () => {
   const [currentSubTaskPeople, setCurrentSubTaskPeople] = useState([]);
   const [taskSubTaskIds, setTaskSubTaskIds] = useState({});
 
-  const [dragId, setDragId] = useState(null)
+  const [dragTaskId, setDragTaskId] = useState(null);
+  const [dragSubTaskId, setDragSubTaskId] = useState(null);
 
-  const onDragStart = (e, id) => {
-    setDragId(id);
+  const isAdmin = userData?.role === configKeys.ADMIN_ROLE ? true : false;
+  const classes = "border border-blue-gray-200";
+
+  const projectPermitted = userData?.permissions?.find(
+    (project) => project?.projectId === state.id
+  );
+
+  const onDragStart = (e, taskDragId, subTaskDragId = null) => {
+    setDragTaskId(taskDragId);
+    if (subTaskDragId) {
+      setDragSubTaskId(subTaskDragId);
+    }
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -115,62 +140,133 @@ const Projects = () => {
     e.dataTransfer.dropEffect = "move";
   };
 
-  const onDrop = async(e, dropId) => {
+  const onDrop = async (e, dropId, dropSubTaskId = null) => {
     e.preventDefault();
-    if(dragId !== undefined && dropId !== undefined && dragId !== dropId){
-      const dragTask = {...selectedProject.find(tasks=>tasks._id === dragId)}
-      const dropTask = {...selectedProject.find(tasks=>tasks._id === dropId)}
-      
-      let temp = dragTask.order
-      dragTask.order = dropTask.order
-      dropTask.order = temp
-      
-      const updateProject = (selected)=>selected.map(task=>{
-        if(task._id === dragId){
-          return dropTask
-        }else if(task._id === dropId){
-          return dragTask
-        }else{
-          return task
+    if (dropSubTaskId) {
+      if (
+        dragSubTaskId !== null &&
+        dragSubTaskId !== undefined &&
+        dropSubTaskId !== null &&
+        dropSubTaskId !== undefined &&
+        dragSubTaskId !== dropSubTaskId &&
+        dropId === dragTaskId
+      ) {
+        const dragSubTask = {
+          ...selectedProject
+            .find((tasks) => tasks._id === dragTaskId)
+            ?.subTasks?.find((subTasks) => subTasks._id === dragSubTaskId),
+        };
+        const dropSubTask = {
+          ...selectedProject
+            .find((tasks) => tasks._id === dropId)
+            ?.subTasks?.find((subTasks) => subTasks._id === dropSubTaskId),
+        };
+
+        let temp = dragSubTask.order;
+        dragSubTask.order = dropSubTask.order;
+        dropSubTask.order = temp;
+
+        const updateProject = (selected) =>
+          selected.map((task) => {
+            if (task._id === dragTaskId) {
+              return {
+                ...task,
+                subTasks: task.subTasks.map((subTask) => {
+                  if (subTask._id === dragSubTaskId) {
+                    return dropSubTask;
+                  } else if (subTask._id === dropSubTaskId) {
+                    return dragSubTask;
+                  } else {
+                    return subTask;
+                  }
+                }),
+              };
+            } else {
+              return task;
+            }
+          });
+
+        setSelectedProject((previous) => updateProject(previous));
+        setCurrentProject((previous) => updateProject(previous));
+
+        const response = await projectSubTaskDnD({
+          dragSubTaskId,
+          dragOrder: dragSubTask.order,
+          dropSubTaskId,
+          dropOrder: dropSubTask.order,
+        });
+
+        if (!response?.status) {
+          toast.error("Internal error");
         }
-      })
-
-      setSelectedProject(previous=>updateProject(previous))
-
-      const response = await projectDnD({dragId,dragOrder:dragTask.order,dropId,dropOrder:dropTask.order})
-      if(!response?.status){
-        toast.error("Internal error")
       }
+    } else {
+      if (
+        dragTaskId !== null &&
+        dragTaskId !== undefined &&
+        dropId !== null &&
+        dropId !== undefined &&
+        dragTaskId !== dropId
+      ) {
+        const dragTask = {
+          ...selectedProject.find((tasks) => tasks._id === dragTaskId),
+        };
+        const dropTask = {
+          ...selectedProject.find((tasks) => tasks._id === dropId),
+        };
 
-      if(currentProject.length){
-        setCurrentProject(previous=>updateProject(previous))
+        let temp = dragTask.order;
+        dragTask.order = dropTask.order;
+        dropTask.order = temp;
+
+        const updateProject = (selected) =>
+          selected.map((task) => {
+            if (task._id === dragTaskId) {
+              return dropTask;
+            } else if (task._id === dropId) {
+              return dragTask;
+            } else {
+              return task;
+            }
+          });
+
+        setSelectedProject((previous) => updateProject(previous));
+        setCurrentProject((previous) => updateProject(previous));
+
+        const response = await projectDnD({
+          dragId: dragTaskId,
+          dragOrder: dragTask.order,
+          dropId,
+          dropOrder: dropTask.order,
+        });
+        if (!response?.status) {
+          toast.error("Internal error");
+        }
       }
     }
   };
 
   // const onDragEnd = () => {
-  //   // setDragId(null);
+  //   // setDragTaskId(null);
   // };
-
-
-
 
   const addHeaderOpenHandler = () => {
     setAddHeaderOpen((previous) => !previous);
   };
 
-  const classes = "border border-blue-gray-200";
-
   const getSelectedProject = async () => {
-    const [project, status, priority, permissions] = await Promise.all([
-      getSingleProject(state?.id),
-      getAllStatusOptions(),
-      getAllPriorityOptions(),
-      getPermittedHeaders(),
-    ]);
+    const [project, status, priority, permissions, allHeaders] =
+      await Promise.all([
+        getSingleProject(state?.id),
+        getAllStatusOptions(),
+        getAllPriorityOptions(),
+        getPermittedHeaders(),
+        getAllHeaders(),
+      ]);
 
     if (project?.status) {
       setSelectedProject(project.data);
+      setCurrentProject(project.data);
     }
     if (status?.status) {
       setStatusGroup(status.data);
@@ -181,6 +277,10 @@ const Projects = () => {
     if (permissions?.status) {
       setPermittedHeaders(permissions.data);
     }
+
+    if (allHeaders?.status) {
+      setHeaders(allHeaders.data);
+    }
   };
 
   useEffect(() => {
@@ -189,39 +289,24 @@ const Projects = () => {
   }, [state]);
 
   const formHandler = () => {
-    setIsFormOpen(!isFormOpen);
+    if(isFormOpen){
+      setTaskSubTaskIds({})
+    }
+    setIsFormOpen((previous) => !previous);
   };
 
   const addSubTask = async (taskid) => {
     const selectedTask = selectedProject?.find((task) => task._id === taskid);
     const lastSubTaskExists = selectedTask?.subTasks?.slice(-1)[0]?.task.length;
-    const subTasksExist = selectedTask.subTasks?.length;
 
-    if (lastSubTaskExists || !subTasksExist) {
-      const subTaskResponse = await addSingleSubTask(taskid);
-      if (subTaskResponse?.status) {
-        const updateProject = (selected) =>
-          selected.map((singleTask) =>
-            singleTask._id === taskid
-              ? {
-                  ...singleTask,
-                  subTasks: [...singleTask.subTasks, subTaskResponse.data],
-                }
-              : singleTask
-          );
-        setSelectedProject((previous) => updateProject(previous));
-
-        if (currentProject.length) {
-          setCurrentProject((previous) => updateProject(previous));
-        }
-      } else {
-        toast.error(subTaskResponse.message);
-      }
+    if (lastSubTaskExists || !selectedTask?.subTasks?.length) {
+      setTaskSubTaskIds({ taskId: taskid, subTaskId: "" });
+      formHandler();
     }
   };
 
   const dueDateChanger = async (taskid, subTaskId, date) => {
-    const dateChangeResponse = await dueDateUpdate(subTaskId, date);
+    const dateChangeResponse = await dueDateUpdate(state.id, subTaskId, date);
     const updateProject = (selected) =>
       selected.map((task) =>
         task._id === taskid
@@ -235,11 +320,22 @@ const Projects = () => {
             }
           : task
       );
-    setSelectedProject((previous) => updateProject(previous));
 
-    if (currentProject.length) {
-      setCurrentProject((previous) => updateProject(previous));
-    }
+    setSelectedProject((previous) => updateProject(previous));
+    setCurrentProject((previous) => updateProject(previous));
+
+    setLiveUpdationDate({
+      projectId: state?.id,
+      taskId: taskid,
+      subTaskId,
+      field: "dueDate",
+      value: date,
+      notification: {
+        ...dateChangeResponse.notification,
+        assignerName: userData.userName,
+        assignerImg: userData.profilePhotoURL,
+      },
+    });
 
     if (!dateChangeResponse?.status) {
       toast.error(dateChangeResponse.message);
@@ -248,6 +344,11 @@ const Projects = () => {
 
   const subTaskChatModalHandler = () => {
     setOpenChat((previous) => !previous);
+  };
+
+  const subTaskChatModalOpenHandler = (chatExistance) => {
+    subTaskChatModalHandler();
+    setChatExists(chatExistance);
   };
 
   const removeOrExportTaskModalHandler = () => {
@@ -278,7 +379,7 @@ const Projects = () => {
         } else if (key === "people") {
           return row[key].length
             ? row[key]
-                .map((person) => person.email.split("@")[0])
+                .map((person) => person.userName)
                 .join(" ")
                 .toUpperCase()
             : "";
@@ -307,16 +408,23 @@ const Projects = () => {
   const removeOrExportTask = async () => {
     removeOrExportTaskModalHandler();
     if (exportOrRemoveOption === "remove") {
-      const response = await removeATask(taskData._id);
+      const response = await removeATask(state.id, taskData._id, taskData.name);
       if (response?.status) {
         const updateProject = (selected) =>
           selected.filter((task) => task._id !== taskData._id);
 
         setSelectedProject((previous) => updateProject(previous));
+        setCurrentProject((previous) => updateProject(previous));
 
-        if (currentProject.length) {
-          setCurrentProject((previous) => updateProject(previous));
-        }
+        setLiveUpdationRemoveTask({
+          projectId: state?.id,
+          taskId: taskData._id,
+          notification: {
+            ...response.notification,
+            assignerName: userData.userName,
+            assignerImg: userData.profilePhotoURL,
+          },
+        });
 
         toast.success(response.message);
       } else {
@@ -330,16 +438,35 @@ const Projects = () => {
 
   // Filter project according to selection
   const filterProject = (type, selection) => {
-    setSelectedProject((previous) =>
-      previous
+    setSelectedProject(
+      currentProject
         .map((task) => {
           const filteredSubTasks = task.subTasks?.filter((subTask) => {
             if (type === "subTask") {
-              return subTask._id === selection._id;
+              if (person?._id) {
+                return (
+                  selection.test(subTask.task) &&
+                  subTask.people.some(
+                    (eachPerson) => eachPerson._id === person._id
+                  )
+                );
+              } else {
+                return selection.test(subTask.task);
+              }
             } else {
-              return subTask.people.some(
-                (eachPerson) => eachPerson._id === selection._id
-              );
+              if (subTaskName.length) {
+                const regex = new RegExp(subTaskName, "i");
+                return (
+                  regex.test(subTask.task) &&
+                  subTask.people.some(
+                    (eachPerson) => eachPerson._id === selection._id
+                  )
+                );
+              } else {
+                return subTask.people.some(
+                  (eachPerson) => eachPerson._id === selection._id
+                );
+              }
             }
           });
           if (filteredSubTasks.length) {
@@ -354,18 +481,20 @@ const Projects = () => {
     );
   };
 
+
   // Filter project after removing one filter selection
-  const removedSelectionFilterProject = (type, selection) => {
+  const removedSelectionFilterProject = () => {
     setSelectedProject(
       currentProject
         .map((task) => {
           const filteredSubTasks = task.subTasks?.filter((subTask) => {
-            if (type === "subTask") {
-              return subTask._id === selection._id;
-            } else {
+            if (person?._id) {
               return subTask.people.some(
-                (eachPerson) => eachPerson._id === selection._id
+                (eachPerson) => eachPerson._id === person._id
               );
+            } else if (subTaskName.length) {
+              const regex = new RegExp(subTaskName, "i");
+              return regex.test(subTask.task);
             }
           });
           if (filteredSubTasks.length) {
@@ -383,52 +512,76 @@ const Projects = () => {
   // Search Sub task Toggle
   const searchInputToggle = () => {
     if (!openSearchInput) {
-      const allTasks = selectedProject.flatMap((task) =>
-        task.subTasks
-          .filter((subTask) => subTask.task)
-          .map((subTask) => {
-            const { _id, task } = subTask;
-            return { _id, task };
-          })
-      );
-      setAllSubTasks(allTasks);
-      setFilteredSubTasks(allTasks);
+      setTimeout(() => {
+        searchTaskRef?.current?.focus();
+      }, 500);
     }
-
     setOpenSearchInput((previous) => !previous);
-
-    if (!searchedSubTask?._id && !currentProject.length) {
-      setCurrentProject(selectedProject);
-    }
   };
+
+
+  const removeProjectFilter = (type)=>{
+    if(type === "subTask"){
+      setSubTaskName("")
+      setSelectedProject(
+        currentProject
+          .map((task) => {
+            const filteredSubTasks = task.subTasks?.filter((subTask) => {
+              if (person?._id) {
+                return subTask.people.some(
+                  (eachPerson) => eachPerson._id === person._id
+                );
+              } else {
+                return subTask;
+              }
+            });
+            if (filteredSubTasks.length) {
+              return {
+                ...task,
+                subTasks: filteredSubTasks,
+              };
+            }
+            return null;
+          })
+          .filter((each) => each !== null)
+      );
+      
+    }else{
+      setPerson({}) 
+      setSelectedProject(
+        currentProject
+          .map((task) => {
+            const filteredSubTasks = task.subTasks?.filter((subTask) => {
+              if(subTaskName.length) {
+                const regex = new RegExp(subTaskName, "i");
+                return regex.test(subTask.task);
+              } else {
+                return subTask;
+              }
+            });
+            if (filteredSubTasks.length) {
+              return {
+                ...task,
+                subTasks: filteredSubTasks,
+              };
+            }
+            return null;
+          })
+          .filter((each) => each !== null)
+      );
+    }
+  }
 
   const searchSubTask = (event) => {
     const { value } = event.target;
-    const trimmed = value.trim();
+    setSubTaskName(value);
 
-    setSubTaskName(trimmed);
-
-    if (trimmed.length) {
-      const regex = new RegExp(trimmed, "i");
-      setAllSubTasks(filteredSubTasks.filter((each) => regex.test(each.task)));
+    if (value.length) {
+      setIsFiltered(true);
+      const regex = new RegExp(value, "i");
+      filterProject("subTask", regex);
     } else {
-      setAllSubTasks(filteredSubTasks);
-    }
-  };
-
-  const selectSubtask = (selectedSubTask) => {
-    setSearchedSubTask(selectedSubTask);
-    filterProject("subTask", selectedSubTask);
-    searchInputToggle();
-  };
-
-  const removeSubTaskFilter = () => {
-    setSearchedSubTask({});
-    setSubTaskName("");
-    if (person?._id) {
-      removedSelectionFilterProject("person", person);
-    } else {
-      setSelectedProject(currentProject);
+      removeProjectFilter("subTask")
     }
   };
 
@@ -439,8 +592,6 @@ const Projects = () => {
         !searchInputRef.current.contains(event.target)
       ) {
         searchInputToggle();
-        setSubTaskName("");
-        setSearchedSubTask({});
       }
     },
     [searchInputToggle]
@@ -463,10 +614,10 @@ const Projects = () => {
           .flatMap((tasks) => tasks.people)
       );
       combinedArr.forEach((people) => {
-        const { _id, email, profilePhotoURL } = people;
-        const peopleName = email.split("@")[0];
+        const { _id, userName, profilePhotoURL } = people;
+
         if (!unique[_id]) {
-          unique[_id] = { _id, peopleName, profilePhotoURL };
+          unique[_id] = { _id, userName, profilePhotoURL };
         }
       });
 
@@ -477,9 +628,9 @@ const Projects = () => {
 
     setOpenPersonDropdown((previous) => !previous);
 
-    if (!person?._id && !currentProject.length) {
-      setCurrentProject(selectedProject);
-    }
+    // if (!person?._id) {
+    //   setCurrentProject(selectedProject);
+    // }
   };
 
   const searchPerson = (event) => {
@@ -488,7 +639,7 @@ const Projects = () => {
 
     if (trimmed.length) {
       const regex = new RegExp(trimmed, "i");
-      setAllUsers(filteredUsers.filter((each) => regex.test(each.peopleName)));
+      setAllUsers(filteredUsers.filter((each) => regex.test(each.userName)));
     } else {
       setAllUsers(filteredUsers);
     }
@@ -497,17 +648,20 @@ const Projects = () => {
   const setSinglePersonFilter = (selectedPerson) => {
     setPerson(selectedPerson);
     filterProject("person", selectedPerson);
+    setIsFiltered(true);
     personDropdownHandler();
   };
 
-  const removePersonFilter = () => {
-    setPerson({});
-    if (searchedSubTask?._id) {
-      removedSelectionFilterProject("subTask", searchedSubTask);
-    } else {
-      setSelectedProject(currentProject);
-    }
-  };
+  // const removePersonFilter = () => {
+  //   setPerson({});
+  //   if (subTaskName) {
+  //     const regex = new RegExp(subTaskName, "i");
+  //     removedSelectionFilterProject("subTask", regex);
+  //   } else {
+  //     setSelectedProject(currentProject);
+  //     setIsFiltered(false);
+  //   }
+  // };
 
   const handleSortToggle = () => setOpenSort((previous) => !previous);
 
@@ -547,6 +701,7 @@ const Projects = () => {
     value
   ) => {
     const dynamicFieldUpdateResponse = await dynamicFieldUpdate(
+      state.id,
       fieldSubTaskId,
       field,
       value
@@ -567,10 +722,20 @@ const Projects = () => {
         );
 
       setSelectedProject((previous) => updateProject(previous));
+      setCurrentProject((previous) => updateProject(previous));
 
-      if (currentProject.length) {
-        setCurrentProject((previous) => updateProject(previous));
-      }
+      setLiveUpdationDynamicField({
+        projectId: state?.id,
+        taskId: fieldTaskId,
+        subTaskId: fieldSubTaskId,
+        field,
+        value,
+        notification: {
+          ...dynamicFieldUpdateResponse.notification,
+          assignerName: userData.userName,
+          assignerImg: userData.profilePhotoURL,
+        },
+      });
     } else {
       toast.error(dynamicFieldUpdateResponse.message);
     }
@@ -629,9 +794,7 @@ const Projects = () => {
 
       setSelectedProject((previous) => updateProject(previous));
 
-      if (currentProject.length) {
-        setCurrentProject((previous) => updateProject(previous));
-      }
+      setCurrentProject((previous) => updateProject(previous));
 
       const dndResponse = await headerDnd(
         taskid,
@@ -664,18 +827,21 @@ const Projects = () => {
     peopleModalHandler();
   };
 
+  const taskArrangePopupHandler = () =>
+    setOpenTaskArrangePopup((previous) => !previous);
+
   return (
-    <div className="mt-14 mr-1 mb-1 p-5 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
-      <h1 className="text-2xl font-bold capitalize">
+    <div className="mt-20 p-5 w-full h-[calc(100vh-5.5rem)] overflow-y-hidden">
+      <h1 className="text-2xl font-bold uppercase">
         {state?.name ?? "Project"}
       </h1>
-      
+
       <div className="mt-2 flex gap-2 h-8">
         <Button
           onClick={formHandler}
-          className="capitalize flex items-center gap-1 transition py-1 px-2 rounded"
+          className=" bg-maingreen text-black flex items-center gap-1 transition py-1 px-2 rounded"
         >
-          <p className="hidden md:block">Add Task</p>
+          <p className="hidden md:block">Add Group</p>
           <BiPlus className="w-4 h-4" />
         </Button>
 
@@ -687,59 +853,46 @@ const Projects = () => {
               className="rounded pr-5"
               placeholder="Search"
               maxLength={25}
+              ref={searchTaskRef}
             />
             <BiSearchAlt2 className="absolute bottom-1/2 translate-y-1/2 right-1 w-3 h-3" />
-            {subTaskName && (
-              <div className="absolute p-1 flex flex-col gap-1 shadow-lg w-full max-h-32 bg-white overflow-y-scroll border z-10 rounded">
-                {allSubTasks?.length ? (
-                  allSubTasks.map((subtask) => (
-                    <p
-                      key={subtask._id}
-                      className="cursor-pointer capitalize rounded hover:bg-gray-100 pl-1 text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis min-h-6 h-6"
-                      onClick={() => selectSubtask(subtask)}
-                    >
-                      {subtask.task}
-                    </p>
-                  ))
-                ) : (
-                  <p className="text-gray-500 m-auto text-center">
-                    No tasks found
-                  </p>
-                )}
-              </div>
-            )}
           </div>
-        ) : searchedSubTask?._id ? (
-          <button className="max-w-28 flex items-center gap-1 transition duration-150 text-slate-500 bg-blue-200 shadow-md py-1 px-2 rounded outline-none">
+        ) : subTaskName ? (
+          <button className="max-w-28 flex items-center gap-1 transition duration-150 text-slate-500 bg-maingreen shadow-md py-1 px-2 rounded outline-none">
             <p className="text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis">
-              {searchedSubTask.task}
+              {subTaskName}
             </p>
             <IoMdCloseCircle
-              onClick={removeSubTaskFilter}
+              onClick={()=>removeProjectFilter("subTask")}
               className="w-4 h-4"
             />
           </button>
         ) : (
           <button
             onClick={searchInputToggle}
-            className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none"
+            className="flex items-center gap-1 transition duration-150 text-slate-500 bg-[#ffffffcd] hover:bg-maingreen hover:shadow-md py-1 px-2 rounded outline-none"
           >
             <BiSearchAlt2 />
-            <p className="hidden md:block">Search</p>
+            <p className="hidden md:block uppercase text-xs font-semibold">
+              Search
+            </p>
           </button>
         )}
 
         {person?._id ? (
           <button
-            className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 bg-blue-200 shadow-lg outline-none`}
+            className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 bg-maingreen focus:bg-maingreen shadow-lg outline-none`}
           >
             <img
               className="w-5 h-5 rounded-full"
               src={person.profilePhotoURL ?? "/avatar-icon.jpg"}
-              alt="Person Photo"
+              alt="Profile Photo"
             />
-            <p className="hidden md:block">Person</p>
-            <IoMdCloseCircle onClick={removePersonFilter} className="w-4 h-4" />
+            <p className="hidden md:block ">Person</p>
+            <IoMdCloseCircle
+              onClick={()=>removeProjectFilter("person")}
+              className="w-4 h-4"
+            />
           </button>
         ) : (
           <Popover
@@ -749,12 +902,14 @@ const Projects = () => {
           >
             <PopoverHandler>
               <button
-                className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 hover:bg-blue-200 hover:shadow-md outline-none ${
-                  openPersonDropdown && "bg-blue-200 shadow-lg"
+                className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 bg-[#ffffffcd] hover:bg-maingreen hover:shadow-md outline-none ${
+                  openPersonDropdown && "bg-maingreen shadow-lg"
                 }`}
               >
                 <BiUserCircle className="w-4 h-4" />
-                <p className="hidden md:block">Person</p>
+                <p className="hidden md:block uppercase text-xs font-semibold">
+                  Person
+                </p>
               </button>
             </PopoverHandler>
             <PopoverContent className="p-3 w-52 flex flex-col justify-between gap-2 shadow-xl z-10">
@@ -785,7 +940,7 @@ const Projects = () => {
                             index === 0 && "left-0"
                           } px-1 py-0 shadow border bg-black text-white rounded text-sm`}
                         >
-                          {user.peopleName}
+                          {user.userName}
                         </p>
                       </div>
                     );
@@ -800,23 +955,26 @@ const Projects = () => {
           </Popover>
         )}
 
-        <button className="flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 focus:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none">
+        {/* 
+        <button className="flex items-center gap-1 transition duration-150 text-slate-500 bg-[#ffffffcd] hover:bg-maingreen  hover:shadow-md py-1 px-2 rounded outline-none">
           <BiFilterAlt />
           <p className="hidden md:block">Filter</p>
-        </button>
+        </button> */}
 
         <Popover placement="bottom" open={openSort} handler={handleSortToggle}>
           <PopoverHandler>
             <button
-              className={`flex items-center gap-1 transition duration-150 text-slate-500 hover:bg-blue-200 hover:shadow-md py-1 px-2 rounded outline-none ${
-                openSort && "bg-blue-200"
+              className={`flex items-center gap-1 transition duration-150 text-slate-500 bg-[#ffffffcd] hover:bg-maingreen  hover:shadow-md py-1 px-2 rounded outline-none ${
+                openSort && "bg-maingreen"
               }`}
             >
               <BiSort />
-              <p className="hidden md:block">Sort</p>
+              <p className="hidden md:block uppercase text-xs font-semibold">
+                Sort
+              </p>
             </button>
           </PopoverHandler>
-          <PopoverContent className="p-1 rounded flex flex-col gap-1 cursor-pointer">
+          <PopoverContent className="p-1 rounded flex flex-col gap-1 cursor-pointer z-10">
             <p
               onClick={() => sortTasks("A-Z")}
               className="px-2 hover:bg-gray-100 rounded"
@@ -831,24 +989,66 @@ const Projects = () => {
             </p>
           </PopoverContent>
         </Popover>
+
+        <Popover
+          open={openTaskArrangePopup}
+          handler={taskArrangePopupHandler}
+          placement="bottom"
+        >
+          <PopoverHandler>
+            <button
+              className={`rounded flex gap-1 items-center py-1 px-2 transition duration-150 text-slate-500 bg-[#ffffffcd] hover:bg-maingreen hover:shadow-md outline-none ${
+                openTaskArrangePopup && "bg-maingreen shadow-lg"
+              }`}
+            >
+              <FaArrowsTurnToDots className="w-4 h-4" />
+              <p className="hidden md:block uppercase text-xs font-semibold">
+                Arrange Tasks
+              </p>
+            </button>
+          </PopoverHandler>
+          <PopoverContent className="p-2 w-52 max-h-96 shadow-xl z-10">
+            <div className="flex flex-col gap-2 overflow-y-scroll no-scrollbar">
+              {selectedProject?.length ? (
+                selectedProject.map(({ _id, name }) => {
+                  return (
+                    <p
+                      draggable
+                      onDragStart={(e) => onDragStart(e, _id)}
+                      onDragOver={onDragOver}
+                      onDrop={(e) => onDrop(e, _id)}
+                      key={_id}
+                      className="pl-2 mx-1 cursor-move rounded capitalize bg-maingreen hover:bg-maingreenhvr text-nowrap whitespace-nowrap overflow-hidden overflow-ellipsis"
+                    >
+                      {name}
+                    </p>
+                  );
+                })
+              ) : (
+                <p className="text-gray-500 m-auto text-center">No Tasks</p>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <DndContext
         onDragEnd={handleDragEnd}
-        // modifiers={[restrictToHorizontalAxis]}
+        modifiers={[restrictToHorizontalAxis]}
       >
         {/* Tasks Table */}
-        <div className="mt-4 overflow-y-scroll h-[calc(100vh-13rem)] no-scrollbar">
+        <div className="my-4 overflow-y-scroll h-[calc(100vh-13rem)] no-scrollbar">
           <div className="flex flex-col gap-4 ">
             {selectedProject.length ? (
-              selectedProject.map((singleTable) => (
+              selectedProject.map((singleTable, index) => (
                 <TaskTable
                   key={singleTable._id}
+                  projectId={state.id}
                   singleTable={singleTable}
                   addSubTask={addSubTask}
                   dueDateChanger={dueDateChanger}
                   classes={classes}
-                  subTaskChatModalHandler={subTaskChatModalHandler}
+                  subTaskChatModalOpenHandler={subTaskChatModalOpenHandler}
                   isAdmin={isAdmin}
                   projectPermitted={projectPermitted}
                   removeOrExportTaskModalOpen={removeOrExportTaskModalOpen}
@@ -863,6 +1063,8 @@ const Projects = () => {
                   onDragStart={onDragStart}
                   onDragOver={onDragOver}
                   onDrop={onDrop}
+                  index={index + 1}
+                  taskCount={selectedProject.length}
                 />
               ))
             ) : (
@@ -874,7 +1076,11 @@ const Projects = () => {
 
       {/* Add Task */}
       <Dialog size="xs" open={isFormOpen} handler={formHandler}>
-        <FormComponent formHandler={formHandler} projectId={state?.id ?? 1} />
+        <FormComponent
+          formHandler={formHandler}
+          projectId={state?.id}
+          taskId={taskSubTaskIds.taskId}
+        />
       </Dialog>
 
       <Dialog
@@ -884,7 +1090,10 @@ const Projects = () => {
         size="md"
         className="outline-none"
       >
-        <SubTaskChat subTaskChatModalHandler={subTaskChatModalHandler} />
+        <SubTaskChat
+          subTaskChatModalHandler={subTaskChatModalHandler}
+          chatExists={chatExists}
+        />
       </Dialog>
 
       <Dialog
@@ -923,7 +1132,10 @@ const Projects = () => {
         size="xs"
         className="outline-none"
       >
-        <AddHeaderComponent addHeaderOpenHandler={addHeaderOpenHandler} />
+        <AddHeaderComponent
+          projectId={state.id}
+          addHeaderOpenHandler={addHeaderOpenHandler}
+        />
       </Dialog>
 
       {/* Dynamic option field Modal */}
@@ -935,6 +1147,7 @@ const Projects = () => {
         className="outline-none"
       >
         <AddDynamicOptionComponent
+          projectId={state?.id}
           dynamicSelectFieldType={dynamicSelectFieldType}
           dynamicFieldModalHandler={dynamicFieldModalHandler}
           setStatusGroup={setStatusGroup}
@@ -947,9 +1160,9 @@ const Projects = () => {
         handler={peopleModalHandler}
         size="xs"
         className="outline-none"
-        dismiss={{ escapeKey: false, outsidePress: false }}
       >
         <PeopleSelectComponent
+          projectId={state.id}
           taskSubTaskIds={taskSubTaskIds}
           currentSubTaskPeople={currentSubTaskPeople}
           setCurrentSubTaskPeople={setCurrentSubTaskPeople}

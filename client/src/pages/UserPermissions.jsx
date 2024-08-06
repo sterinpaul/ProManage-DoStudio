@@ -10,7 +10,7 @@ import {
 import { Button, Dialog, DialogBody, Typography, DialogFooter } from "@material-tailwind/react";
 import { PermissionProjects } from "../components/permissions/PermissionProjects";
 
-const TABLE_HEADER = ["Sl.No.", "User Id", "Email", "Status"];
+const TABLE_HEADER = ["Sl.No", "User Id", "Email", "Status"];
 
 const UserPermissions = () => {
   const [users, setUsers] = useState([]);
@@ -83,10 +83,10 @@ const UserPermissions = () => {
   }
 
   return (
-    <div className="mt-14 mr-1 mb-1 p-5 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
+    <div className="mt-20 mr-1 mb-1 p-5 w-full h-[calc(100vh-5.75rem)] overflow-y-hidden text-black">
       <h1 className="text-2xl font-bold">Permissions</h1>
       <p className="mt-2">Choose a user to manage their permissions</p>
-      <div className="mt-6 w-full overflow-x-scroll">
+      <div className="mt-6 w-full overflow-x-scroll overflow-y-scroll h-full">
         <table className="table-auto w-full">
           <thead>
             <tr className="border border-blue-gray-200">
@@ -124,8 +124,7 @@ const UserPermissions = () => {
       <Dialog
         open={openPermissionModal}
         handler={permissionModalHandler}
-        size="md"
-        className="p-2"
+        size="lg"
         dismiss={{ escapeKey: false, outsidePress: false }}
       >
         <PermissionProjects

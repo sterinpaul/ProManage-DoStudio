@@ -1,5 +1,7 @@
 import Joi from "joi"
 import projectHelpers from "../helpers/projectHelpers.js"
+import userHelpers from "../helpers/userHelpers.js"
+import notificationHelpers from "../helpers/notificationHelpers.js"
 
 
 const projectControllers = () => {
@@ -19,7 +21,7 @@ const projectControllers = () => {
     const addProject = async(req,res)=>{  
         try {
             const projectSchema = Joi.object({
-                name: Joi.string().min(1).max(25).required()
+                name: Joi.string().min(1).max(50).required()
             })
             const { error, value } = projectSchema.validate(req.body)
 
@@ -33,9 +35,17 @@ const projectControllers = () => {
                 return res.status(200).json({status:false,message:"Project name already exists"})
             }
             
-            const projectResponse = await projectHelpers.addProject(value)
-            if(projectResponse){
-                return res.status(200).json({status:true,data:projectResponse})
+            const assigner = req.payload.id
+            const [projectResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    projectHelpers.addProject(value),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`added a project: ${value.name}`})
+                ]
+            )
+            
+            if(projectResponse && notificationResponse){
+                return res.status(200).json({status:true,data:projectResponse, notification: notificationResponse})
             }
             return res.status(200).json({status:false,message:"Error adding project"})
         } catch (error) {

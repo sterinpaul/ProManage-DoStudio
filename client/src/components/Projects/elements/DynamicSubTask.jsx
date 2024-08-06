@@ -12,9 +12,8 @@ export const DynamicSubTask = ({
   updateDynamicField,
   isAdmin
 }) => {
-  const [error, setError] = useState(false);
   const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState(dynamicValue ?? "");
+  const [value, setValue] = useState("");
   const inputRef = useRef(null);
   const permittedHeaders = useRecoilValue(permittedHeadersAtom)
 
@@ -43,8 +42,6 @@ export const DynamicSubTask = ({
     if (value.trim().length) {
       updateDynamicField(taskId, subTaskId, field, value);
       editOpenToggle();
-    } else {
-      setError(true);
     }
   };
 
@@ -53,6 +50,10 @@ export const DynamicSubTask = ({
       editOpenToggle();
     }
   };
+
+  useEffect(()=>{
+    setValue(dynamicValue ?? "")
+  },[dynamicValue])
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
@@ -63,9 +64,8 @@ export const DynamicSubTask = ({
 
   return (
     <td
-      className={`${
-        error && "outline-2 outline-dashed outline-red-600"
-      } ${classes} relative group cursor-pointer w-44`}
+      onDoubleClick={editOpenToggle}
+      className={`${classes} relative group cursor-pointer w-44`}
     >
       {edit ? (
         <form onSubmit={updateField}>
@@ -85,10 +85,6 @@ export const DynamicSubTask = ({
           <p className="whitespace-nowrap overflow-hidden overflow-ellipsis capitalize">
             {value}
           </p>
-          <MdEdit
-            onClick={editOpenToggle}
-            className="absolute hidden right-0 top-2 group-hover:block w-4 h-4"
-          />
         </div>
       )}
     </td>

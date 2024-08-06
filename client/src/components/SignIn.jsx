@@ -2,7 +2,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
-
+import {Mainlogo} from '../assets'
 import {
   CardHeader,
   CardBody,
@@ -55,12 +55,9 @@ export const SignIn = () => {
     <form onSubmit={formik.handleSubmit}>
       <CardHeader
         variant="gradient"
-        color="blue"
-        className="mb-4 h-28 flex justify-center items-center text-center px-2"
+        className="mb-4 bg-maingreen h-28 flex justify-center items-center text-center px-2"
       >
-        <Typography variant="h3" color="white" className="font-kaushan">
-          DoStudio
-        </Typography>
+        <img className='h-28 w-28 object-cover' src={Mainlogo} alt="logo" loading='eager'/>
 
       </CardHeader>
       <CardBody className="flex flex-col gap-2">
@@ -75,7 +72,7 @@ export const SignIn = () => {
         <p className="h-4 ml-2 text-sm text-red-800">{formik.touched.password && formik.errors.password ?
           formik.errors.password : null}</p>
 
-        <Button type="submit" className="mt-5" color="blue" variant="gradient" fullWidth>
+        <Button type="submit" className="mt-5 bg-maingreen hover:bg-maingreenhvr text-black" fullWidth>
           Sign In
         </Button>
 

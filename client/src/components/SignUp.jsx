@@ -5,23 +5,26 @@ import lodash from 'lodash'
 import {
   Input,
   CardBody,
-  Button,
-  Typography
+  Button
 } from "@material-tailwind/react";
 import { signUp } from '../api/apiConnections/authConnections';
-import { useNavigate } from 'react-router-dom';
+
 
 
 export const SignUp = ({handleSignIn}) => {
-  const navigate = useNavigate()
 
   const formik = useFormik({
     initialValues: {
+      userName: '',
       email: '',
       password: '',
       rePassword: ''
     },
     validationSchema: Yup.object().shape({
+      userName: Yup.string()
+        .min(6, 'Must be 6 characters or more')
+        .max(12, 'Must be less than 13 characters')
+        .required('Required'),
       email: Yup.string()
         .email('Invalid email address')
         .required('Required'),
@@ -49,11 +52,17 @@ export const SignUp = ({handleSignIn}) => {
   })
 
   return (
-    <form onSubmit={formik.handleSubmit} className="w-100">
-      <Typography variant="h3" color="blue" className="text-center pt-4">
+    <form onSubmit={formik.handleSubmit} className="w-100 pt-5">
+      {/* <Typography variant="h3" className="text-center pt-4 text-black font-medium uppercase">
         Sign Up
-      </Typography>
+      </Typography> */}
       <CardBody className="flex flex-col gap-2">
+        <div className='mb-4'>
+          <Input type="text" id="userName" size="lg" label="User Name"
+            {...formik.getFieldProps('userName')} />
+          <p className="h-4 ml-2 text-sm text-red-800">{formik.touched.userName && formik.errors.userName ?
+            formik.errors.userName : null}</p>
+        </div>
         <div className='mb-4'>
           <Input type="email" id="email" size="lg" label="E-mail"
             {...formik.getFieldProps('email')} />
@@ -72,7 +81,7 @@ export const SignUp = ({handleSignIn}) => {
           formik.errors.rePassword : null}</p>
 
 
-        <Button type="submit" color="blue" variant="gradient" fullWidth>
+        <Button type="submit" className='bg-maingreen hover:bg-maingreenhvr text-black' fullWidth>
           Submit
         </Button>
 

@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import { getNextSequence } from "../utils/getNextSequence.js";
 
 
 const SubTaskSchema = new Schema (
@@ -33,6 +34,10 @@ const SubTaskSchema = new Schema (
             type: [Schema.Types.ObjectId],
             ref: 'users',
             default:[]
+        },
+        order:{
+            type: Number,
+            default: 0
         }
     },
     {
@@ -41,6 +46,10 @@ const SubTaskSchema = new Schema (
     }
 )
 
+SubTaskSchema.pre('save', async function (next) {
+    this.order = await getNextSequence("subTaskCounter")
+    next();
+})
 
 let SubTaskModel = model('subtasks', SubTaskSchema);
 

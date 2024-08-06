@@ -2,41 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
+
 @font-face{
-  src: url(assets/fonts/Figtree-Light.woff2) format(woff2);
-  font-family: "figtree-light";
+  src: url(assets/fonts/Satoshi-Light.woff2) format(woff2);
+  font-family: "satoshi-light";
+  font-display: swap;
+}
+@font-face{
+  src: url(assets/fonts/Satoshi-Medium.woff2) format(woff2);
+  font-family: "satoshi-medium";
   font-display: swap;
 }
 @font-face{
   src: url(assets/fonts/Figtree-Regular.woff2) format(woff2);
-  font-family: "figtree-regular";
-  font-display: swap;
-}
-@font-face{
-  src: url(assets/fonts/Figtree-Medium.woff2) format(woff2);
-  font-family: "figtree-medium";
+  font-family: "satoshi-regular";
   font-display: swap;
 }
 @font-face{
   src: url(assets/fonts/Figtree-SemiBold.woff2) format(woff2);
-  font-family: "figtree-semibold";
+  font-family: "satoshi-semibold";
   font-display: swap;
 }
-@font-face{
-  src: url(assets/fonts/Figtree-Bold.woff2) format(woff2);
-  font-family: "figtree-bold";
-  font-display: swap;
-}
-@font-face{
-  src: url(assets/fonts/Figtree-ExtraBold.woff2) format(woff2);
-  font-family: "figtree-extrabold";
-  font-display: swap;
-}
-@font-face{
-  src: url(assets/fonts/Figtree-Black.woff2) format(woff2);
-  font-family: "figtree-black";
-  font-display: swap;
-}
+
 
 * {
   margin: 0;
@@ -51,9 +40,12 @@ html {
 }
 
 body {
-  background-color: #fff;
+  /* background-color: #eb0606; */
+  background-image: url('https://img.freepik.com/premium-photo/groovy-psychedelic-abstract-wavy-decorative-funky-background-hippie-trendy-design-digital-art_598586-601.jpg?w=1060');
+  background-size: cover;
+  background-repeat: no-repeat;
   color: black;
-  font-family: "figtree-regular", sans-serif;
+  font-family: "satoshi-regular", sans-serif;
   /* overflow-y: hidden; */
 }
 
@@ -76,4 +68,24 @@ td,th{
   height: 2.8rem;
   min-height: 2.8rem;
   overflow-y: auto;
+}
+
+::-webkit-scrollbar{
+width: 5px;
+background: rgb(244, 244, 244);
+}
+::-webkit-scrollbar-thumb{
+background:#4b464b;
+border-radius: 6px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+background:linear-gradient(to bottom,#AFFE00, #67910b);
+cursor: pointer;
+}
+
+.projectscl::-webkit-scrollbar{
+  width: 0px;
+  background: black;
 }

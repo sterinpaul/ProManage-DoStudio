@@ -21,6 +21,11 @@ export const currentProjectCopyAtom = atom({
     default: []
 })
 
+export const filterStatusAtom = atom({
+    key:"filterStatusAtom",
+    default: false
+})
+
 export const taskSubTaskAtom = atom({
     key:"taskSubTaskAtom",
     default: {taskId:"",subTaskId:""}
@@ -39,4 +44,14 @@ export const priorityOptionsAtom = atom({
 export const permittedHeadersAtom = atom({
     key:"permittedHeadersAtom",
     default: []
+})
+
+export const projectHeadersAtom = atom({
+    key:"projectHeadersAtom",
+    default: []
+})
+
+export const headerWidthActiveAtom = atom({
+    key:"headerWidthActiveAtom",
+    default: false
 })

@@ -5,16 +5,15 @@ import { Typography } from "@material-tailwind/react";
 
 const Profile = () => {
   const [user, setUser] = useRecoilState(userDataAtom);
-  const userName = user?.email.split("@")[0].toUpperCase()
 
   return(
-    <div className="mt-14 mr-1 mb-1 p-8 w-full h-[calc(100vh-3.8rem)] overflow-y-hidden">
+    <div className="mt-16 bg-[#ffffff9c] p-8 w-full h-[calc(100vh-4.5rem)] overflow-y-hidden">
       <ProfilePic  />
       <div className="text-center m-4">
         <Typography variant="h3">
-          {userName}
+          {user.userName}
         </Typography>
-        <p className="text-gray-600">{user.email}</p>
+        <p className="">{user.email}</p>
       </div>
     </div>
   )

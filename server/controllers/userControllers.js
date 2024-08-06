@@ -1,4 +1,3 @@
-import Joi from 'joi'
 import userHelpers from '../helpers/userHelpers.js'
 import permissionHelpers from '../helpers/permissionHelpers.js'
 
@@ -11,6 +10,19 @@ const userControllers = () => {
             if(response){
                 return res.status(200).json({status:true,data:response})
             }
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
+    const resetNotifications = async (req,res)=>{
+        try {
+            const {id} = req.payload
+            const response = await userHelpers.resetNotifications(id)
+            if(response.modifiedCount){
+                return res.status(200).json({status:true})
+            }
+            return res.status(200).json({status:false,message:"Could not reset notification count"})
         } catch (error) {
             throw new Error(error.message);
         }
@@ -45,7 +57,7 @@ const userControllers = () => {
             if(response){
                 return res.status(200).json({ status: true,data:profilePhotoURL, message: "Profile picture uploaded" })    
             }
-            return res.status(400).json({ status: false, message: "Profile picture could not be uploaded" })
+            return res.status(200).json({ status: false, message: "Profile picture could not be uploaded" })
         } catch (error) {
             console.error("Error uploading image", error);
             return res.status(500).json({ status: false, message: "Internal error" })
@@ -55,6 +67,7 @@ const userControllers = () => {
 
     return {
         getUserData,
+        resetNotifications,
         getUsersAssign,
         getPermissions,
         uploadProfilePic

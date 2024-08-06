@@ -6,8 +6,8 @@ import unreadChatHelpers from '../helpers/unreadChatHelpers.js'
 const chatControllers = () => {
     const getChatMessages = async (req,res)=>{
         try {
-            const {roomId} = req.params
-            const response = await chatHelpers.getChatMessages(roomId)
+            const {roomId,skip} = req.params
+            const response = await chatHelpers.getChatMessages(roomId,Number(skip))
 
             if(response.length){
                 return res.status(200).json({status:true,data:response})
@@ -110,7 +110,7 @@ const chatControllers = () => {
             if(response.modifiedCount){
                 return res.status(200).json({ status: true, message: "Chat removed" })
             }
-            return res.status(400).json({ status: false, message: "Chat could not remove" })
+            return res.status(200).json({ status: false, message: "Chat could not remove" })
         } catch (error) {
             return res.status(500).json({ status: false, message: error.message });
         }

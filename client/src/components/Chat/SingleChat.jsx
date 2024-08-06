@@ -12,9 +12,7 @@ export const SingleChat = ({
   downloadFile,
   removeChatConfirmation
 }) => {
-  const userName = singleMessage.user
-    ? singleMessage.user.split("@")[0]
-    : "admin";
+  
   const editExpired =
     moment(singleMessage.createdAt).unix() <= moment().unix() - 600;
 
@@ -63,7 +61,7 @@ export const SingleChat = ({
     >
       <div className="flex justify-between gap-1 items-center">
         <p className="px-2 font-semibold max-w-36 whitespace-nowrap overflow-hidden overflow-ellipsis">
-          {userName}
+          {singleMessage.user}
         </p>
 
         <div className="relative">

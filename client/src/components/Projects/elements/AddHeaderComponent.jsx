@@ -1,19 +1,25 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from "react-toastify";
-import { currentProjectAtom } from '../../../recoil/atoms/projectAtoms';
-import { useSetRecoilState } from 'recoil';
+import { currentProjectAtom, currentProjectCopyAtom } from '../../../recoil/atoms/projectAtoms';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useState } from 'react';
 import { Input, Button, DialogBody, DialogFooter, Typography } from '@material-tailwind/react';
 import { addHeader } from '../../../api/apiConnections/projectConnections';
 import {LoadingSpinner} from '../../Home/LoadingSpinner';
+import { liveUpdationAddHeaderAtom } from '../../../recoil/atoms/liveUpdationAtoms';
+import { userDataAtom } from '../../../recoil/atoms/userAtoms';
 
 
-export const AddHeaderComponent = ({ addHeaderOpenHandler }) => {
+export const AddHeaderComponent = ({ projectId, addHeaderOpenHandler }) => {
+    const user = useRecoilValue(userDataAtom);
     const setSelectedProject = useSetRecoilState(currentProjectAtom)
+    const setCurrentProject = useSetRecoilState(currentProjectCopyAtom);
     const [addHeaderError, setAddHeaderError] = useState("")
     const [loading,setLoading] = useState(false)
 
+    // Live Updations
+    const setLiveUpdationAddHeader = useSetRecoilState(liveUpdationAddHeaderAtom)
 
     const formik = useFormik({
         initialValues: {
@@ -21,7 +27,7 @@ export const AddHeaderComponent = ({ addHeaderOpenHandler }) => {
         },
         validationSchema: Yup.object().shape({
             name: Yup.string()
-                .max(20, 'Maximum 20 characters allowed')
+                .max(50, 'Maximum 50 characters allowed')
                 .matches(/^(?!.*  )[A-Za-z]+(?: [A-Za-z]+)*$/,'Only alphabets are allowed')
                 .required('Required')
         }),
@@ -30,8 +36,13 @@ export const AddHeaderComponent = ({ addHeaderOpenHandler }) => {
             const headerResponse = await addHeader(values)
             setLoading(false)
 
+            const updateProject = (selected)=>(
+                selected.map(task=>({...task,headers:[...task.headers,headerResponse.data]})))
             if (headerResponse?.status) {
-                setSelectedProject(previous => previous.map(task=>({...task,headers:[...task.headers,headerResponse.data]})))
+                setSelectedProject(previous => updateProject(previous))
+                setCurrentProject(previous => updateProject(previous))
+                
+                setLiveUpdationAddHeader({ projectId,header: headerResponse.data, notification: {...headerResponse.notification,assignerName:user.userName,assignerImg: user.profilePhotoURL}});
                 addHeaderOpenHandler()
                 toast.success(headerResponse.message)
             } else {
@@ -66,7 +77,7 @@ export const AddHeaderComponent = ({ addHeaderOpenHandler }) => {
                             {...formik.getFieldProps('name')}
                             type="text"
                             label="Header Name"
-                            maxLength={21}
+                            maxLength={50}
                             className="capitalize"
                             color='blue'
                             

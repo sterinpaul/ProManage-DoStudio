@@ -61,7 +61,7 @@ export const ProfilePic = () => {
       <div className="mx-auto flex justify-center items-center w-52 h-52">
         <div
           onClick={uploadModalHandler}
-          className="border ring-4 border-blue-500 cursor-pointer rounded-full overflow-hidden relative w-52 h-52 group"
+          className="border ring-4 border-maingreen cursor-pointer rounded-full overflow-hidden relative w-52 h-52 group"
         >
           <img
             className="h-full w-full object-contain relative"
@@ -101,7 +101,7 @@ export const ProfilePic = () => {
                         onWheel={handleWheel}
                       /> : <div style={{ width: "250px", height: "250px" }} className="flex flex-col justify-center items-center gap-2">
                       
-                      <label className="bg-blue-500 hover:bg-blue-600 text-white text-center py-1 px-2 rounded cursor-pointer text-nowrap">
+                      <label className="bg-main hover:bg-blue-600 text-white text-center py-1 px-2 rounded cursor-pointer text-nowrap">
                         Choose
                         <input
                           className="hidden"

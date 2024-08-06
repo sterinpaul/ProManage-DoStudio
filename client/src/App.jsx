@@ -24,9 +24,9 @@ const Layout = () => {
   return (
     <>
       <ScrollToTop />
-      <div>
+      <div className="">
         <Topbar />
-        <div className="flex">
+        <div className="flex mt-2">
           <Sidebar />
           <Outlet />
         </div>
@@ -50,7 +50,7 @@ function App() {
           element: (
             <Suspense
               fallback={
-                <p className="h-screen grid place-items-center">Loading....</p>
+                <p className="h-screen text-center w-full grid place-items-center text-white">Loading....</p>
               }
             >
               {token ? <Home /> : <SignInSignUp />}
@@ -62,7 +62,7 @@ function App() {
           element: (
             <Suspense
               fallback={
-                <p className="h-screen grid place-items-center">Loading....</p>
+                <p className="h-screen text-center w-full grid place-items-center text-white">Loading....</p>
               }
             >
               {token ? <Projects /> : <SignInSignUp />}
@@ -74,7 +74,7 @@ function App() {
           element: (
             <Suspense
               fallback={
-                <p className="h-screen grid place-items-center">Loading....</p>
+                <p className="h-screen text-center w-full grid place-items-center text-white">Loading....</p>
               }
             >
               {token ? <Profile /> : <SignInSignUp />}
@@ -86,7 +86,7 @@ function App() {
           element: (
             <Suspense
               fallback={
-                <p className="h-screen grid place-items-center">Loading....</p>
+                <p className="h-screen text-center w-full grid place-items-center text-white">Loading....</p>
               }
             >
               {token ? user.role === configKeys.ADMIN_ROLE ? <UserPermissions /> : <p className="grid place-content-center w-full h-screen">Unauthorized access</p> : <SignInSignUp />}
@@ -98,7 +98,7 @@ function App() {
           element: (
             <Suspense
               fallback={
-                <p className="h-screen grid place-items-center">Loading....</p>
+                <p className="h-screen text-center w-full grid place-items-center text-white">Loading....</p>
               }
             >
               {token ? <Error /> : <SignInSignUp />}

@@ -1,5 +1,5 @@
-import { Switch } from "@material-tailwind/react";
 import { useState } from "react";
+// import { Switch } from "@material-tailwind/react";
 
 export const SinglePermission = ({header,activeCheckBox,projectId,permissions,permissionSwitchHandler}) => {
   const [permitted, setPermitted] = useState(permissions?.length ? permissions.find(permissions=>permissions.projectId === projectId)?.allowedPermissions?.includes(header.key) ? true : false : false);
@@ -12,13 +12,14 @@ export const SinglePermission = ({header,activeCheckBox,projectId,permissions,pe
   return (
     <td className="border border-blue-gray-200">
       <div className="w-full flex justify-center items-center">
-        <Switch
+        <input
           onChange={permissionToggler}
           disabled={!activeCheckBox}
           color="blue"
           size="sm"
+          type="checkbox"
           checked={permitted}
-        ></Switch>
+        />
       </div>
     </td>
   );

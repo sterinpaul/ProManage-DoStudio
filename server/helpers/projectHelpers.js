@@ -7,7 +7,11 @@ const projectHelpers = {
         return await ProjectModel.find({isActive:true}).sort({createdAt:-1})
     },
     findProjectByName:async(name)=>{
-        return await ProjectModel.findOne({isActive:true,name})
+        return await ProjectModel.findOne({name})
+    },
+    getAllProjectsByName:async(name)=>{
+        const regex = new RegExp(`^${name}`,'i')
+        return await ProjectModel.countDocuments({name:{$regex:regex}})
     },
     addProject:async(projectData)=>{
         const newProject = new ProjectModel(projectData)

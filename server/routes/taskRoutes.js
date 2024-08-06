@@ -1,5 +1,6 @@
 import express from 'express'
 import taskControllers from '../controllers/taskControllers.js';
+import permissionMiddleware from '../middlewares/permissionMiddleware.js';
 
 const taskRoutes = ()=>{
     const router = express.Router();
@@ -7,9 +8,10 @@ const taskRoutes = ()=>{
     
     router.post('/addTask',controllers.addTask)
     router.get('/getSingleProject/:projectId',controllers.getSingleProject)
-    router.delete('/removeTask/:taskId',controllers.removeTask)
+    router.put('/removeTask/:projectId',permissionMiddleware("remove"),controllers.removeTask)
     router.patch('/dndTasks',controllers.dndTaskUpdate)
     router.patch('/dndHeaders',controllers.dndHeaderUpdate)
+    router.patch('/updateName',permissionMiddleware(),controllers.updateTaskName)
     
     return router
 }

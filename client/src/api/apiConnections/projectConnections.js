@@ -58,6 +58,30 @@ export const getPermittedHeaders = async () => {
     }
 }
 
+export const getAllHeaders = async () => {
+    try {
+        const response = await baseURL.get(`/headers/getAllHeaders`);
+        if (response) {
+            return response.data;
+        }
+    } catch (error) {
+        console.error(`Error fetching headers: ${error.message}`);
+        toast.error(error.message)
+    }
+}
+
+export const updateSingleHeaderWidth = async (key,name,width) => {
+    try {
+        const response = await baseURL.patch(`/headers/updateHeaderWidth`,{key,name,width});
+        if (response) {
+            return response.data;
+        }
+    } catch (error) {
+        console.error(`Error updating header width: ${error.message}`);
+        toast.error(error.message)
+    }
+}
+
 export const addProject = async (projectData) => {
     try {
         const response = await baseURL.post(`/projects/addProject`, projectData);
@@ -82,9 +106,9 @@ export const addTask = async (taskData) => {
     }
 }
 
-export const addSingleSubTask = async (taskId) => {
+export const addSingleSubTask = async (taskId,taskName) => {
     try {
-        const response = await baseURL.post(`/subTasks/addSubTask`, { taskId });
+        const response = await baseURL.post(`/subTasks/addSubTask`, { taskId,taskName });
         if (response) {
             return response.data;
         }
@@ -94,9 +118,9 @@ export const addSingleSubTask = async (taskId) => {
     }
 }
 
-export const updateSubTaskName = async (subTaskId, name) => {
+export const updateTaskName = async (projectId,taskId, name) => {
     try {
-        const response = await baseURL.patch(`/subTasks/updateName`, { subTaskId, name });
+        const response = await baseURL.patch(`/tasks/updateName`, { projectId, taskId, name });
         if (response) {
             return response.data;
         }
@@ -106,9 +130,21 @@ export const updateSubTaskName = async (subTaskId, name) => {
     }
 }
 
-export const updateSubTaskNote = async (subTaskId, notes) => {
+export const updateSubTaskName = async (projectId, subTaskId, name) => {
     try {
-        const response = await baseURL.patch(`/subTasks/updateNote`, { subTaskId, notes });
+        const response = await baseURL.patch(`/subTasks/updateName/${projectId}`, { subTaskId, name });
+        if (response) {
+            return response.data;
+        }
+    } catch (error) {
+        console.error(`Error updating name: ${error.message}`);
+        toast.error(error.message)
+    }
+}
+
+export const updateSubTaskNote = async (projectId, subTaskId, notes) => {
+    try {
+        const response = await baseURL.patch(`/subTasks/updateNote/${projectId}`, { subTaskId, notes });
         if (response) {
             return response.data;
         }
@@ -118,9 +154,9 @@ export const updateSubTaskNote = async (subTaskId, notes) => {
     }
 }
 
-export const updateStatus = async (subTaskId, status) => {
+export const updateStatus = async (projectId, subTaskId, status) => {
     try {
-        const response = await baseURL.patch(`/subTasks/updateStatus`, { subTaskId, status });
+        const response = await baseURL.patch(`/subTasks/updateStatus/${projectId}`, { subTaskId, status });
         if (response) {
             return response.data;
         }
@@ -130,9 +166,9 @@ export const updateStatus = async (subTaskId, status) => {
     }
 }
 
-export const updatePriority = async (subTaskId, priority) => {
+export const updatePriority = async (projectId, subTaskId, priority) => {
     try {
-        const response = await baseURL.patch(`/subTasks/updatePriority`, { subTaskId, priority });
+        const response = await baseURL.patch(`/subTasks/updatePriority/${projectId}`, { subTaskId, priority });
         if (response) {
             return response.data;
         }
@@ -142,9 +178,9 @@ export const updatePriority = async (subTaskId, priority) => {
     }
 }
 
-export const dueDateUpdate = async (subTaskId, dueDate) => {
+export const dueDateUpdate = async (projectId, subTaskId, dueDate) => {
     try {
-        const response = await baseURL.patch(`/subTasks/updateDueDate`, { subTaskId, dueDate });
+        const response = await baseURL.patch(`/subTasks/updateDueDate/${projectId}`, { subTaskId, dueDate });
         if (response) {
             return response.data;
         }
@@ -154,9 +190,9 @@ export const dueDateUpdate = async (subTaskId, dueDate) => {
     }
 }
 
-export const removeSubTasks = async (subTaskIds) => {
+export const removeSubTasks = async (projectId, subTaskIds) => {
     try {
-        const response = await baseURL.patch(`/subTasks/removeSubTask`, { subTaskIds });
+        const response = await baseURL.patch(`/subTasks/removeSubTask/${projectId}`, { subTaskIds });
         if (response) {
             return response.data;
         }
@@ -166,9 +202,9 @@ export const removeSubTasks = async (subTaskIds) => {
     }
 }
 
-export const subTaskToPerson = async (subTaskId, people) => {
+export const subTaskToPerson = async (projectId, subTaskId, peopleId, assignee, isAdded) => {
     try {
-        const response = await baseURL.patch(`/subTasks/assignSubTask`, { subTaskId, people });
+        const response = await baseURL.patch(`/subTasks/assignSubTask/${projectId}`, { subTaskId, peopleId, assignee, isAdded });
         if (response) {
             return response.data;
         }
@@ -178,9 +214,9 @@ export const subTaskToPerson = async (subTaskId, people) => {
     }
 }
 
-export const removeATask = async (taskId) => {
+export const removeATask = async (projectId,taskId,taskName) => {
     try {
-        const response = await baseURL.delete(`/tasks/removeTask/${taskId}`);
+        const response = await baseURL.put(`/tasks/removeTask/${projectId}`,{taskId,taskName});
         if (response) {
             return response.data;
         }
@@ -202,9 +238,9 @@ export const addHeader = async (header) => {
     }
 }
 
-export const dynamicFieldUpdate = async (subTaskId, field, value) => {
+export const dynamicFieldUpdate = async (projectId, subTaskId, field, value) => {
     try {
-        const response = await baseURL.patch(`/subTasks/updateField`, { subTaskId, field, value });
+        const response = await baseURL.patch(`/subTasks/updateField/${projectId}`, { subTaskId, field, value });
         if (response) {
             return response.data;
         }
@@ -238,9 +274,21 @@ export const projectDnD = async (projectDnd) => {
     }
 }
 
-export const addDynamicStatusOption = async (option) => {
+export const projectSubTaskDnD = async (projectSubTaskDnd) => {
     try {
-        const response = await baseURL.post(`/status/addOption`, option);
+        const response = await baseURL.patch(`/subTasks/dndSubTasks`, projectSubTaskDnd);
+        if (response) {
+            return response.data;
+        }
+    } catch (error) {
+        console.error(`Error updating dnd: ${error.message}`);
+        toast.error(error.message)
+    }
+}
+
+export const addDynamicStatusOption = async (projectId,option) => {
+    try {
+        const response = await baseURL.post(`/status/addOption/${projectId}`, option);
         if (response) {
             return response.data;
         }
@@ -249,9 +297,9 @@ export const addDynamicStatusOption = async (option) => {
         toast.error(error.message)
     }
 }
-export const addDynamicPriorityOption = async (option) => {
+export const addDynamicPriorityOption = async (projectId,option) => {
     try {
-        const response = await baseURL.post(`/priority/addOption`, option);
+        const response = await baseURL.post(`/priority/addOption/${projectId}`, option);
         if (response) {
             return response.data;
         }

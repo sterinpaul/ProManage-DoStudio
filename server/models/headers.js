@@ -16,6 +16,10 @@ const HeaderSchema = new Schema(
         order: {
             type: Number,
             required: true
+        },
+        width:{
+            type: String,
+            default:"120px"
         }
     }
 )

@@ -18,15 +18,14 @@ export default withMT({
     extend: {
       colors: {
         'main': '#be1e2d',
+        'maingreen': '#AFFE00',
+        'maingreenhvr': '#a9f30a',
       },
       fontFamily: {
-        light: ['figtree-light', 'sans-serif'],
-        normal: ['figtree-regular', 'sans-serif'],
-        medium: ['figtree-medium', 'sans-serif'],
-        semibold: ['figtree-semibold', 'sans-serif'],
-        bold: ['figtree-bold', 'sans-serif'],
-        extrabold: ['figtree-extrabold', 'sans-serif'],
-        black: ['figtree-black', 'sans-serif'],
+        light: ['satoshi-light', 'sans-serif'],
+        normal: ['satoshi-regular', 'sans-serif'],
+        medium: ['satoshi-medium', 'sans-serif'],
+        semibold: ['satoshi-semibol', 'sans-serif'],
       },
     },
 

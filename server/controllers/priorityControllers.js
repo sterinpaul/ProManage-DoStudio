@@ -1,5 +1,7 @@
 import Joi from "joi"
 import priorityHelpers from "../helpers/priorityHelpers.js"
+import userHelpers from "../helpers/userHelpers.js"
+import notificationHelpers from "../helpers/notificationHelpers.js"
 
 
 const priorityControllers = () => {
@@ -28,10 +30,17 @@ const priorityControllers = () => {
                 return res.status(200).json({ status: false, message: "Option already exists" })
             }
 
-            const optionResponse = await priorityHelpers.addOption(value)
+            const assigner = req.payload.id
+            const [optionResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    priorityHelpers.addOption(value),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`added new priority option : ${value.option}`})
+                ]
+            )
 
-            if (optionResponse) {
-                return res.status(200).json({ status: true, message: "Option added", data: optionResponse })
+            if (optionResponse && notificationResponse) {
+                return res.status(200).json({ status: true, message: "Option added", data: optionResponse, notification: notificationResponse})
             }
             return res.status(200).json({ status: false, message: "Error adding option" })
         } catch (error) {

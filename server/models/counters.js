@@ -4,11 +4,12 @@ const counterSchema = new Schema (
     {
         _id:{
             type: String,
-            default:0
+            default:"taskCounter"
         },
         seq:{
             type: Number,
-            required: true
+            required: true,
+            default:0
         }
     }
 )

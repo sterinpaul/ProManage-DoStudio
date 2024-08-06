@@ -9,6 +9,9 @@ const statusHelpers = {
     delete updated.__v
     return updated
   },
+  findStatusCount: async()=>{
+    return await StatusModel.countDocuments()
+  },
   findOptionByName: async (option) => {
     return await StatusModel.findOne({ option },{_id:1})
   },

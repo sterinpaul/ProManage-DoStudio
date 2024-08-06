@@ -14,6 +14,30 @@ export const getUserData = async() => {
     }
 }
 
+export const getAllNotifications = async(skip) => {
+    try{
+        const response = await baseURL.get(`/notifications/getNotifications/${skip}`);
+        if (response) {
+            return response.data;
+        }
+    }catch(error){
+        console.error(`Error fetching notifications : ${error.message}`);
+        toast.error("Internal error")
+    }
+}
+
+export const resetUserNotifications = async() => {
+    try{
+        const response = await baseURL.patch(`/user/resetNotifications`);
+        if (response) {
+            return response.data;
+        }
+    }catch(error){
+        console.error(`Error resetting notification count: ${error.message}`);
+        toast.error("Internal error")
+    }
+}
+
 export const getUsersForAssignSubTask = async() => {
     try{
         const response = await baseURL.get(`/user/getUsersAssign`);

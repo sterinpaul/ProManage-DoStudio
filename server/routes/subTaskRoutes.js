@@ -1,21 +1,21 @@
 import subTaskControllers from '../controllers/subTaskControllers.js';
 import express from 'express'
-// import multer from 'multer'
-// const upload = multer()
+import permissionMiddleware from '../middlewares/permissionMiddleware.js';
 
 const subTaskRoutes = ()=>{
     const router = express.Router();
     const controllers = subTaskControllers()
 
     router.post('/addSubTask',controllers.addSubTask)
-    router.patch('/updateName',controllers.updateSubTaskName)
-    router.patch('/updateNote',controllers.updateSubTaskNote)
-    router.patch('/updateStatus',controllers.updateSubTaskStatus)
-    router.patch('/updatePriority',controllers.updateSubTaskPriority)
-    router.patch('/updateDueDate',controllers.updateDueDate)
-    router.patch('/updateField',controllers.updateDynamicField)
-    router.patch('/assignSubTask',controllers.assignSubTask)
-    router.patch('/removeSubTask',controllers.removeSubTsk)
+    router.patch('/updateName/:projectId',permissionMiddleware("task"),controllers.updateSubTaskName)
+    router.patch('/updateNote/:projectId',permissionMiddleware("notes"),controllers.updateSubTaskNote)
+    router.patch('/updateStatus/:projectId',permissionMiddleware("status"),controllers.updateSubTaskStatus)
+    router.patch('/updatePriority/:projectId',permissionMiddleware("priority"),controllers.updateSubTaskPriority)
+    router.patch('/updateDueDate/:projectId',permissionMiddleware("dueDate"),controllers.updateDueDate)
+    router.patch('/updateField/:projectId',permissionMiddleware("dynamic"),controllers.updateDynamicField)
+    router.patch('/assignSubTask/:projectId',permissionMiddleware("people"),controllers.assignSubTask)
+    router.patch('/removeSubTask/:projectId',permissionMiddleware("remove"),controllers.removeSubTsk)
+    router.patch('/dndSubTasks',controllers.dndSubTaskUpdate)
     
     return router
 }

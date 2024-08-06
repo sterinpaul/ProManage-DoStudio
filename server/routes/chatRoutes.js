@@ -6,7 +6,7 @@ const chatRoutes = ()=>{
     const router = express.Router();
     const controllers = chatControllers()
 
-    router.get('/getChatMessages/:roomId',controllers.getChatMessages)
+    router.get('/getChatMessages/:roomId/:skip',controllers.getChatMessages)
     router.post('/sendMessage',controllers.sendMessage)
     router.post('/sendFile',uploadChatFile,controllers.sendFile)
     router.patch('/updateUnreadChat',controllers.updateUnreadChat)

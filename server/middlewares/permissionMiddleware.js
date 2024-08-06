@@ -1,7 +1,7 @@
 import configKeys from "../config/configKeys.js"
 import userHelpers from "../helpers/userHelpers.js"
 
-const permissionMiddleware = (permissionType)=>{
+const permissionMiddleware = (permissionType="")=>{
     return async function(req,res,next){
         const {projectId} = req.params
         const {id,role} = req.payload
@@ -14,7 +14,11 @@ const permissionMiddleware = (permissionType)=>{
                 const permissionAccess = await userHelpers.getUserPermissions(id)
                 if(permissionAccess?.permissions?.length){
                     const projectPermission = permissionAccess.permissions.find((project)=>project.projectId === projectId)
-                    if(projectPermission?.allowedPermissions?.includes(permissionType)){
+                    if(permissionType === "dynamic"){
+                        if(projectPermission?.allowedPermissions?.includes(req.body.field)){
+                            return next()
+                        }
+                    }else if(projectPermission?.allowedPermissions?.includes(permissionType)){
                         return next()
                     }
                 }

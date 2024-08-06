@@ -4,6 +4,11 @@ import configKeys from "../config/configKeys.js";
 
 const UserSchema = new Schema (
     {
+        userName: {
+            type: String,
+            unique: true,
+            required: true
+        },
         email: {
             type: String,
             unique: true,
@@ -27,6 +32,10 @@ const UserSchema = new Schema (
         },
         profilePhotoURL:{
             type: String
+        },
+        notificationUnreadCount:{
+            type:Number,
+            default:0
         }
     },
     {

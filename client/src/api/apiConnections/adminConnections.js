@@ -78,12 +78,22 @@ export const editProjectName = async(project) => {
     }
 }
 
-export const removeAProject = async(projectId) => {
+export const removeAProject = async(projectId,name) => {
     try{
-        const response = await baseURL.patch(`/admin/removeProject/${projectId}`);
+        const response = await baseURL.patch(`/admin/removeProject`,{projectId,name});
         if(response) return response.data
     }catch(error){
         console.error(`Error removing project: ${error.message}`);
+        toast.error("Internal error")
+    }
+}
+
+export const cloneAProject = async(projectId,name) => {
+    try{
+        const response = await baseURL.put(`/admin/cloneProject`,{projectId,name});
+        if(response) return response.data
+    }catch(error){
+        console.error(`Error cloning project: ${error.message}`);
         toast.error("Internal error")
     }
 }

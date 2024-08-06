@@ -10,6 +10,9 @@ const taskHelpers = {
   findTaskByName: async (name, projectId) => {
     return await TaskModel.findOne({ isActive: true, name, projectId })
   },
+  findAllTaskByProjectId: async (projectId) => {
+    return await TaskModel.find({ isActive: true, projectId },{_id:0,name:1,headers:1,order:1}).lean()
+  },
   getSingleProject: async (projectid, userid) => {
     const projectId = new mongoose.Types.ObjectId(projectid)
     const userId = new mongoose.Types.ObjectId(userid)
@@ -66,7 +69,7 @@ const taskHelpers = {
                     },
                     {
                       $project: {
-                        email: 1,
+                        userName: 1,
                         profilePhotoURL: 1
                       }
                     }
@@ -96,8 +99,29 @@ const taskHelpers = {
                 }
               },
               {
+                $lookup:{
+                  from:"chats",
+                  localField: "_id",
+                  foreignField:"roomId",
+                  pipeline:[
+                    {
+                      $match:{
+                        isActive:true
+                      }
+                    },
+                    {
+                      $project:{
+                        _id:0,
+                        isActive:1
+                      }
+                    }
+                  ],
+                  as:"chats"
+                }
+              },
+              {
                 $addFields: {
-                  chatCount: {
+                  chatUnreadCount: {
                     $ifNull: [
                       {
                         $arrayElemAt: [
@@ -107,6 +131,13 @@ const taskHelpers = {
                       },
                       0
                     ]
+                  },
+                  isChatExists: {
+                    $cond: {
+                      if: { $gt: [{ $size: "$chats" }, 0] },
+                      then: true,
+                      else: false
+                    }
                   }
                 }
               }
@@ -117,11 +148,25 @@ const taskHelpers = {
         {
           $addFields: {
             subTasks: {
-              $filter: {
-                input: "$subTasks",
-                as: "subTask",
-                cond: {
-                  $ne: ["$$subTask._id", null]
+              $let: {
+                vars: {
+                  filteredSubTasks: {
+                    $filter: {
+                      input: "$subTasks",
+                      as: "subTask",
+                      cond: {
+                        $ne: ["$$subTask._id", null]
+                      }
+                    }
+                  }
+                },
+                in: {
+                  $sortArray: {
+                    input: "$$filteredSubTasks",
+                    sortBy: {
+                      order: 1
+                    }
+                  }
                 }
               }
             },
@@ -172,6 +217,9 @@ const taskHelpers = {
   },
   removeTasks:async(projectId)=>{
     return await TaskModel.updateMany({projectId},{$set:{isActive:false}})
+  },
+  updateTaskName:async(_id,name)=>{
+    return await TaskModel.updateOne({_id},{$set:{name}})
   }
 }
 

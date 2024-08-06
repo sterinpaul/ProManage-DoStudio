@@ -3,8 +3,9 @@ import Token from "../models/token.js";
 
 
 const authHelpers = {
-    signUp:async(email,password)=>{
+    signUp:async(userName,email,password)=>{
         const newUser = new UserModel({
+            userName,
             email,
             password
         })
@@ -12,6 +13,9 @@ const authHelpers = {
     },
     getUserByEmail:async(email)=>{
         return await UserModel.findOne({email},{__v:0})
+    },
+    getUserByUserName:async(userName)=>{
+        return await UserModel.findOne({userName},{__v:0})
     },
     // Do not remove {upsert:true,new:true} from addToken query
     addToken:async(userId,token)=>{

@@ -13,6 +13,7 @@ import { SingleProject } from "./SingleProject";
 import { updatePermissions } from "../../api/apiConnections/adminConnections";
 import { toast } from "react-toastify";
 
+
 export const PermissionProjects = ({
   selectedUserId,
   userPermissions,
@@ -24,8 +25,8 @@ export const PermissionProjects = ({
 }) => {
   const [projects, setProjects] = useRecoilState(allProjectsAtom);
   const [permissions, setPermissions] = useState(userPermissions);
-  const dropdownRef = useRef(null)
   const [openAddDropDown, setOpenAddDropDown] = useState(false);
+  const dropdownRef = useRef(null)
 
   const addPermissionDropDownToggle = () =>
     setOpenAddDropDown((previous) => !previous);
@@ -78,9 +79,9 @@ useEffect(() => {
       <DialogHeader>
         <p className="mx-auto">Permission Settings</p>
       </DialogHeader>
-      <DialogBody className="overflow-x-scroll">
+      <DialogBody className="overflow-scroll h-96">
         <table className="w-full text-left table-auto min-w-max">
-          <thead>
+          <thead className="sticky">
             <tr className="font-normal text-sm">
               <th
                 rowSpan={2}
@@ -95,30 +96,33 @@ useEffect(() => {
                 Project Name
               </th>
               <th
-                colSpan={permissionHeaders?.length + 1}
+                colSpan={permissionHeaders?.length + 2}
                 className="p-1 border border-blue-gray-200 bg-blue-gray-50 text-center"
               >
                 Permissions
               </th>
             </tr>
-            <tr className="font-normal text-sm text-center">
+            <tr className="font-normal text-sm text-center z-10 ">
+              <th className="p-1 border border-blue-gray-200 bg-blue-gray-50">Remove</th>
               {permissionHeaders?.map((header) => (
                 <th
                   key={header._id}
-                  className="capitalize p-1 border border-blue-gray-200 bg-blue-gray-50"
+                  className="capitalize min-w-16 p-1 border border-blue-gray-200 bg-blue-gray-50"
                 >
                   {header.name}
                 </th>
               ))}
 
-              <th className="p-1 border border-blue-gray-200 bg-blue-gray-50 relative">
+              <th className="p-1 border border-blue-gray-200 bg-blue-gray-50">
+                <div className="relative">
                 <BiPlus
                   onClick={addPermissionDropDownToggle}
                   className="w-5 h-5 mx-auto cursor-pointer"
                 />
 
                 {openAddDropDown && (
-                  <div ref={dropdownRef} className={`z-10 absolute bg-white shadow-xl rounded p-1 top-6 right-1 grid gap-1 ${headers.length === 1 ? "grid-cols-1" : "grid-cols-2" } w-max grid-flow-dense`}>
+                  <div ref={dropdownRef} className={`absolute bg-white shadow-xl rounded p-1 top-6 right-1 grid gap-1 ${headers.length === 1 ? "grid-cols-1" : "grid-cols-2" } w-max grid-flow-dense`}>
+                  
                     {headers?.map((header) => (
                       <div
                         key={header._id}
@@ -136,10 +140,11 @@ useEffect(() => {
                     ))}
                   </div>
                 )}
+                </div>
               </th>
             </tr>
           </thead>
-          <tbody className="overflow-y-scroll">
+          <tbody>
             {projects.length
               ? projects.map((singleProject,index) => (
                   <SingleProject

@@ -7,6 +7,7 @@ const userRoutes = ()=>{
     const controllers = userControllers()
 
     router.get('/getUserData',controllers.getUserData)
+    router.patch('/resetNotifications',controllers.resetNotifications)
     router.get('/getUsersAssign',controllers.getUsersAssign)
     router.get('/getPermissions',controllers.getPermissions)
     router.post('/uploadProfilePic',uploadProfilePic,controllers.uploadProfilePic)

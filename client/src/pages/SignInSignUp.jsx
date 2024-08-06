@@ -18,14 +18,14 @@ const SignInSignUp = () => {
                         <SignIn />
                         <Typography variant="small" className="text-center mb-4">
                             Don&apos;t have an account ?
-                            <span className="font-bold ml-1 cursor-pointer hover:text-blue-700" onClick={handleSignIn}>Sign up</span>
+                            <span className="font-bold ml-1 cursor-pointer hover:text-black" onClick={handleSignIn}>Sign up</span>
                         </Typography>
                     </div> :
                     <div>
                         <SignUp handleSignIn={handleSignIn} />
                         <Typography variant="small" className="text-center mb-4">
                             Already have an account ?
-                            <span className="font-bold ml-1 cursor-pointer hover:text-blue-700" onClick={handleSignIn}>Sign in</span>
+                            <span className="font-bold ml-1 cursor-pointer hover:text-black" onClick={handleSignIn}>Sign in</span>
                         </Typography>
                     </div>
                 }

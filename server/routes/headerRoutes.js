@@ -6,6 +6,8 @@ const headerRoutes = ()=>{
     const controllers = headerControllers()
     
     router.post('/addHeader',controllers.addHeader)
+    router.get('/getAllHeaders',controllers.getAllHeaders)
+    router.patch('/updateHeaderWidth',controllers.updateHeaderWidth)
     
     return router
 }

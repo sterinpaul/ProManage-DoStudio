@@ -3,9 +3,9 @@ import baseURL from '../baseURL'
 import axios from 'axios';
 
 
-export const getSubTaskChatMessages = async(roomId) => {
+export const getSubTaskChatMessages = async(roomId,skip) => {
     try{
-        const response = await baseURL.get(`/chat/getChatMessages/${roomId}`);
+        const response = await baseURL.get(`/chat/getChatMessages/${roomId}/${skip}`);
         if (response) {
             return response.data;
         }

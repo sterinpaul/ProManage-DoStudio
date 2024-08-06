@@ -9,6 +9,7 @@ const authControllers = () => {
     const signUp = async (req, res) => {
         try {
             const userSchema = Joi.object({
+                userName: Joi.string().min(6).max(12).required(),
                 email: Joi.string().email({tlds:{allow:false}}).required(),
                 password: Joi.string().min(6).max(12).required()
             })
@@ -18,7 +19,8 @@ const authControllers = () => {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
 
-            const { email, password } = value;
+            const { userName, email, password } = value;
+            const lowerCaseUserName = userName.toLowerCase()
             const lowerCaseEmail = email.toLowerCase()
             
             const userExists = await authHelpers.getUserByEmail(lowerCaseEmail)
@@ -26,8 +28,15 @@ const authControllers = () => {
             if(userExists){
                 return res.status(200).json({ status: false, message: "User exists. Contact admin" });
             }
+            
+            const userNameExists = await authHelpers.getUserByUserName(lowerCaseUserName)
+            
+            if(userNameExists){
+                return res.status(200).json({ status: false, message: "User name exists"});
+            }
+
             const hashedPassword = await authService.encryptPassword(password)
-            const response = await authHelpers.signUp(lowerCaseEmail, hashedPassword);
+            const response = await authHelpers.signUp(lowerCaseUserName, lowerCaseEmail, hashedPassword);
             if (response) {
                 return res.status(200).json({ status: true, message: "Registration successfull" });
             } else {
@@ -70,9 +79,11 @@ const authControllers = () => {
 
                         if (refreshTokenToDb) {
                             const data = {
-                                _id:user._id,
+                                _id: user._id,
+                                userName: user.userName,
                                 email: user.email,
-                                role: user.role,
+                                notificationUnreadCount: user.notificationUnreadCount,
+                                role: user.role
                             }
                             if (role === configKeys.JWT_USER_ROLE) {
                                 data.permissions = user.permissions
@@ -98,7 +109,7 @@ const authControllers = () => {
                     }
                 }
             } else {
-                return res.status(400).json({ status: false, message: "User does not exist" })
+                return res.status(200).json({ status: false, message: "User does not exist" })
             }
         } catch (error) {
             return res.status(500).json({ status: false, message: "Error occured" })

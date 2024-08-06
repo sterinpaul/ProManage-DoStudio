@@ -6,11 +6,17 @@ const userHelpers = {
     getUserData:async(_id)=>{
         return await UserModel.findOne({_id},{password:0,isActive:0})
     },
+    addNotificationCount:async(assigner)=>{
+        return await UserModel.updateMany({_id:{$ne:assigner}},{$inc:{notificationUnreadCount:1}})
+    },
+    resetNotifications:async(_id)=>{
+        return await UserModel.updateOne({_id},{$set:{notificationUnreadCount:0}})
+    },
     getAllUsers:async()=>{
         return await UserModel.find({role:configKeys.JWT_USER_ROLE},{__v:0,password:0,role:0}).sort({isActive:1})
     },
     getUsersForAssign:async()=>{
-        return await UserModel.find({isActive:true},{email:1,profilePhotoURL:1})
+        return await UserModel.find({isActive:true},{userName:1,profilePhotoURL:1})
     },
     updateUserStatus:async(_id,isActive)=>{
         return await UserModel.updateOne({_id},{$set:{isActive}})

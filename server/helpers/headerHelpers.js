@@ -9,6 +9,9 @@ const headerHelpers = {
     delete updated.__v
     return updated
   },
+  seedAllHeaders: async (headers) => {
+    return await HeaderModel.insertMany(headers)
+  },
   findHeaderByName: async (name) => {
     return await HeaderModel.findOne({ name },{_id:1})
   },
@@ -21,8 +24,11 @@ const headerHelpers = {
   getAllHeaders: async()=>{
     return await HeaderModel.find({},{__v:0}).sort({order:1})
   },
-  getHeaders: async()=>{
-    return await HeaderModel.find({},{__v:0}).sort({order:1})
+  getHeadersForAddTask: async()=>{
+    return await HeaderModel.find({},{__v:0,width:0}).sort({order:1})
+  },
+  updateHeaderWidth: async(key,width)=>{
+    return await HeaderModel.updateOne({key},{$set:{width}})
   }
 }
 

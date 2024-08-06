@@ -11,7 +11,3 @@ export const socketMessageAtom = atom({
     default: {}
 })
 
-export const assignNotifyAtom = atom({
-    key:"assignNotifyAtom",
-    default: {}
-})

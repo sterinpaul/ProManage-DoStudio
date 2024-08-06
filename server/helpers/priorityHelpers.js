@@ -9,6 +9,9 @@ const priorityHelpers = {
     delete updated.__v
     return updated
   },
+  findPriorityCount: async()=>{
+    return await PriorityModel.countDocuments()
+  },
   findOptionByName: async (option) => {
     return await PriorityModel.findOne({ option },{_id:1})
   },

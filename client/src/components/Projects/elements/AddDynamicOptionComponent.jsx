@@ -6,11 +6,15 @@ import { Input, Button, DialogFooter, Typography } from '@material-tailwind/reac
 import { LoadingSpinner } from '../../Home/LoadingSpinner';
 import { HexColorPicker } from 'react-colorful';
 import { addDynamicPriorityOption, addDynamicStatusOption } from '../../../api/apiConnections/projectConnections';
+import { liveUpdationStatusPriorityHeaderAtom } from '../../../recoil/atoms/liveUpdationAtoms';
+import { useSetRecoilState } from 'recoil';
 
 
-export const AddDynamicOptionComponent = ({ dynamicSelectFieldType, dynamicFieldModalHandler, setStatusGroup, setPriorityGroup }) => {
+export const AddDynamicOptionComponent = ({ projectId, dynamicSelectFieldType, dynamicFieldModalHandler, setStatusGroup, setPriorityGroup }) => {
     const [addOptionError, setAddOptionError] = useState("")
     const [loading, setLoading] = useState(false)
+
+    const setLiveUpdationStatusPriorityHeader = useSetRecoilState(liveUpdationStatusPriorityHeaderAtom);
 
     const loadingToggle = () => setLoading(previous => !previous)
 
@@ -31,9 +35,9 @@ export const AddDynamicOptionComponent = ({ dynamicSelectFieldType, dynamicField
             
                 let response;
                 if (dynamicSelectFieldType === "status") {
-                    response = await addDynamicStatusOption(values)
+                    response = await addDynamicStatusOption(projectId,values)
                 } else if (dynamicSelectFieldType === "priority") {
-                    response = await addDynamicPriorityOption(values)
+                    response = await addDynamicPriorityOption(projectId,values)
                 }
                 loadingToggle()
 
@@ -45,6 +49,7 @@ export const AddDynamicOptionComponent = ({ dynamicSelectFieldType, dynamicField
                         setPriorityGroup(previous => [...previous, response.data])
                     }
                     toast.success(response.message)
+                    setLiveUpdationStatusPriorityHeader({option:response.data,isStatus:dynamicSelectFieldType === "status" ? true : false,notification:response.notification})
                 } else {
                     setAddOptionError(response.message)
 
@@ -82,13 +87,13 @@ export const AddDynamicOptionComponent = ({ dynamicSelectFieldType, dynamicField
                     <p className="h-2 ml-2 text-xs text-red-500">{formik.touched.option && formik.errors.option ? formik.errors.option : null}</p>
                 </div>
 
-                <div>
+                <div className='flex flex-col items-center'>
                     <p className='text-center p-2'>Choose a background color</p>
                     <HexColorPicker color={formik.values.color} onChange={(color) => formik.setFieldValue('color', color)} />
                     <p className="h-2 ml-2 mt-2 text-xs text-red-500">{formik.touched.color && formik.errors.color ? formik.errors.color : null}</p>
                 </div>
 
-                <p className='text-red-500 text-center h-2'>{addOptionError}</p>
+                <p className='text-red-500 text-center h-2 mb-2'>{addOptionError}</p>
 
             </div>
             <DialogFooter className="mx-auto text-center mb-4 flex justify-center items-center gap-4">

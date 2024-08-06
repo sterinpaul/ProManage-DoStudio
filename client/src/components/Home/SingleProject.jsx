@@ -34,8 +34,8 @@ export const SingleProject = ({ project,projectUpdationHandler }) => {
 
 
   return (
-    <div className="text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer group">
-      <div className="flex justify-between pt-1">
+    <div className="text-black  bg-maingreen hover:bg-maingreenhvr rounded-xl cursor-pointer group">
+      <div className="flex justify-between p-1">
         <div onClick={navigation} className="h-4 w-full"></div>
         {userData.role === configKeys.ADMIN_ROLE && <Popover open={openProjectOption} handler={projectOpenHandler} placement="bottom-end">
           <PopoverHandler>
@@ -46,6 +46,7 @@ export const SingleProject = ({ project,projectUpdationHandler }) => {
           <PopoverContent className="rounded p-1 flex flex-col gap-1">
             <p onClick={()=>optionHandler("edit")} className="hover:bg-blue-gray-50 text-black px-2 py-1 cursor-pointer rounded transition duration-200">Edit</p>
             <p onClick={()=>optionHandler("remove")} className="hover:bg-blue-gray-50 text-black px-2 py-1 cursor-pointer rounded transition duration-200">Remove</p>
+            <p onClick={()=>optionHandler("clone")} className="hover:bg-blue-gray-50 text-black px-2 py-1 cursor-pointer rounded transition duration-200">Clone</p>
           </PopoverContent>
         </Popover>}
       </div>
@@ -53,7 +54,7 @@ export const SingleProject = ({ project,projectUpdationHandler }) => {
         onClick={navigation}
         className="w-full h-28 flex justify-center items-center"
       >
-        <p className="capitalize group-hover:scale-125 transition delay-100 pb-5">
+        <p className="capitalize font-semibold group-hover:scale-110 duration-300 pb-5">
           {project.name}
         </p>
       </div>

@@ -2,6 +2,8 @@ import Joi from "joi"
 import subTaskHelpers from "../helpers/subTaskHelpers.js"
 import chatHelpers from "../helpers/chatHelpers.js"
 import headerHelpers from "../helpers/headerHelpers.js"
+import userHelpers from "../helpers/userHelpers.js"
+import notificationHelpers from "../helpers/notificationHelpers.js"
 
 
 const subTaskControllers = () => {
@@ -9,19 +11,28 @@ const subTaskControllers = () => {
     const addSubTask = async(req,res)=>{
         try {
             const subTaskSchema = Joi.object({
-                taskId: Joi.string().required()
+                taskId: Joi.string().required(),
+                taskName: Joi.string().required()
             })
             const { error, value } = subTaskSchema.validate(req.body)
     
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
+            const {taskId,taskName} = value
 
+            const subTaskNameExists = await subTaskHelpers.findSubTaskByName(taskName)
+            if(subTaskNameExists){
+                return res.status(200).json({ status: false, message: "Sub-task name already exists" })
+            }
+            const assigner = req.payload.id
             const allHeaders = await headerHelpers.getAllHeaders()
-            const subTask = {taskId:value.taskId}
+            const subTask = {taskId}
             if(allHeaders.length){
                 allHeaders?.forEach(header=>{
-                    if(header.key === "status"){
+                    if(header.key === "task"){
+                        subTask.task = taskName
+                    }else if(header.key === "status"){
                         subTask.status = "not started"
                     }else if(header.key === "priority"){
                         subTask.priority = "normal"
@@ -32,13 +43,19 @@ const subTaskControllers = () => {
                     }
                 })
             }
-            const subTaskResponse = await subTaskHelpers.addSubTask(subTask)
+            const [subTaskResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    subTaskHelpers.addSubTask(subTask),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`added a subtask: ${value.taskName}`})
+                ]
+            )
             
-            if(subTaskResponse){
-                return res.status(200).json({status:true,data:subTaskResponse})
+            if(subTaskResponse && notificationResponse){
+                return res.status(200).json({status:true,data:subTaskResponse,notification:notificationResponse})
             }
 
-            return res.status(200).json({status:false,message:"Error adding Sub task"})
+            return res.status(200).json({status:false,message:"Error adding Sub-task"})
         } catch (error) {
             throw new Error(error.message);
         }
@@ -55,10 +72,18 @@ const subTaskControllers = () => {
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
+            const assigner = req.payload.id
+
+            const [subTaskNameUpdateResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    subTaskHelpers.updateSubTaskName(value),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`updated name of a task`})
+                ]
+            )
             
-            const subTaskNameUpdateResponse = await subTaskHelpers.updateSubTaskName(value)
-            if(subTaskNameUpdateResponse.modifiedCount){
-                return res.status(200).json({status:true})
+            if(subTaskNameUpdateResponse.modifiedCount && notificationResponse){
+                return res.status(200).json({status:true, notification: notificationResponse})
             }
             return res.status(200).json({status:false,message:"Error updating name"})
         } catch (error) {
@@ -70,17 +95,25 @@ const subTaskControllers = () => {
         try {
             const subTaskNoteSchema = Joi.object({
                 subTaskId: Joi.string().required(),
-                notes: Joi.string().max(150).required()
+                notes: Joi.string().allow("").max(150).required()
             })
             const { error, value } = subTaskNoteSchema.validate(req.body)
     
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
+            const assigner = req.payload.id
+
+            const [subTaskNoteUpdateResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    subTaskHelpers.updateSubTaskNote(value),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`updated note of a task`})
+                ]
+            )
             
-            const subTaskNoteUpdateResponse = await subTaskHelpers.updateSubTaskNote(value)
-            if(subTaskNoteUpdateResponse.modifiedCount){
-                return res.status(200).json({status:true})
+            if(subTaskNoteUpdateResponse.modifiedCount && notificationResponse){
+                return res.status(200).json({status:true, notification: notificationResponse})
             }
             return res.status(200).json({status:false,message:"Error updating note"})
         } catch (error) {
@@ -99,10 +132,18 @@ const subTaskControllers = () => {
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
+            const assigner = req.payload.id
+
+            const [subTaskStatusUpdateResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    subTaskHelpers.updateSubTaskStatus(value),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`updated status of a task`})
+                ]
+            )
             
-            const subTaskStatusUpdateResponse = await subTaskHelpers.updateSubTaskStatus(value)
-            if(subTaskStatusUpdateResponse.modifiedCount){
-                return res.status(200).json({status:true})
+            if(subTaskStatusUpdateResponse.modifiedCount && notificationResponse){
+                return res.status(200).json({status:true, notification: notificationResponse})
             }
             return res.status(200).json({status:false,message:"Error updating status"})
         } catch (error) {
@@ -121,10 +162,18 @@ const subTaskControllers = () => {
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
+            const assigner = req.payload.id
+
+            const [subTaskPriorityUpdateResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    subTaskHelpers.updateSubTaskPriority(value),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`updated priority of a task`})
+                ]
+            )
             
-            const subTaskPriorityUpdateResponse = await subTaskHelpers.updateSubTaskPriority(value)
-            if(subTaskPriorityUpdateResponse.modifiedCount){
-                return res.status(200).json({status:true})
+            if(subTaskPriorityUpdateResponse.modifiedCount && notificationResponse){
+                return res.status(200).json({status:true, notification: notificationResponse})
             }
             return res.status(200).json({status:false,message:"Error updating priority"})
         } catch (error) {
@@ -136,17 +185,25 @@ const subTaskControllers = () => {
         try {
             const dueDateSchema = Joi.object({
                 subTaskId: Joi.string().required(),
-                dueDate: Joi.string().required()
+                dueDate: Joi.string().allow(null).required()
             })
             const { error, value } = dueDateSchema.validate(req.body)
     
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
+            const assigner = req.payload.id
+
+            const [subTaskDateUpdateResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    subTaskHelpers.updateDueDate(value),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`updated due date of a task`})
+                ]
+            )
             
-            const subTaskDateUpdateResponse = await subTaskHelpers.updateDueDate(value)
-            if(subTaskDateUpdateResponse.modifiedCount){
-                return res.status(200).json({status:true})
+            if(subTaskDateUpdateResponse.modifiedCount && notificationResponse){
+                return res.status(200).json({status:true, notification: notificationResponse})
             }
             return res.status(200).json({status:false,message:"Error updating due date"})
         } catch (error) {
@@ -166,11 +223,18 @@ const subTaskControllers = () => {
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
+            const assigner = req.payload.id
+
+            const [dynamicFieldUpdateResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    subTaskHelpers.updateDynamicField(value),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`updated ${value.field} of a task`})
+                ]
+            )
             
-            const dynamicFieldUpdateResponse = await subTaskHelpers.updateDynamicField(value)
-            console.log('dynamicFieldUpdateResponse',dynamicFieldUpdateResponse);
-            if(dynamicFieldUpdateResponse.modifiedCount){
-                return res.status(200).json({status:true})
+            if(dynamicFieldUpdateResponse.modifiedCount && notificationResponse){
+                return res.status(200).json({status:true, notification: notificationResponse})
             }
             return res.status(200).json({status:false,message:"Error updating value"})
         } catch (error) {
@@ -182,17 +246,27 @@ const subTaskControllers = () => {
         try {
             const subTaskAssignSchema = Joi.object({
                 subTaskId: Joi.string().required(),
-                people: Joi.array().required()
+                peopleId: Joi.string().required(),
+                assignee: Joi.string().required(),
+                isAdded: Joi.boolean().required()
             })
             const { error, value } = subTaskAssignSchema.validate(req.body)
     
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
-            const {subTaskId,people} = value
-            const assignResponse = await subTaskHelpers.updatePeople(subTaskId,people)
-            if(assignResponse.modifiedCount){
-                return res.status(200).json({status:true})
+            const {subTaskId,peopleId,assignee,isAdded} = value
+            const assigner = req.payload.id
+            const [assignResponse,userNotificationResponse,notificationResponse] = await Promise.all(
+                [
+                    subTaskHelpers.updatePeople(subTaskId,peopleId,isAdded),
+                    userHelpers.addNotificationCount(assigner),
+                    notificationHelpers.addNotification({assigner,notification:`${isAdded ? "assigned task to" : "removed task from"} ${assignee}`})
+                ]
+            )
+            
+            if(assignResponse.modifiedCount && notificationResponse){
+                return res.status(200).json({status:true, notification: notificationResponse })
             }
             return res.status(200).json({status:false,message:"Error assigning person"})
         } catch (error) {
@@ -208,21 +282,55 @@ const subTaskControllers = () => {
             if (error) {
                 return res.status(200).json({ status: false, message: error.details[0].message })
             }
-
+            const assigner = req.payload.id
             const queryArray = []
             value.forEach(id=>{
                 queryArray.push(subTaskHelpers.removeSubTask(id))
                 queryArray.push(chatHelpers.removeChats(id))
             })
 
+            queryArray.push(userHelpers.addNotificationCount(assigner),notificationHelpers.addNotification({assigner,notification:`removed a subtask`}))
+            
             const subTaskRemoveResponse = await Promise.all(queryArray)
-            const removeStatus = subTaskRemoveResponse.every(response=>response.acknowledged)
+            const removeStatus = subTaskRemoveResponse.every(response=>response)
             if(removeStatus){
-                return res.status(200).json({status:true,message:`${value.length>1 ? "Sub tasks" : "Sub task"} removed`})
+                return res.status(200).json({status:true,message:`${value.length>1 ? "Sub tasks" : "Sub task"} removed`, notification: subTaskRemoveResponse[subTaskRemoveResponse.length-1]})
             }
             return res.status(200).json({status:false,message:`Error removing ${value.length>1 ? "sub tasks" : "sub task"}`})
         } catch (error) {
             throw new Error(error.message);
+        }
+    }
+
+    const dndSubTaskUpdate = async (req, res) => {
+        try {
+            const dndSubTaskSchema = Joi.object({
+                dragSubTaskId: Joi.string().required(),
+                dropSubTaskId: Joi.string().required(),
+                dragOrder: Joi.number().required(),
+                dropOrder: Joi.number().required()
+            })
+            
+            const { error, value } = dndSubTaskSchema.validate(req.body)
+
+            if (error) {
+                return res.status(200).json({ status: false, message: error.details[0].message })
+            }
+            const { dragSubTaskId, dragOrder, dropSubTaskId, dropOrder } = value
+            
+            const dndTaskResponse = await Promise.all([
+                subTaskHelpers.dndSubTaskUpdate(dragSubTaskId, dragOrder),
+                subTaskHelpers.dndSubTaskUpdate(dropSubTaskId, dropOrder)
+            ])
+
+            const updateStatus = dndTaskResponse.every(response => response.modifiedCount === 1)
+            if (updateStatus) {
+                return res.status(200).json({ status: true })
+            }
+            return res.status(200).json({ status: false, message: `Error updating subtask DnD` })
+        } catch (error) {
+            console.error('Error in dnd Update:', error);
+            return res.status(500).json({ status: false, message: error.message });
         }
     }
 
@@ -236,7 +344,8 @@ const subTaskControllers = () => {
         updateDueDate,
         updateDynamicField,
         assignSubTask,
-        removeSubTsk
+        removeSubTsk,
+        dndSubTaskUpdate
     }
 }
 

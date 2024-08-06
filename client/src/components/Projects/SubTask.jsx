@@ -8,9 +8,8 @@ import {
   PopoverContent,
 } from "@material-tailwind/react";
 import moment from "moment";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SelectComponent } from "./elements/SelectComponent";
-import { MdEdit } from "react-icons/md";
 import { InputComponent } from "../Home/InputComponent";
 import { toast } from "react-toastify";
 import {
@@ -19,7 +18,7 @@ import {
   updateSubTaskName,
   updateSubTaskNote,
 } from "../../api/apiConnections/projectConnections";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import {
   currentProjectAtom,
   currentProjectCopyAtom,
@@ -32,9 +31,15 @@ import {
   TbSquareRoundedCheckFilled,
 } from "react-icons/tb";
 import { DynamicSubTask } from "./elements/DynamicSubTask";
-
+import {
+  liveUpdationStatusPriorityAtom,
+  liveUpdationSubTaskNameAtom,
+  liveUpdationSubTaskNotesAtom,
+} from "../../recoil/atoms/liveUpdationAtoms";
+import { userDataAtom } from "../../recoil/atoms/userAtoms";
 
 export const SubTask = ({
+  projectId,
   subTask,
   taskId,
   classes,
@@ -44,22 +49,28 @@ export const SubTask = ({
   dueDateChanger,
   selectedSubTasks,
   singleSubTaskSelectionhandler,
-  subTaskChatModalHandler,
+  subTaskChatModalOpenHandler,
   isAdmin,
   projectPermitted,
   updateDynamicField,
   addOptionModalToggle,
-  currentSubTaskPeopleModalHandler
+  currentSubTaskPeopleModalHandler,
+  onDragStart,
+  onDragOver,
+  onDrop,
 }) => {
+  const user = useRecoilValue(userDataAtom);
   const setSelectedProject = useSetRecoilState(currentProjectAtom);
-  const [currentProject, setCurrentProject] = useRecoilState(
-    currentProjectCopyAtom
-  );
-  
+  const setCurrentProject = useSetRecoilState(currentProjectCopyAtom);
+
   const setTaskSubTaskId = useSetRecoilState(taskSubTaskAtom);
-  const [selectedDate, setSelectedDate] = useState(
-    subTask.dueDate ? dayjs(subTask.dueDate) : null
-  );
+
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  useEffect(() => {
+    setSelectedDate(subTask?.dueDate ? dayjs(subTask.dueDate) : null);
+  }, [subTask.dueDate]);
+
   const checkboxSelected = selectedSubTasks?.some(
     (task) => task?._id === subTask?._id
   );
@@ -67,16 +78,35 @@ export const SubTask = ({
   const [editToggle, setEditToggle] = useState(false);
   const [editNotesToggle, setEditNotesToggle] = useState(false);
   const [nameError, setNameError] = useState(false);
-  const [notesError, setNotesError] = useState(false);
-  const [subTaskName, setSubTaskName] = useState(subTask?.task);
-  const [subTaskNotes, setSubTaskNotes] = useState(subTask?.notes);
+  const [subTaskName, setSubTaskName] = useState("");
+  const [subTaskNotes, setSubTaskNotes] = useState("");
   const [openPopoverHover, setOpenPopoverHover] = useState(false);
 
   const permittedHeaders = useRecoilValue(permittedHeadersAtom);
 
+  // Live Updations
+  const setLiveUpdationSubTaskName = useSetRecoilState(
+    liveUpdationSubTaskNameAtom
+  );
+  const setLiveUpdationSubTaskNotes = useSetRecoilState(
+    liveUpdationSubTaskNotesAtom
+  );
+  const setLiveUpdationStatusPriority = useSetRecoilState(
+    liveUpdationStatusPriorityAtom
+  );
+
+  useEffect(() => {
+    setSubTaskName(subTask?.task);
+  }, [subTask?.task]);
+
+  useEffect(() => {
+    setSubTaskNotes(subTask?.notes);
+  }, [subTask?.notes]);
+
   const isTaskNotAllowed = permittedHeaders?.some(
     (head) => head.key === "task"
   );
+
   const isTaskAccess = isAdmin
     ? true
     : isTaskNotAllowed
@@ -86,6 +116,7 @@ export const SubTask = ({
   const isPeopleNotAllowed = permittedHeaders?.some(
     (head) => head.key === "people"
   );
+
   const isPeopleAccess = isAdmin
     ? true
     : isPeopleNotAllowed
@@ -93,26 +124,28 @@ export const SubTask = ({
     : true;
 
   const isNotesNotAllowed = permittedHeaders?.some(
-    (head) => head.key === "people"
+    (head) => head.key === "notes"
   );
+
   const isNotesAccess = isAdmin
     ? true
     : isNotesNotAllowed
-    ? projectPermitted?.allowedPermissions?.includes("people") ?? false
+    ? projectPermitted?.allowedPermissions?.includes("notes") ?? false
     : true;
-
 
   const openChatBox = () => {
     setTaskSubTaskId({ taskId, subTaskId: subTask._id });
-    subTaskChatModalHandler();
+    subTaskChatModalOpenHandler(subTask.isChatExists);
   };
 
   const peopleModalHandler = (peopleArray) => {
     if (isPeopleAccess) {
-      currentSubTaskPeopleModalHandler({taskId,subTaskId:subTask._id},peopleArray)
+      currentSubTaskPeopleModalHandler(
+        { taskId, subTaskId: subTask._id },
+        peopleArray
+      );
     }
   };
-
 
   const triggers = {
     onMouseEnter: () => setOpenPopoverHover(true),
@@ -120,7 +153,7 @@ export const SubTask = ({
   };
 
   const disabledDate = (current) => {
-    return current && current < moment().endOf("day");
+    return current && current < moment().startOf("day");
   };
 
   const dateChange = (date) => {
@@ -130,7 +163,8 @@ export const SubTask = ({
 
   const selectSubTask = (event) => {
     const {
-      chatCount,
+      chatUnreadCount,
+      isChatExists,
       createdAt,
       updatedAt,
       isActive,
@@ -148,7 +182,9 @@ export const SubTask = ({
   };
 
   const openEditNotesInput = () => {
-    setEditNotesToggle(!editNotesToggle);
+    if (isNotesAccess) {
+      setEditNotesToggle(!editNotesToggle);
+    }
   };
 
   const updateName = async (event) => {
@@ -157,7 +193,7 @@ export const SubTask = ({
     if (subTaskName.trim().length) {
       setNameError(false);
       if (subTask.task !== subTaskName) {
-        const response = await updateSubTaskName(subTask._id, subTaskName);
+        const response = await updateSubTaskName(projectId, subTask._id, subTaskName);
         if (response?.status) {
           const updateProject = (selected) =>
             selected.map((task) =>
@@ -174,10 +210,20 @@ export const SubTask = ({
             );
 
           setSelectedProject((previous) => updateProject(previous));
+          setCurrentProject((previous) => updateProject(previous));
 
-          if (currentProject.length) {
-            setCurrentProject((previous) => updateProject(previous));
-          }
+          setLiveUpdationSubTaskName({
+            projectId,
+            taskId,
+            subTaskId: subTask._id,
+            field: "task",
+            value: subTaskName,
+            notification: {
+              ...response.notification,
+              assignerName: user.userName,
+              assignerImg: user.profilePhotoURL,
+            },
+          });
 
           setEditToggle(false);
         } else {
@@ -191,38 +237,44 @@ export const SubTask = ({
   const updateNotes = async (event) => {
     event.preventDefault();
     openEditNotesInput();
-    if (subTaskNotes.trim().length) {
-      setNotesError(false);
-      if (subTask.notes !== subTaskNotes) {
-        const response = await updateSubTaskNote(subTask._id, subTaskNotes);
-        if (response?.status) {
-          const updateProject = (selected) =>
-            selected.map((task) =>
-              task._id === taskId
-                ? {
-                    ...task,
-                    subTasks: task.subTasks.map((subTasks) =>
-                      subTask._id === subTasks._id
-                        ? { ...subTasks, notes: subTaskNotes }
-                        : subTasks
-                    ),
-                  }
-                : task
-            );
 
-          setSelectedProject((previous) => updateProject(previous));
+    if (subTask.notes !== subTaskNotes) {
+      const response = await updateSubTaskNote(projectId, subTask._id, subTaskNotes);
+      if (response?.status) {
+        const updateProject = (selected) =>
+          selected.map((task) =>
+            task._id === taskId
+              ? {
+                  ...task,
+                  subTasks: task.subTasks.map((subTasks) =>
+                    subTask._id === subTasks._id
+                      ? { ...subTasks, notes: subTaskNotes }
+                      : subTasks
+                  ),
+                }
+              : task
+          );
 
-          if (currentProject.length) {
-            setCurrentProject((previous) => updateProject(previous));
-          }
+        setSelectedProject((previous) => updateProject(previous));
+        setCurrentProject((previous) => updateProject(previous));
 
-          setEditNotesToggle(false);
-        } else {
-          toast.error(response.message);
-        }
+        setLiveUpdationSubTaskNotes({
+          projectId,
+          taskId,
+          subTaskId: subTask._id,
+          field: "notes",
+          value: subTaskNotes,
+          notification: {
+            ...response.notification,
+            assignerName: user.userName,
+            assignerImg: user.profilePhotoURL,
+          },
+        });
+
+        setEditNotesToggle(false);
+      } else {
+        toast.error(response.message);
       }
-    } else {
-      setNotesError(true);
     }
   };
 
@@ -243,30 +295,60 @@ export const SubTask = ({
 
     setSelectedProject((previous) => updateProject(previous));
 
-    if (currentProject.length) {
-      setCurrentProject((previous) => updateProject(previous));
-    }
+    setCurrentProject((previous) => updateProject(previous));
 
     if (headerType === "status") {
-      const response = await updateStatus(subTask._id, option);
-      if (!response?.status) {
+      const response = await updateStatus(projectId, subTask._id, option);
+      if (response?.status) {
+        setLiveUpdationStatusPriority({
+          projectId,
+          taskId,
+          subTaskId: subTask._id,
+          field: "status",
+          value: option,
+          notification: {
+            ...response.notification,
+            assignerName: user.userName,
+            assignerImg: user.profilePhotoURL,
+          },
+        });
+      } else {
         toast.error(response.message);
       }
     } else {
       if (headerType === "priority") {
-        const response = await updatePriority(subTask._id, option);
-        if (!response?.status) {
+        const response = await updatePriority(projectId, subTask._id, option);
+        if (response?.status) {
+          setLiveUpdationStatusPriority({
+            projectId,
+            taskId,
+            subTaskId: subTask._id,
+            field: "priority",
+            value: option,
+            notification: {
+              ...response.notification,
+              assignerName: user.userName,
+              assignerImg: user.profilePhotoURL,
+            },
+          });
+        } else {
           toast.error(response.message);
         }
       }
     }
   };
 
-  
-
   return (
-    <tr className="even:bg-blue-gray-50 odd:bg-gray-100 hover:bg-white">
-      <td className={`${classes} text-center w-14`}>
+    <tr
+      draggable
+      onDragStart={(e) => onDragStart(e, taskId, subTask._id)}
+      onDragOver={onDragOver}
+      onDrop={(e) => onDrop(e, taskId, subTask._id)}
+      className="bg-[#ffffffcd] text-black hover:bg-[#aefe00] group"
+    >
+      <td
+        className={`${classes} sticky z-10 left-0 bg-white group-hover:bg-[#aefe00] text-center w-14 outline outline-1 outline-blue-gray-200`}
+      >
         <input
           checked={checkboxSelected}
           onChange={selectSubTask}
@@ -274,54 +356,54 @@ export const SubTask = ({
           className="w-3 h-3 rounded cursor-pointer"
         />
       </td>
+      <td
+        onDoubleClick={openEditNameInput}
+        className={`${
+          nameError && "outline-2 h-full outline-dashed outline-red-600"
+        } ${classes} sticky z-10 left-14 bg-white group-hover:bg-[#aefe00] cursor-pointer p-0 outline outline-1 outline-blue-gray-200`}
+      >
+        <div className="flex justify-between h-8">
+          <div className="relative group px-2.5 h-full py-1">
+            {editToggle ? (
+              <InputComponent
+                subTaskName={subTaskName}
+                setSubTaskName={setSubTaskName}
+                updateName={updateName}
+              />
+            ) : (
+              <div className="w-full">
+                <p className="whitespace-nowrap overflow-hidden overflow-ellipsis capitalize">
+                  {subTaskName}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div
+            onClick={openChatBox}
+            className="border-l border-blue-gray-200 flex justify-center items-center w-16"
+          >
+            <div className="relative">
+              <HiOutlineChatBubbleOvalLeft className={`w-6 h-6`} />
+              {subTask.isChatExists && (
+                <span className="bg-green-500 absolute top-1 right-0 rounded-full p-1"></span>
+              )}
+              {subTask?.chatUnreadCount ? (
+                <div className="absolute top-0 -right-1 rounded-full w-4 h-4 flex items-center justify-center text-white bg-green-500">
+                  <p className="text-center p-[2px] whitespace-nowrap overflow-hidden overflow-ellipsis text-[9px]">
+                    {subTask.chatUnreadCount}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </td>
 
       {headers?.map((header) => {
-        if (header.key === "task") {
-          return (
-            <td
-              key={header._id}
-              className={`${
-                nameError && "outline-2 h-full outline-dashed outline-red-600"
-              } ${classes} cursor-pointer w-60 p-0`}
-            >
-              <div className="flex justify-between h-8">
-                <div className="relative group px-2.5 h-full py-1">
-                  {editToggle ? (
-                    <InputComponent
-                      subTaskName={subTaskName}
-                      setSubTaskName={setSubTaskName}
-                      updateName={updateName}
-                    />
-                  ) : (
-                    <div className="w-44">
-                      <p className="whitespace-nowrap overflow-hidden overflow-ellipsis capitalize">
-                        {subTaskName}
-                      </p>
-                      <MdEdit
-                        onClick={openEditNameInput}
-                        className="absolute hidden right-0 top-2 group-hover:block w-4 h-4"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div
-                  onClick={openChatBox}
-                  className="border-l border-blue-gray-200 relative flex justify-center items-center w-16"
-                >
-                  <HiOutlineChatBubbleOvalLeft className="w-6 h-6" />
-                  {subTask?.chatUnreadCount ? (
-                    <div className="absolute top-2 right-1 rounded-full w-4 h-4 flex items-center justify-center text-white bg-green-500">
-                      <p className="text-center p-[2px] whitespace-nowrap overflow-hidden overflow-ellipsis text-[9px]">
-                        {subTask.chatUnreadCount}
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </td>
-          );
-        } else if (header.key === "status") {
+        if(header.key === "task") {
+          return
+        }else if (header.key === "status") {
           return (
             <SelectComponent
               key={header._id}
@@ -346,7 +428,7 @@ export const SubTask = ({
             : true;
           return (
             <td key={header._id} className={`${classes} text-center w-36`}>
-              <div className="flex items-center justify-around">
+              <div className="flex items-center justify-around mx-auto w-32">
                 {selectedDate &&
                   (subTask.status === "done" ? (
                     <TbSquareRoundedCheckFilled className="w-5 h-5 text-green-500" />
@@ -367,11 +449,11 @@ export const SubTask = ({
                     suffixIcon={null}
                     disabled={!isAccess}
                     onChange={dateChange}
-                    allowClear={false}
-                    className=" bg-transparent"
+                    allowClear={true}
+                    className="bg-transparent w-28"
                     disabledDate={disabledDate}
                     format="DD-MMM-YYYY"
-                    defaultValue={selectedDate}
+                    value={selectedDate}
                   />
                 </Space>
               </div>
@@ -395,39 +477,35 @@ export const SubTask = ({
           return (
             <td key={header._id} className={`${classes} text-center w-32`}>
               <div
-                onClick={()=>peopleModalHandler(subTask?.people)}
+                onClick={() => peopleModalHandler(subTask?.people)}
                 className="relative -space-x-4 w-fit m-auto flex justify-center items-center"
               >
                 {subTask?.people?.length ? (
                   subTask.people.map((person) => {
                     return (
-                      <div
-                        key={person._id}
-                        className="hover:z-10 group"
-                      >
+                      <div key={person._id} className="hover:z-10 group">
                         <Avatar
-                          className="min-w-7 w-7 h-7 cursor-pointer border border-blue-500"
+                          className="min-w-7 w-7 h-7 cursor-pointer border border-black"
                           src={person?.profilePhotoURL ?? "/avatar-icon.jpg"}
                           alt="ProfilePhoto"
                           size="sm"
                           loading="lazy"
                         />
                         <p className="absolute hidden group-hover:block -top-7 right-1/2 translate-x-1/2 px-2 shadow-xl border bg-white rounded-full ">
-                          {person?.email?.split("@")[0]}
+                          {person?.userName}
                         </p>
                       </div>
                     );
                   })
                 ) : (
                   <Avatar
-                    className="w-7 h-7 border border-blue-500"
+                    className="w-7 h-7 border border-black"
                     src="/avatar-icon.jpg"
                     alt="ProfilePhoto"
                     size="sm"
                     loading="lazy"
                   />
                 )}
-
               </div>
             </td>
           );
@@ -435,9 +513,8 @@ export const SubTask = ({
           return (
             <td
               key={header._id}
-              className={`${
-                notesError && "outline-2 outline-dashed outline-red-600"
-              } ${classes} relative group cursor-pointer`}
+              className={`${classes} group cursor-pointer`}
+              onDoubleClick={openEditNotesInput}
             >
               {editNotesToggle ? (
                 <TextAreaComponent
@@ -458,15 +535,11 @@ export const SubTask = ({
                     </PopoverHandler>
                     <PopoverContent
                       {...triggers}
-                      className="max-w-52 overflow-y-scroll"
+                      className="max-w-52 overflow-y-scroll z-10"
                     >
-                      {subTaskNotes}
+                      <p>{subTaskNotes}</p>
                     </PopoverContent>
                   </Popover>
-                  <MdEdit
-                    onClick={openEditNotesInput}
-                    className="absolute hidden right-0 top-2 group-hover:block w-4 h-4"
-                  />
                 </div>
               )}
             </td>
@@ -487,7 +560,7 @@ export const SubTask = ({
         }
       })}
 
-      <td className="border-r border-blue-gray-200 bg-white"></td>
+      <td className="border-r border-blue-gray-200 bg-transparent"></td>
     </tr>
   );
 };

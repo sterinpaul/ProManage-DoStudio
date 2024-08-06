@@ -11,7 +11,7 @@ const TaskSchema = new Schema (
         },
         name: {
             type: String,
-            unique: true,
+            // unique: true,
             required: true
         },
         headers:{
